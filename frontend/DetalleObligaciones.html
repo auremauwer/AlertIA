@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AlertIA</title>
+    <link rel="icon" type="image/x-icon" href="Alertia.ico" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec0000",
+                        "background": "#ffffff",
+                        "surface": "#ffffff",
+                        "border-subtle": "#e5e7eb",
+                        "text-main": "#000000",
+                        "text-muted": "#6b7280",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffffff; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db; 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #000000; 
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            border-left: 4px solid #ec0000;
+            background-color: #fef2f2;
+            color: #ec0000;
+        }
+        .status-pill {
+            @apply px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border;
+        }
+        .status-pendiente { @apply bg-yellow-50 text-yellow-700 border-yellow-200; }
+        .status-ventana { @apply bg-red-50 text-red-700 border-red-200; }
+        .status-pausada { @apply bg-gray-50 text-gray-600 border-gray-200; }
+        .status-atendida { @apply bg-green-50 text-green-700 border-green-200; }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+
+<body class="bg-white text-text-main font-display flex flex-col h-screen overflow-hidden relative">
+    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-border-subtle flex items-center justify-between bg-white shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="bg-red-50 p-2 rounded-lg">
+                        <span class="material-symbols-outlined text-primary">description</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-extrabold text-text-main">Detalle de Obligación</h3>
+                            <span class="text-xs font-bold text-primary bg-red-50 px-2 py-0.5 rounded">OBL-00124</span>
+                        </div>
+                        <p class="text-[11px] text-text-muted font-semibold uppercase tracking-wider">CNBV •
+                            Cumplimiento • Mensual</p>
+                    </div>
+                </div>
+                <button class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <span class="material-symbols-outlined text-gray-400">close</span>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-2 space-y-6">
+                        <div>
+                            <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Información
+                                General</h4>
+                            <div class="grid grid-cols-2 gap-y-4 gap-x-6">
+                                <div>
+                                    <p class="text-[10px] text-text-muted uppercase font-bold">Disposición resumida</p>
+                                    <p class="text-sm font-semibold">Reporte preventivo de operaciones inusuales 4.1.2
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-text-muted uppercase font-bold">Regulador</p>
+                                    <p class="text-sm font-semibold">Comisión Nacional Bancaria y de Valores</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-text-muted uppercase font-bold">Fecha Límite</p>
+                                    <p class="text-sm font-mono font-bold text-primary">25/10/2023</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-text-muted uppercase font-bold">Estado Actual</p>
+                                    <div class="mt-1"><span class="status-pill status-ventana">En ventana de
+                                            alerta</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Regla de
+                                Alertamiento Aplicada</h4>
+                            <div
+                                class="bg-gray-50 border border-border-subtle rounded-lg p-4 flex items-center justify-between">
+                                <div class="flex gap-4">
+                                    <div class="text-center">
+                                        <p class="text-[10px] font-bold text-text-muted uppercase">Alerta 1</p>
+                                        <p class="text-lg font-extrabold text-text-main">30 <span
+                                                class="text-[10px] font-normal">días</span></p>
+                                    </div>
+                                    <div class="w-px h-8 bg-gray-200 self-center"></div>
+                                    <div class="text-center">
+                                        <p class="text-[10px] font-bold text-text-muted uppercase">Alerta 2</p>
+                                        <p class="text-lg font-extrabold text-text-main">10 <span
+                                                class="text-[10px] font-normal">días</span></p>
+                                    </div>
+                                    <div class="w-px h-8 bg-gray-200 self-center"></div>
+                                    <div class="text-center">
+                                        <p class="text-[10px] font-bold text-text-muted uppercase">Crítica</p>
+                                        <p class="text-lg font-extrabold text-primary">5 <span
+                                                class="text-[10px] font-normal">días</span></p>
+                                    </div>
+                                </div>
+                                <span class="text-[11px] font-semibold text-text-muted italic">Canal: Email +
+                                    Dashboard</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50/50 border border-dashed border-gray-200 rounded-lg p-4 space-y-4 h-fit">
+                        <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Acciones Rápidas
+                        </h4>
+                        <button
+                            class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-border-subtle hover:border-primary-black hover:text-primary-black-black rounded-md text-sm font-bold transition-all group">
+                            <span
+                                class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">pause_circle</span>
+                            Pausar Seguimiento
+                        </button>
+                        <button
+                            class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-border-subtle hover:border-primary-black hover:text-primary-black-black rounded-md text-sm font-bold transition-all group">
+                            <span
+                                class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">add_comment</span>
+                            Agregar Comentario
+                        </button>
+                        <div class="space-y-2">
+                            <button
+                                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white hover:bg-red-700 rounded-md text-sm font-bold shadow-sm transition-all">
+                                <span class="material-symbols-outlined text-lg">check_circle</span>
+                                Marcar Atendida
+                            </button>
+                            <p class="text-[12px] text-gray-500 text-center leading-tight">Detiene el seguimiento y las
+                                alertas futuras</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between border-b border-border-subtle pb-2">
+                        <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Historial y
+                            Trazabilidad</h4>
+                        <span class="text-[10px] font-bold text-text-muted bg-gray-100 px-2 py-0.5 rounded">8
+                            Eventos</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <div class="shrink-0 flex flex-col items-center">
+                                <div
+                                    class="size-7 rounded-full bg-slate-600 text-white flex items-center justify-center ring-4 ring-white z-10">
+                                    <span class="material-symbols-outlined text-[14px]">calculate</span>
+                                </div>
+                                <div class="w-px flex-1 bg-gray-200 my-1"></div>
+                            </div>
+                            <div class="pb-4 pt-1">
+                                <p class="text-xs font-bold text-text-main">Alerta Crítica Calculada</p>
+                                <p class="text-[11px] text-text-muted">Sistema detectó que faltan 5 días para el
+                                    vencimiento.</p>
+                                <p class="text-[10px] font-medium text-text-muted mt-1 uppercase">20 Oct 2023 - 09:00 AM
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="shrink-0 flex flex-col items-center">
+                                <div
+                                    class="size-7 rounded-full bg-slate-600 text-white flex items-center justify-center ring-4 ring-white z-10">
+                                    <span class="material-symbols-outlined text-[14px]">mail</span>
+                                </div>
+                                <div class="w-px flex-1 bg-gray-200 my-1"></div>
+                            </div>
+                            <div class="pb-4 pt-1">
+                                <p class="text-xs font-bold text-text-main">Correo enviado a responsable</p>
+                                <p class="text-[11px] text-text-muted">Destinatario: cumplimiento@banco.com. Subject:
+                                    [URGENTE] Vencimiento OBL-00124.</p>
+                                <p class="text-[10px] font-medium text-text-muted mt-1 uppercase">20 Oct 2023 - 09:01 AM
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="shrink-0 flex flex-col items-center">
+                                <div
+                                    class="size-7 rounded-full bg-yellow-50 border border-amber-300 text-amber-600 flex items-center justify-center ring-4 ring-white z-10">
+                                    <span class="material-symbols-outlined text-[14px]">comment</span>
+                                </div>
+                                <div class="w-px flex-1 bg-gray-200 my-1"></div>
+                            </div>
+                            <div class="pb-4 pt-1">
+                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <p class="text-xs font-bold text-text-main mb-1 italic">"Se solicitó prórroga al
+                                        regulador, en espera de respuesta."</p>
+                                    <p class="text-[10px] font-bold text-primary uppercase">Comentario Interno -
+                                        Administrador</p>
+                                </div>
+                                <p class="text-[10px] font-medium text-text-muted mt-1 uppercase">18 Oct 2023 - 03:45 PM
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="shrink-0 flex flex-col items-center">
+                                <div
+                                    class="size-7 rounded-full bg-red-50 border border-red-300 text-red-500 flex items-center justify-center ring-4 ring-white z-10">
+                                    <span class="material-symbols-outlined text-[14px]">play_arrow</span>
+                                </div>
+                            </div>
+                            <div class="pt-1">
+                                <p class="text-xs font-bold text-text-main">Reanudación de alertas</p>
+                                <p class="text-[11px] text-text-muted">El seguimiento fue reanudado manualmente.</p>
+                                <p class="text-[10px] font-medium text-text-muted mt-1 uppercase">15 Oct 2023 - 10:20 AM
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-border-subtle flex justify-end shrink-0">
+                <button
+                    class="flex items-center gap-1.5 text-sm font-semibold text-text-muted hover:text-text-main transition-colors cursor-pointer group">
+                    <span class="group-hover:-translate-x-0.5 transition-transform">←</span>
+                    Cerrar detalle
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display">
+            <div class="flex h-full flex-col justify-between">
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-3 px-6 py-8">
+                        <div class="flex items-center justify-center size-9">
+                            <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
+                        </div>
+                        <div class="flex flex-col">
+                            <h1 class="text-xl font-extrabold tracking-tighter leading-none">
+                                <span class="text-black">Alert</span><span class="text-primary">IA</span>
+                            </h1>
+                        </div>
+                    </div>
+                    <nav class="flex flex-col px-3">
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Dashboard.html">
+                            <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                            <span class="text-sm font-semibold">Dashboard</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 bg-gray-100 text-primary border-r-[6px] border-primary transition-all mb-1"
+                            href="Obligaciones.html">
+                            <span class="material-symbols-outlined text-[20px] filled">assignment</span>
+                            <span class="text-sm font-semibold">Obligaciones</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Correos.html">
+                            <span class="material-symbols-outlined text-[20px]">mail</span>
+                            <span class="text-sm font-semibold">Envío de correos</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Historial.html">
+                            <span class="material-symbols-outlined text-[20px]">history</span>
+                            <span class="text-sm font-semibold">Historial de envíos</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Configuración.html">
+                            <span class="material-symbols-outlined text-[20px]">settings</span>
+                            <span class="text-sm font-semibold">Configuración</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Auditoria.html">
+                            <span class="material-symbols-outlined text-[20px]">list_alt</span>
+                            <span class="text-sm font-semibold">Auditoría / Logs</span>
+                        </a>
+                    </nav>
+                </div>
+                <div class="flex flex-col gap-2 border-t border-gray-200 p-6">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
+                            <span class="material-symbols-outlined text-gray-500 text-lg">person</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-black">Analista Riesgos</span>
+                            <span class="text-[10px] text-gray-500">Lectura Exclusiva</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 overflow-y-auto bg-white">
+            <div class="p-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <div class="space-y-1">
+                        <h2 class="text-2xl font-extrabold text-text-main tracking-tight">Gestión de Obligaciones</h2>
+                        <p class="text-text-muted text-sm">Visualización y control de cumplimiento normativo.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="flex items-center gap-2 px-3 py-1.5 rounded bg-gray-50 border border-gray-100 hidden md:flex">
+                            <span class="material-symbols-outlined text-green-600 text-sm">database</span>
+                            <span
+                                class="text-[10px] font-bold text-gray-600 uppercase tracking-widest leading-none">Excel
+                                Sync: OK</span>
+                        </div>
+                        <div class="relative">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
+                            <input
+                                class="pl-9 pr-4 py-2 border border-border-subtle rounded-md text-sm w-64 focus:ring-1 focus:ring-primary-black focus:border-primary-black"
+                                placeholder="Buscar ID o Regulador..." type="text" />
+                        </div>
+                        <button
+                            class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-red-700 text-white text-sm font-bold rounded shadow-sm transition-colors">
+                            <span class="material-symbols-outlined text-lg">add</span>
+                            Nueva Obligación
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg border border-border-subtle shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-border-subtle">
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">ID
+                                        Obligación</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                                        Regulador</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                                        Disposición</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">Área
+                                    </th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                                        Periodicidad</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                                        Límite</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">Días
+                                    </th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                                        Estado</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                                        Última Acción</th>
+                                    <th
+                                        class="p-4 text-[10px] font-bold uppercase tracking-widest text-text-muted text-right">
+                                        Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border-subtle">
+                                <tr class="hover:bg-gray-50/50 transition-colors">
+                                    <td class="p-4 text-xs font-bold text-primary">OBL-00124</td>
+                                    <td class="p-4 text-xs font-semibold">CNBV</td>
+                                    <td class="p-4 text-xs text-text-muted max-w-xs truncate">Reporte preventivo de
+                                        operaciones inusuales 4.1.2</td>
+                                    <td class="p-4 text-xs font-medium">Cumplimiento</td>
+                                    <td class="p-4 text-xs">Mensual</td>
+                                    <td class="p-4 text-xs font-mono">25/10/2023</td>
+                                    <td class="p-4 text-xs font-bold text-red-600">-2</td>
+                                    <td class="p-4">
+                                        <span class="status-pill status-ventana">En ventana</span>
+                                    </td>
+                                    <td class="p-4 text-xs text-text-muted italic">Correo enviado</td>
+                                    <td class="p-4 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button
+                                                class="p-1.5 hover:bg-gray-100 rounded-full text-text-muted hover:text-primary-black transition-colors"
+                                                title="Ver detalles">
+                                                <span class="material-symbols-outlined">visibility</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 hover:bg-gray-100 rounded-full text-text-muted hover:text-gray-900 transition-colors"
+                                                title="Pausar">
+                                                <span class="material-symbols-outlined">pause_circle</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 hover:bg-green-50 rounded-full text-text-muted hover:text-green-600 transition-colors"
+                                                title="Marcar como atendida">
+                                                <span class="material-symbols-outlined">check_circle</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/50 transition-colors">
+                                    <td class="p-4 text-xs font-bold text-primary">OBL-00130</td>
+                                    <td class="p-4 text-xs font-semibold">BANXICO</td>
+                                    <td class="p-4 text-xs text-text-muted max-w-xs truncate">Anexo 12 bis: Flujos de
+                                        capitales diarios</td>
+                                    <td class="p-4 text-xs font-medium">Tesorería</td>
+                                    <td class="p-4 text-xs">Diario</td>
+                                    <td class="p-4 text-xs font-mono">28/10/2023</td>
+                                    <td class="p-4 text-xs font-bold">1</td>
+                                    <td class="p-4">
+                                        <span class="status-pill status-pendiente">Pendiente</span>
+                                    </td>
+                                    <td class="p-4 text-xs text-text-muted italic">Actualizado Excel</td>
+                                    <td class="p-4 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button
+                                                class="p-1.5 hover:bg-gray-100 rounded-full text-text-muted hover:text-primary-black transition-colors"><span
+                                                    class="material-symbols-outlined">visibility</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-gray-100 rounded-full text-text-muted hover:text-gray-900 transition-colors"><span
+                                                    class="material-symbols-outlined">pause_circle</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-green-50 rounded-full text-text-muted hover:text-green-600 transition-colors"><span
+                                                    class="material-symbols-outlined">check_circle</span></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-border-subtle">
+                        <div class="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+                            Mostrando 4 de 24 registros
+                        </div>
+                        <div class="flex gap-1">
+                            <button
+                                class="p-1.5 border border-border-subtle rounded bg-white text-text-muted hover:bg-gray-50 transition-colors"><span
+                                    class="material-symbols-outlined">chevron_left</span></button>
+                            <button
+                                class="px-3 py-1 border border-primary bg-primary text-white text-xs font-bold rounded">1</button>
+                            <button
+                                class="px-3 py-1 border border-border-subtle bg-white text-text-muted text-xs font-bold rounded hover:bg-gray-50">2</button>
+                            <button
+                                class="p-1.5 border border-border-subtle rounded bg-white text-text-muted hover:bg-gray-50 transition-colors"><span
+                                    class="material-symbols-outlined">chevron_right</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- Cargar scripts de la aplicación -->
+    <script src="js/app-init.js"></script>
+    <script src="js/controllers/detalle-obligacion-controller.js"></script>
+</body>
+
+</html>

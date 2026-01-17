@@ -1,0 +1,194 @@
+/**
+ * Servicio de Obligaciones
+ * Maneja toda la lógica de negocio relacionada con obligaciones
+ */
+class ObligacionesService {
+    constructor(dataAdapter) {
+        this.dataAdapter = dataAdapter;
+    }
+
+    /**
+     * Obtener todas las obligaciones
+     */
+    async getAll(filters = {}) {
+        try {
+            const obligaciones = await this.dataAdapter.getObligaciones(filters);
+            
+            // Enriquecer con información calculada
+            return obligaciones.map(obl => this.enrichObligacion(obl));
+        } catch (error) {
+            console.error('Error al obtener obligaciones:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener una obligación por ID
+     */
+    async getById(id) {
+        try {
+            const obligacion = await this.dataAdapter.getObligacion(id);
+            if (!obligacion) {
+                throw new Error(`Obligación ${id} no encontrada`);
+            }
+            return this.enrichObligacion(obligacion);
+        } catch (error) {
+            console.error(`Error al obtener obligación ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Enriquecer obligación con información calculada
+     */
+    enrichObligacion(obligacion) {
+        const diasRestantes = Utils.getDaysUntil(obligacion.fecha_limite);
+        const criticidad = Utils.getCriticidad(
+            diasRestantes,
+            obligacion.reglas_alertamiento
+        );
+        
+        return {
+            ...obligacion,
+            dias_restantes: diasRestantes,
+            criticidad: criticidad,
+            requiere_envio: diasRestantes !== null && diasRestantes <= (obligacion.reglas_alertamiento?.critica || 5),
+            en_ventana: diasRestantes !== null && diasRestantes > (obligacion.reglas_alertamiento?.critica || 5) && 
+                       diasRestantes <= (obligacion.reglas_alertamiento?.alerta1 || 30)
+        };
+    }
+
+    /**
+     * Filtrar obligaciones
+     */
+    async filter(filters) {
+        const obligaciones = await this.getAll();
+        
+        let filtered = [...obligaciones];
+        
+        if (filters.area) {
+            filtered = filtered.filter(obl => obl.area === filters.area);
+        }
+        
+        if (filters.periodicidad) {
+            filtered = filtered.filter(obl => obl.periodicidad === filters.periodicidad);
+        }
+        
+        if (filters.estado) {
+            filtered = filtered.filter(obl => obl.estado === filters.estado);
+        }
+        
+        if (filters.criticidad) {
+            filtered = filtered.filter(obl => obl.criticidad.nivel === filters.criticidad);
+        }
+        
+        if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            filtered = filtered.filter(obl => 
+                obl.id.toLowerCase().includes(searchLower) ||
+                obl.regulador.toLowerCase().includes(searchLower) ||
+                obl.descripcion.toLowerCase().includes(searchLower) ||
+                obl.area.toLowerCase().includes(searchLower)
+            );
+        }
+        
+        return filtered;
+    }
+
+    /**
+     * Pausar obligación
+     */
+    async pausar(id, motivo = '') {
+        try {
+            const obligacion = await this.dataAdapter.updateObligacionEstado(id, 'pausada');
+            
+            // Registrar en auditoría
+            const user = await this.dataAdapter.getCurrentUser();
+            await this.dataAdapter.saveAuditoria({
+                usuario: user.nombre,
+                accion: 'Pausó obligación',
+                contexto: {
+                    obligacion_id: id,
+                    motivo: motivo
+                },
+                ip: Utils.getUserIP()
+            });
+            
+            return obligacion;
+        } catch (error) {
+            console.error(`Error al pausar obligación ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Reanudar obligación
+     */
+    async reanudar(id) {
+        try {
+            const obligacion = await this.dataAdapter.updateObligacionEstado(id, 'activa');
+            
+            // Registrar en auditoría
+            const user = await this.dataAdapter.getCurrentUser();
+            await this.dataAdapter.saveAuditoria({
+                usuario: user.nombre,
+                accion: 'Reanudó obligación',
+                contexto: {
+                    obligacion_id: id
+                },
+                ip: Utils.getUserIP()
+            });
+            
+            return obligacion;
+        } catch (error) {
+            console.error(`Error al reanudar obligación ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Marcar como atendida
+     */
+    async marcarAtendida(id) {
+        try {
+            const obligacion = await this.dataAdapter.updateObligacionEstado(id, 'atendida');
+            
+            // Registrar en auditoría
+            const user = await this.dataAdapter.getCurrentUser();
+            await this.dataAdapter.saveAuditoria({
+                usuario: user.nombre,
+                accion: 'Marcó obligación como atendida',
+                contexto: {
+                    obligacion_id: id
+                },
+                ip: Utils.getUserIP()
+            });
+            
+            return obligacion;
+        } catch (error) {
+            console.error(`Error al marcar obligación ${id} como atendida:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener estadísticas
+     */
+    async getEstadisticas() {
+        const obligaciones = await this.getAll();
+        
+        return {
+            total: obligaciones.length,
+            activas: obligaciones.filter(obl => obl.estado === 'activa').length,
+            pausadas: obligaciones.filter(obl => obl.estado === 'pausada').length,
+            atendidas: obligaciones.filter(obl => obl.estado === 'atendida').length,
+            criticas: obligaciones.filter(obl => obl.criticidad.nivel === 'critica').length,
+            en_ventana: obligaciones.filter(obl => obl.criticidad.nivel === 'ventana').length
+        };
+    }
+}
+
+// Exportar para uso global
+if (typeof window !== 'undefined') {
+    window.ObligacionesService = ObligacionesService;
+}

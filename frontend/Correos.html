@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AlertIA</title>
+    <link rel="icon" type="image/x-icon" href="Alertia.ico" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec0000",
+                        "background": "#ffffff",
+                        "surface": "#ffffff",
+                        "border-light": "#e5e7eb",
+                        "text-main": "#222222",
+                        "text-secondary": "#6b7280",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }
+.material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }
+        .material-symbols-outlined.filled {
+             font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        .sidebar-item-active {
+            @apply bg-red-50 text-primary border-r-4 border-primary font-semibold;
+        }.table-checkbox {
+            @apply border-gray-400 rounded focus:ring-primary text-primary w-4 h-4 transition duration-150 ease-in-out cursor-pointer;
+        }.table-checkbox:checked {
+            background-color: #ec0000;
+            border-color: #ec0000;
+        }        .alert-badge {
+            @apply inline-flex items-center justify-center w-24 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+        }
+        .step-indicator {
+            @apply flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold text-sm transition-all;
+        }
+        .step-indicator.active {
+            @apply bg-primary text-white border-primary;
+        }
+        .step-indicator.completed {
+            @apply bg-green-500 text-white border-green-500;
+        }
+        .step-indicator.pending {
+            @apply bg-white text-gray-400 border-gray-300;
+        }
+        .step-content {
+            display: none;
+        }
+        .step-content.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="font-display bg-white text-text-main overflow-hidden h-screen flex">
+    <aside class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display">
+        <div class="flex h-full flex-col justify-between">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-3 px-6 py-8">
+                    <div class="flex items-center justify-center size-9">
+                        <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-xl font-extrabold tracking-tighter leading-none">
+                            <span class="text-black">Alert</span><span class="text-primary">IA</span>
+                        </h1>
+                    </div>
+                </div>
+                <nav class="flex flex-col px-3">
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Dashboard.html">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-semibold">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Obligaciones.html">
+                        <span class="material-symbols-outlined text-[20px]">assignment</span>
+                        <span class="text-sm font-semibold">Obligaciones</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 bg-gray-100 text-primary border-r-[6px] border-primary transition-all mb-1"
+                        href="Correos.html">
+                        <span class="material-symbols-outlined text-[20px] filled">mail</span>
+                        <span class="text-sm font-semibold">Envío de correos</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Historial.html">
+                        <span class="material-symbols-outlined text-[20px]">history</span>
+                        <span class="text-sm font-semibold">Historial de envíos</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Configuración.html">
+                        <span class="material-symbols-outlined text-[20px]">settings</span>
+                        <span class="text-sm font-semibold">Configuración</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Auditoria.html">
+                        <span class="material-symbols-outlined text-[20px]">list_alt</span>
+                        <span class="text-sm font-semibold">Auditoría / Logs</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="flex flex-col gap-2 border-t border-gray-200 p-6">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
+                        <span class="material-symbols-outlined text-gray-500 text-lg">person</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-black">Analista Riesgos</span>
+                        <span class="text-[10px] text-gray-500">Lectura Exclusiva</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+        <header class="h-16 flex items-center justify-between px-8 border-b border-border-light shrink-0">
+            <div class="flex items-center gap-3">
+                <h2 class="text-lg font-bold text-text-main">Envío de Correos</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <div
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span class="text-[11px] font-bold uppercase">Servidor Activo</span>
+                </div>
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-50 text-text-secondary relative">
+                    <span class="material-symbols-outlined text-2xl">notifications</span>
+                    <span
+                        class="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
+                </button>
+            </div>
+        </header>
+        <main class="flex-1 overflow-y-auto p-8 bg-gray-50/30">
+            <div class="max-w-6xl mx-auto space-y-6">
+                <!-- Indicador de Progreso -->
+                <div class="bg-white p-6 rounded-xl border border-border-light shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="flex items-center gap-2 flex-1">
+                                <div class="step-indicator active" data-step="1">
+                                    <span class="material-symbols-outlined text-lg">calculate</span>
+                                </div>
+                                <div class="flex-1 h-1 bg-gray-200 rounded">
+                                    <div class="h-full bg-primary rounded transition-all" style="width: 0%"></div>
+                                </div>
+                                <div class="step-indicator pending" data-step="2">
+                                    <span class="material-symbols-outlined text-lg">checklist</span>
+                                </div>
+                                <div class="flex-1 h-1 bg-gray-200 rounded">
+                                    <div class="h-full bg-gray-200 rounded transition-all" style="width: 0%"></div>
+                                </div>
+                                <div class="step-indicator pending" data-step="3">
+                                    <span class="material-symbols-outlined text-lg">preview</span>
+                                </div>
+                                <div class="flex-1 h-1 bg-gray-200 rounded">
+                                    <div class="h-full bg-gray-200 rounded transition-all" style="width: 0%"></div>
+                                </div>
+                                <div class="step-indicator pending" data-step="4">
+                                    <span class="material-symbols-outlined text-lg">send</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-xs font-bold text-text-secondary uppercase tracking-wider">
+                            <span id="step-label">Paso 1: Cálculo</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 pr-8">
+                            <h3 class="text-2xl font-black text-text-main mb-1" id="step-title">Cálculo de Alertas
+                                Diarias</h3>
+                            <p class="text-sm text-text-secondary truncate" id="step-description">Identifique las
+                                obligaciones y destinatarios que requieren envío de correo hoy.</p>
+                        </div>
+                        <button id="btn-calculate"
+                            class="shrink-0 px-6 py-3 bg-primary hover:bg-red-700 text-white font-bold rounded-lg shadow-lg shadow-red-500/20 transition-all flex items-center gap-2 text-sm uppercase tracking-wider">
+                            <span class="material-symbols-outlined text-xl">calculate</span>
+                            Calcular alertas de hoy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Paso 1: Cálculo Manual -->
+                <div id="step-1" class="step-content active">
+                    <div
+                        class="flex items-center justify-between bg-white p-6 rounded-xl border border-border-light shadow-sm">
+                        <div class="flex-1 pr-8">
+                            <h3 class="text-2xl font-black text-text-main mb-1">Cálculo de Alertas Diarias</h3>
+                            <p class="text-sm text-text-secondary truncate">Identifique las obligaciones y destinatarios
+                                que requieren envío de correo hoy.</p>
+                        </div>
+                        <button id="btn-calculate-step1"
+                            class="shrink-0 px-6 py-3 bg-primary hover:bg-red-700 text-white font-bold rounded-lg shadow-lg shadow-red-500/20 transition-all flex items-center gap-2 text-sm uppercase tracking-wider">
+                            <span class="material-symbols-outlined text-xl">calculate</span>
+                            Calcular alertas de hoy
+                        </button>
+                    </div>
+                    <div id="step-1-table"
+                        class="bg-white rounded-xl border border-border-light shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b border-border-light">
+                                        <th class="p-4 w-12 text-center">
+                                            <input class="table-checkbox" type="checkbox" />
+                                        </th>
+                                        <th
+                                            class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider">
+                                            Obligación</th>
+                                        <th
+                                            class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider">
+                                            Área</th>
+                                        <th
+                                            class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider">
+                                            Destinatario</th>
+                                        <th
+                                            class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider text-center">
+                                            Tipo de Alerta</th>
+                                        <th
+                                            class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider text-right">
+                                            Fecha Límite</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="p-4 text-center">
+                                            <input checked="" class="table-checkbox" type="checkbox" />
+                                        </td>
+                                        <td class="p-4">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-semibold text-text-main">Declaración Jurada
+                                                    Anual</span>
+                                                <span class="text-xs text-text-secondary">OBL-2023-0102</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-sm text-text-secondary">Finanzas Corporativas</td>
+                                        <td class="p-4">
+                                            <div class="flex items-center gap-2 text-sm text-text-main">
+                                                <span
+                                                    class="material-symbols-outlined text-gray-400 text-base">person</span>
+                                                Juan Pérez
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <span
+                                                class="alert-badge bg-slate-100 text-slate-600 border border-slate-200">
+                                                1ra Alerta
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-sm font-medium text-text-main text-right">15/10/2023</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="p-4 text-center">
+                                            <input checked="" class="table-checkbox" type="checkbox" />
+                                        </td>
+                                        <td class="p-4">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-semibold text-text-main">Auditoría Interna
+                                                    Q3</span>
+                                                <span class="text-xs text-text-secondary">OBL-2023-0441</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-sm text-text-secondary">Compliance</td>
+                                        <td class="p-4">
+                                            <div class="flex items-center gap-2 text-sm text-text-main">
+                                                <span
+                                                    class="material-symbols-outlined text-gray-400 text-base">person</span>
+                                                María García
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <span
+                                                class="alert-badge bg-amber-100 text-amber-700 border border-amber-200">
+                                                2da Alerta
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-sm font-medium text-text-main text-right">12/10/2023</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="p-4 text-center">
+                                            <input checked="" class="table-checkbox" type="checkbox" />
+                                        </td>
+                                        <td class="p-4">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-semibold text-text-main">Renovación
+                                                    Certificación ISO</span>
+                                                <span class="text-xs text-text-secondary">OBL-2023-0988</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-sm text-text-secondary">Operaciones</td>
+                                        <td class="p-4">
+                                            <div class="flex items-center gap-2 text-sm text-text-main">
+                                                <span
+                                                    class="material-symbols-outlined text-gray-400 text-base">person</span>
+                                                Roberto Sánchez
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <span class="alert-badge bg-red-100 text-primary border border-red-200">
+                                                3ra Alerta
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-sm font-medium text-text-main text-right">10/10/2023</td>
+                                    </tr>
+                                    <tr class="bg-gray-50/60">
+                                        <td class="p-4 text-center">
+                                            <input class="table-checkbox opacity-50 cursor-not-allowed bg-gray-50"
+                                                disabled="" type="checkbox" />
+                                        </td>
+                                        <td class="p-4">
+                                            <div class="flex flex-col opacity-40">
+                                                <span class="text-sm font-semibold text-text-main">Reporte ESG
+                                                    Trimestral</span>
+                                                <span class="text-xs text-text-secondary">OBL-2023-1100</span>
+                                            </div>
+                                            <span
+                                                class="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gray-50 text-gray-400 uppercase tracking-tight border border-gray-200">
+                                                Fuera de ventana de envío
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-sm text-text-secondary opacity-40">Riesgos</td>
+                                        <td class="p-4 opacity-40">
+                                            <div class="flex items-center gap-2 text-sm text-text-main">
+                                                <span
+                                                    class="material-symbols-outlined text-gray-400 text-base">person</span>
+                                                Laura Martínez
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-center opacity-40">
+                                            <span
+                                                class="alert-badge bg-slate-100 text-slate-600 border border-slate-200">
+                                                1ra Alerta
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-sm font-medium text-text-main opacity-40 text-right">
+                                            18/10/2023</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="h-16"></div>
+                </div>
+        </main>
+        <!-- Paso 2: Selección -->
+        <div id="step-2" class="step-content">
+            <div class="bg-white rounded-xl border border-border-light shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-border-light">
+                                <th class="p-4 w-12 text-center">
+                                    <input class="table-checkbox" type="checkbox" id="select-all" />
+                                </th>
+                                <th class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider">
+                                    Obligación</th>
+                                <th class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider">Área
+                                </th>
+                                <th class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider">
+                                    Destinatario</th>
+                                <th
+                                    class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider text-center">
+                                    Tipo de Alerta</th>
+                                <th
+                                    class="p-4 text-[11px] font-bold text-text-secondary uppercase tracking-wider text-right">
+                                    Fecha Límite</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100" id="selection-table-body">
+                            <!-- Contenido dinámico desde paso 1 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paso 3: Vista Previa -->
+        <div id="step-3" class="step-content">
+            <div class="bg-white rounded-xl border border-border-light shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-border-light">
+                    <h3 class="text-xl font-bold text-text-main mb-2">Vista Previa de Correo</h3>
+                    <p class="text-sm text-text-secondary">Revise el contenido del correo antes de enviar</p>
+                </div>
+                <div class="p-8 bg-gray-50">
+                    <div class="grid grid-cols-[110px_1fr] gap-y-3 mb-6">
+                        <div class="flex items-center">
+                            <p class="text-text-secondary text-sm font-medium">Remitente</p>
+                        </div>
+                        <div class="flex items-center">
+                            <p class="text-text-main text-sm">alertia-noreply@alertia.com</p>
+                        </div>
+                        <div class="flex items-center">
+                            <p class="text-text-secondary text-sm font-medium">Destinatario</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <p class="text-text-main text-sm" id="preview-destinatario">juan.perez@example.com</p>
+                            <span
+                                class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-green-50 text-green-600 border border-green-200">VARIABLE
+                                OK</span>
+                        </div>
+                        <div class="flex items-center">
+                            <p class="text-text-secondary text-sm font-medium">Asunto</p>
+                        </div>
+                        <div class="flex items-center">
+                            <p class="text-text-main text-sm font-bold" id="preview-asunto">[URGENTE] Vencimiento
+                                OBL-2023-0045 - Declaración Jurada Anual</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-8 max-w-3xl mx-auto">
+                        <div class="mb-6 flex items-center gap-2">
+                            <div class="w-8 h-8 bg-primary rounded flex items-center justify-center text-white">
+                                <span class="material-symbols-outlined text-lg">notifications_active</span>
+                            </div>
+                            <span class="text-lg font-bold text-text-main">AlertIA</span>
+                        </div>
+                        <div class="space-y-4 text-text-main leading-relaxed text-sm" id="preview-body">
+                            <p class="font-bold text-base">Estimado <span class="text-primary" id="preview-nombre">Juan
+                                    Pérez</span>,</p>
+                            <p>Le informamos que la obligación normativa <strong id="preview-obligacion">Declaración
+                                    Jurada Anual</strong> tiene fecha límite el <strong id="preview-fecha">15 de Octubre
+                                    de 2023</strong>.</p>
+                            <p>Esta es una <span class="text-primary font-bold" id="preview-tipo-alerta">1ra
+                                    Alerta</span> y requiere su atención inmediata.</p>
+                            <div class="my-6 p-5 bg-gray-50 rounded border border-gray-200">
+                                <p class="text-xs font-bold text-text-secondary uppercase mb-2">Detalles de la
+                                    Obligación</p>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex justify-between">
+                                        <span class="text-gray-600">ID Obligación:</span>
+                                        <span class="font-mono font-medium" id="preview-id">OBL-2023-0045</span>
+                                    </li>
+                                    <li class="flex justify-between">
+                                        <span class="text-gray-600">Área Responsable:</span>
+                                        <span class="font-medium" id="preview-area">Finanzas Corporativas</span>
+                                    </li>
+                                    <li class="flex justify-between">
+                                        <span class="text-gray-600">Regulador:</span>
+                                        <span class="font-medium" id="preview-regulador">SAT</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <p>Por favor, tome las acciones necesarias para cumplir con esta obligación antes de la
+                                fecha límite indicada.</p>
+                            <div class="pt-6 border-t border-gray-200 mt-6">
+                                <p class="text-gray-500 text-sm">Saludos cordiales,<br />
+                                    <span class="font-bold text-text-main">Equipo de AlertIA</span>
+                                </p>
+                            </div>
+                            <div class="text-[11px] text-gray-400 mt-6">
+                                Este es un correo automático, por favor no responda a esta dirección.<br />
+                                AlertIA Systems.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 4: Confirmación Final -->
+            <div id="step-4" class="step-content">
+                <div class="bg-white rounded-xl border border-border-light shadow-sm overflow-hidden">
+                    <div class="p-8 flex flex-col items-center text-center">
+                        <div class="mb-5 text-primary">
+                            <span class="material-symbols-outlined !text-7xl"
+                                style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;">warning</span>
+                        </div>
+                        <h3 class="text-3xl font-extrabold text-text-main leading-tight mb-6 tracking-tight">
+                            Confirmación Final</h3>
+                        <div class="bg-gray-50 rounded-lg p-6 mb-8 w-full border-l-4 border-primary text-left">
+                            <p class="text-text-main text-lg font-medium leading-relaxed">
+                                Esta acción enviará <span class="text-primary font-black text-3xl mx-1"
+                                    id="confirm-count">124</span> correos y quedará registrada en el historial del
+                                sistema.
+                            </p>
+                            <p class="text-text-secondary text-sm mt-3 font-normal italic">
+                                El proceso de envío masivo es irreversible una vez iniciado.
+                            </p>
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <p class="text-xs text-text-secondary">
+                                    <strong>Usuario ejecutor:</strong> <span id="confirm-user">Admin
+                                        Usuario</span><br />
+                                    <strong>Timestamp:</strong> <span id="confirm-timestamp"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-4 w-full">
+                            <button id="btn-send-final"
+                                class="flex w-full items-center justify-center overflow-hidden rounded-lg h-14 bg-primary hover:bg-red-700 text-white text-lg font-bold transition-all active:scale-[0.98] shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="material-symbols-outlined mr-2">send</span>
+                                Enviar correos seleccionados
+                            </button>
+                            <button id="btn-cancel-final"
+                                class="flex w-full items-center justify-center h-auto bg-transparent text-gray-500 hover:text-gray-800 text-sm font-semibold hover:underline underline-offset-4 transition-colors p-2">
+                                Cancelar y volver al cálculo
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-8 py-4 flex items-center justify-center gap-2 border-t border-gray-100">
+                        <span class="material-symbols-outlined text-sm text-gray-600">lock</span>
+                        <span class="text-xs uppercase tracking-wider text-gray-600 font-bold">Autorización de Seguridad
+                            Requerida</span>
+                    </div>
+                </div>
+            </div>
+
+            <footer
+                class="h-16 bg-white border-t border-border-light flex items-center justify-between px-8 shrink-0 z-10 sticky bottom-0"
+                id="footer-step-1">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+                        <span class="material-symbols-outlined text-text-secondary text-lg">info</span>
+                        <p class="text-sm font-medium text-text-main">
+                            Se enviarían <span class="text-primary font-bold" id="count-step1">0</span> correos basados
+                            en la selección actual.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button id="btn-deselect-all"
+                        class="text-sm text-gray-500 hover:text-gray-900 font-medium hover:underline transition-colors">
+                        Deseleccionar todos
+                    </button>
+                    <button id="btn-next-step1"
+                        class="px-6 py-2.5 bg-primary hover:bg-red-700 text-white font-bold rounded-lg text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        Siguiente: Selección
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                    </button>
+                </div>
+            </footer>
+
+            <footer
+                class="h-16 bg-white border-t border-border-light flex items-center justify-between px-8 shrink-0 z-10 sticky bottom-0 hidden"
+                id="footer-step-2">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+                        <span class="material-symbols-outlined text-text-secondary text-lg">info</span>
+                        <p class="text-sm font-medium text-text-main">
+                            Se enviarían <span class="text-primary font-bold" id="count-step2">0</span> correos basados
+                            en la selección actual.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button id="btn-back-step2"
+                        class="text-sm text-gray-500 hover:text-gray-900 font-medium hover:underline transition-colors">
+                        ← Anterior
+                    </button>
+                    <button id="btn-next-step2"
+                        class="px-6 py-2.5 bg-primary hover:bg-red-700 text-white font-bold rounded-lg text-sm shadow-md transition-all flex items-center gap-2">
+                        Siguiente: Vista Previa
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                    </button>
+                </div>
+            </footer>
+
+            <footer
+                class="h-16 bg-white border-t border-border-light flex items-center justify-between px-8 shrink-0 z-10 sticky bottom-0 hidden"
+                id="footer-step-3">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg border border-green-200">
+                        <span class="material-symbols-outlined text-green-600 text-lg">check_circle</span>
+                        <p class="text-sm font-medium text-green-700">
+                            Vista previa generada correctamente
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button id="btn-back-step3"
+                        class="text-sm text-gray-500 hover:text-gray-900 font-medium hover:underline transition-colors">
+                        ← Anterior
+                    </button>
+                    <button id="btn-next-step3"
+                        class="px-6 py-2.5 bg-primary hover:bg-red-700 text-white font-bold rounded-lg text-sm shadow-md transition-all flex items-center gap-2">
+                        Siguiente: Confirmación
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                    </button>
+                </div>
+            </footer>
+
+            <footer
+                class="h-16 bg-white border-t border-border-light flex items-center justify-between px-8 shrink-0 z-10 sticky bottom-0 hidden"
+                id="footer-step-4">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+                        <span class="material-symbols-outlined text-text-secondary text-lg">lock</span>
+                        <p class="text-sm font-medium text-text-main">
+                            Listo para enviar
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button id="btn-back-step4"
+                        class="text-sm text-gray-500 hover:text-gray-900 font-medium hover:underline transition-colors">
+                        ← Anterior
+                    </button>
+                </div>
+            </footer>
+        </div>
+        <script>
+            // Estado del flujo
+            let currentStep = 1;
+            let isLocked = false;
+            let selectedEmails = [];
+
+            // Datos de ejemplo (en producción vendrían del backend)
+            const sampleData = [
+                { id: 'OBL-2023-0102', nombre: 'Declaración Jurada Anual', area: 'Finanzas Corporativas', destinatario: 'Juan Pérez', email: 'juan.perez@example.com', tipo: '1ra Alerta', fecha: '15/10/2023', regulador: 'SAT' },
+                { id: 'OBL-2023-0441', nombre: 'Auditoría Interna Q3', area: 'Compliance', destinatario: 'María García', email: 'maria.garcia@example.com', tipo: '2da Alerta', fecha: '12/10/2023', regulador: 'CNBV' },
+                { id: 'OBL-2023-0988', nombre: 'Renovación Certificación ISO', area: 'Operaciones', destinatario: 'Roberto Sánchez', email: 'roberto.sanchez@example.com', tipo: 'Crítica', fecha: '10/10/2023', regulador: 'ISO' }
+            ];
+
+            // Inicialización
+            document.addEventListener('DOMContentLoaded', function () {
+                updateStepIndicator();
+                setupEventListeners();
+                updateTimestamp();
+            });
+
+            function setupEventListeners() {
+                // Botón calcular (paso 1)
+                const btnCalculate = document.getElementById('btn-calculate-step1');
+                if (btnCalculate) {
+                    btnCalculate.addEventListener('click', calculateAlerts);
+                }
+
+                // Botón siguiente paso 1
+                const btnNext1 = document.getElementById('btn-next-step1');
+                if (btnNext1) {
+                    btnNext1.addEventListener('click', () => goToStep(2));
+                }
+
+                // Botón deseleccionar todos
+                const btnDeselect = document.getElementById('btn-deselect-all');
+                if (btnDeselect) {
+                    btnDeselect.addEventListener('click', deselectAll);
+                }
+
+                // Botones navegación paso 2
+                const btnBack2 = document.getElementById('btn-back-step2');
+                const btnNext2 = document.getElementById('btn-next-step2');
+                if (btnBack2) btnBack2.addEventListener('click', () => goToStep(1));
+                if (btnNext2) btnNext2.addEventListener('click', () => goToStep(3));
+
+                // Botones navegación paso 3
+                const btnBack3 = document.getElementById('btn-back-step3');
+                const btnNext3 = document.getElementById('btn-next-step3');
+                if (btnBack3) btnBack3.addEventListener('click', () => goToStep(2));
+                if (btnNext3) btnNext3.addEventListener('click', () => goToStep(4));
+
+                // Botones paso 4
+                const btnBack4 = document.getElementById('btn-back-step4');
+                const btnSendFinal = document.getElementById('btn-send-final');
+                const btnCancelFinal = document.getElementById('btn-cancel-final');
+                if (btnBack4) btnBack4.addEventListener('click', () => goToStep(3));
+                if (btnSendFinal) btnSendFinal.addEventListener('click', sendEmails);
+                if (btnCancelFinal) btnCancelFinal.addEventListener('click', () => goToStep(1));
+
+                // Select all checkbox
+                const selectAll = document.getElementById('select-all');
+                if (selectAll) {
+                    selectAll.addEventListener('change', function () {
+                        const checkboxes = document.querySelectorAll('#selection-table-body input[type="checkbox"]');
+                        checkboxes.forEach(cb => cb.checked = this.checked);
+                        updateCount();
+                    });
+                }
+            }
+
+            function calculateAlerts() {
+                const tableBody = document.querySelector('#step-1-table tbody');
+                if (!tableBody) return;
+
+                tableBody.innerHTML = '';
+                sampleData.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors';
+                    row.innerHTML = `
+            <td class="p-4 text-center">
+                <input class="table-checkbox" type="checkbox" data-index="${index}" checked/>
+            </td>
+            <td class="p-4">
+                <div class="flex flex-col">
+                    <span class="text-sm font-semibold text-text-main">${item.nombre}</span>
+                    <span class="text-xs text-text-secondary">${item.id}</span>
+                </div>
+            </td>
+            <td class="p-4 text-sm text-text-secondary">${item.area}</td>
+            <td class="p-4">
+                <div class="flex items-center gap-2 text-sm text-text-main">
+                    <span class="material-symbols-outlined text-gray-400 text-base">person</span>
+                    ${item.destinatario}
+                </div>
+            </td>
+            <td class="p-4 text-center">
+                <span class="alert-badge ${getBadgeClass(item.tipo)}">${item.tipo}</span>
+            </td>
+            <td class="p-4 text-sm font-medium text-text-main text-right">${item.fecha}</td>
+        `;
+                    tableBody.appendChild(row);
+                });
+
+                document.querySelectorAll('#step-1-table input[type="checkbox"]').forEach(cb => {
+                    cb.addEventListener('change', updateCount);
+                });
+
+                updateCount();
+                const btnNext = document.getElementById('btn-next-step1');
+                if (btnNext) btnNext.disabled = false;
+            }
+
+            function getBadgeClass(tipo) {
+                if (tipo === '1ra Alerta') return 'bg-slate-100 text-slate-600 border border-slate-200';
+                if (tipo === '2da Alerta') return 'bg-amber-100 text-amber-700 border border-amber-200';
+                if (tipo === 'Crítica') return 'bg-red-100 text-primary border border-red-200';
+                return 'bg-slate-100 text-slate-600 border border-slate-200';
+            }
+
+            function updateCount() {
+                const checkboxes = document.querySelectorAll('#step-1-table input[type="checkbox"]:checked');
+                const count = checkboxes.length;
+                const count1 = document.getElementById('count-step1');
+                const count2 = document.getElementById('count-step2');
+                const confirmCount = document.getElementById('confirm-count');
+                if (count1) count1.textContent = count;
+                if (count2) count2.textContent = count;
+                if (confirmCount) confirmCount.textContent = count;
+            }
+
+            function deselectAll() {
+                document.querySelectorAll('#step-1-table input[type="checkbox"]').forEach(cb => cb.checked = false);
+                updateCount();
+            }
+
+            function goToStep(step) {
+                if (isLocked && step === 4) return;
+
+                document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('footer[id^="footer-step"]').forEach(el => el.classList.add('hidden'));
+
+                const stepEl = document.getElementById(`step-${step}`);
+                const footerEl = document.getElementById(`footer-step-${step}`);
+                if (stepEl) stepEl.classList.add('active');
+                if (footerEl) footerEl.classList.remove('hidden');
+
+                currentStep = step;
+                updateStepIndicator();
+
+                if (step === 2) {
+                    populateSelectionTable();
+                } else if (step === 3) {
+                    populatePreview();
+                } else if (step === 4) {
+                    updateConfirmation();
+                }
+            }
+
+            function updateStepIndicator() {
+                for (let i = 1; i <= 4; i++) {
+                    const indicator = document.querySelector(`.step-indicator[data-step="${i}"]`);
+                    if (indicator) {
+                        indicator.classList.remove('active', 'completed', 'pending');
+                        if (i < currentStep) {
+                            indicator.classList.add('completed');
+                        } else if (i === currentStep) {
+                            indicator.classList.add('active');
+                        } else {
+                            indicator.classList.add('pending');
+                        }
+                    }
+                }
+
+                const progress = ((currentStep - 1) / 3) * 100;
+                document.querySelectorAll('.step-indicator + .flex-1 .h-full').forEach((bar, index) => {
+                    if (index < currentStep - 1) {
+                        bar.style.width = '100%';
+                        bar.classList.remove('bg-gray-200');
+                        bar.classList.add('bg-primary');
+                    } else {
+                        bar.style.width = '0%';
+                    }
+                });
+
+                const labels = {
+                    1: { title: 'Cálculo de Alertas Diarias', desc: 'Identifique las obligaciones y destinatarios que requieren envío de correo hoy.', step: 'Paso 1: Cálculo' },
+                    2: { title: 'Selección de Correos', desc: 'Seleccione los correos que desea enviar.', step: 'Paso 2: Selección' },
+                    3: { title: 'Vista Previa', desc: 'Revise el contenido del correo antes de enviar.', step: 'Paso 3: Vista Previa' },
+                    4: { title: 'Confirmación Final', desc: 'Confirme el envío de los correos seleccionados.', step: 'Paso 4: Confirmación' }
+                };
+
+                const label = labels[currentStep];
+                if (label) {
+                    const titleEl = document.getElementById('step-title');
+                    const descEl = document.getElementById('step-description');
+                    const stepLabelEl = document.getElementById('step-label');
+                    if (titleEl) titleEl.textContent = label.title;
+                    if (descEl) descEl.textContent = label.desc;
+                    if (stepLabelEl) stepLabelEl.textContent = label.step;
+                }
+            }
+
+            function populateSelectionTable() {
+                const tableBody = document.getElementById('selection-table-body');
+                if (!tableBody) return;
+
+                const checkedBoxes = document.querySelectorAll('#step-1-table input[type="checkbox"]:checked');
+                tableBody.innerHTML = '';
+
+                checkedBoxes.forEach((cb) => {
+                    const dataIndex = parseInt(cb.dataset.index);
+                    const item = sampleData[dataIndex];
+                    if (!item) return;
+
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors';
+                    row.innerHTML = `
+            <td class="p-4 text-center">
+                <input class="table-checkbox" type="checkbox" data-index="${dataIndex}" checked/>
+            </td>
+            <td class="p-4">
+                <div class="flex flex-col">
+                    <span class="text-sm font-semibold text-text-main">${item.nombre}</span>
+                    <span class="text-xs text-text-secondary">${item.id}</span>
+                </div>
+            </td>
+            <td class="p-4 text-sm text-text-secondary">${item.area}</td>
+            <td class="p-4">
+                <div class="flex items-center gap-2 text-sm text-text-main">
+                    <span class="material-symbols-outlined text-gray-400 text-base">person</span>
+                    ${item.destinatario}
+                </div>
+            </td>
+            <td class="p-4 text-center">
+                <span class="alert-badge ${getBadgeClass(item.tipo)}">${item.tipo}</span>
+            </td>
+            <td class="p-4 text-sm font-medium text-text-main text-right">${item.fecha}</td>
+        `;
+                    tableBody.appendChild(row);
+                });
+
+                document.querySelectorAll('#selection-table-body input[type="checkbox"]').forEach(cb => {
+                    cb.addEventListener('change', function () {
+                        updateCount();
+                    });
+                });
+            }
+
+            function populatePreview() {
+                const checkedBoxes = document.querySelectorAll('#step-1-table input[type="checkbox"]:checked');
+                if (checkedBoxes.length === 0) return;
+
+                const firstIndex = parseInt(checkedBoxes[0].dataset.index);
+                const item = sampleData[firstIndex];
+                if (!item) return;
+
+                const previewDest = document.getElementById('preview-destinatario');
+                const previewAsunto = document.getElementById('preview-asunto');
+                const previewNombre = document.getElementById('preview-nombre');
+                const previewObligacion = document.getElementById('preview-obligacion');
+                const previewFecha = document.getElementById('preview-fecha');
+                const previewTipo = document.getElementById('preview-tipo-alerta');
+                const previewId = document.getElementById('preview-id');
+                const previewArea = document.getElementById('preview-area');
+                const previewRegulador = document.getElementById('preview-regulador');
+
+                if (previewDest) previewDest.textContent = item.email;
+                if (previewAsunto) previewAsunto.textContent = `[${item.tipo === 'Crítica' ? 'URGENTE' : 'ALERTA'}] Vencimiento ${item.id} - ${item.nombre}`;
+                if (previewNombre) previewNombre.textContent = item.destinatario;
+                if (previewObligacion) previewObligacion.textContent = item.nombre;
+                if (previewFecha) previewFecha.textContent = item.fecha;
+                if (previewTipo) previewTipo.textContent = item.tipo;
+                if (previewId) previewId.textContent = item.id;
+                if (previewArea) previewArea.textContent = item.area;
+                if (previewRegulador) previewRegulador.textContent = item.regulador;
+            }
+
+            function updateConfirmation() {
+                const checkedBoxes = document.querySelectorAll('#step-1-table input[type="checkbox"]:checked');
+                const count = checkedBoxes.length;
+                const confirmCount = document.getElementById('confirm-count');
+                const confirmUser = document.getElementById('confirm-user');
+                if (confirmCount) confirmCount.textContent = count;
+                if (confirmUser) confirmUser.textContent = 'Admin Usuario';
+                updateTimestamp();
+            }
+
+            function updateTimestamp() {
+                const now = new Date();
+                const timestamp = now.toLocaleString('es-ES', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const timestampEl = document.getElementById('confirm-timestamp');
+                if (timestampEl) timestampEl.textContent = timestamp;
+            }
+
+            function sendEmails() {
+                if (isLocked) {
+                    alert('El envío ya está en proceso. Por favor espere.');
+                    return;
+                }
+
+                isLocked = true;
+                const btnSend = document.getElementById('btn-send-final');
+                if (btnSend) {
+                    btnSend.disabled = true;
+                    btnSend.innerHTML = '<span class="material-symbols-outlined mr-2 animate-spin">sync</span>Enviando...';
+                }
+
+                setTimeout(() => {
+                    alert('Envío completado exitosamente. Los correos han sido registrados en el historial.');
+                    window.location.href = 'Historial.html';
+                }, 2000);
+            }
+        </script>
+        <!-- Cargar scripts de la aplicación -->
+        <script src="js/app-init.js"></script>
+        <script src="js/controllers/envio-correos-controller.js"></script>
+</body>
+
+</html>

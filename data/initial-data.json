@@ -1,0 +1,181 @@
+{
+  "obligaciones": [
+    {
+      "id": "OBL-2023-0045",
+      "regulador": "CNBV",
+      "descripcion": "Presentación Informe Trimestral de Auditoría Externa de Riesgos Financieros",
+      "nombre": "Informe Trimestral de Auditoría Externa",
+      "responsable": "J. Martínez",
+      "area": "Cumplimiento",
+      "fecha_limite": "2023-10-25",
+      "periodicidad": "Mensual",
+      "estado": "activa",
+      "reglas_alertamiento": {
+        "alerta1": 30,
+        "alerta2": 10,
+        "critica": 5
+      },
+      "created_at": "2023-01-15T00:00:00Z",
+      "updated_at": "2023-10-20T00:00:00Z"
+    },
+    {
+      "id": "OBL-2023-0082",
+      "regulador": "CNBV",
+      "descripcion": "Renovación de Póliza de Ciberseguridad - Sector Infraestructura IT",
+      "nombre": "Renovación Póliza Ciberseguridad",
+      "responsable": "S. Rivas",
+      "area": "Seguridad",
+      "fecha_limite": "2023-10-27",
+      "periodicidad": "Anual",
+      "estado": "activa",
+      "reglas_alertamiento": {
+        "alerta1": 30,
+        "alerta2": 10,
+        "critica": 5
+      },
+      "created_at": "2023-01-20T00:00:00Z",
+      "updated_at": "2023-10-20T00:00:00Z"
+    },
+    {
+      "id": "OBL-2023-0112",
+      "regulador": "CNBV",
+      "descripcion": "Actualización de Protocolos de Emergencia - Sucursales Zona Norte",
+      "nombre": "Actualización Protocolos Emergencia",
+      "responsable": "L. Ortega",
+      "area": "Operaciones",
+      "fecha_limite": "2023-11-05",
+      "periodicidad": "Trimestral",
+      "estado": "activa",
+      "reglas_alertamiento": {
+        "alerta1": 30,
+        "alerta2": 10,
+        "critica": 5
+      },
+      "created_at": "2023-02-10T00:00:00Z",
+      "updated_at": "2023-10-20T00:00:00Z"
+    },
+    {
+      "id": "OBL-2023-0125",
+      "regulador": "SAT",
+      "descripcion": "Certificación Anual de Proveedores de Servicios Críticos",
+      "nombre": "Certificación Proveedores Críticos",
+      "responsable": "P. Gómez",
+      "area": "Compras",
+      "fecha_limite": "2023-11-07",
+      "periodicidad": "Anual",
+      "estado": "activa",
+      "reglas_alertamiento": {
+        "alerta1": 30,
+        "alerta2": 10,
+        "critica": 5
+      },
+      "created_at": "2023-02-15T00:00:00Z",
+      "updated_at": "2023-10-20T00:00:00Z"
+    },
+    {
+      "id": "OBL-2023-0102",
+      "regulador": "SAT",
+      "descripcion": "Declaración Jurada Anual",
+      "nombre": "Declaración Jurada Anual",
+      "responsable": "Juan Pérez",
+      "area": "Finanzas Corporativas",
+      "fecha_limite": "2023-10-15",
+      "periodicidad": "Anual",
+      "estado": "activa",
+      "reglas_alertamiento": {
+        "alerta1": 30,
+        "alerta2": 10,
+        "critica": 5
+      },
+      "created_at": "2023-01-10T00:00:00Z",
+      "updated_at": "2023-10-20T00:00:00Z"
+    },
+    {
+      "id": "OBL-2023-0441",
+      "regulador": "CNBV",
+      "descripcion": "Auditoría Interna Q3",
+      "nombre": "Auditoría Interna Q3",
+      "responsable": "María García",
+      "area": "Compliance",
+      "fecha_limite": "2023-10-12",
+      "periodicidad": "Trimestral",
+      "estado": "activa",
+      "reglas_alertamiento": {
+        "alerta1": 30,
+        "alerta2": 10,
+        "critica": 5
+      },
+      "created_at": "2023-07-01T00:00:00Z",
+      "updated_at": "2023-10-20T00:00:00Z"
+    },
+    {
+      "id": "OBL-2023-0988",
+      "regulador": "ISO",
+      "descripcion": "Renovación Certificación ISO",
+      "nombre": "Renovación Certificación ISO",
+      "responsable": "Roberto Sánchez",
+      "area": "Operaciones",
+      "fecha_limite": "2023-10-10",
+      "periodicidad": "Anual",
+      "estado": "activa",
+      "reglas_alertamiento": {
+        "alerta1": 30,
+        "alerta2": 10,
+        "critica": 5
+      },
+      "created_at": "2023-01-05T00:00:00Z",
+      "updated_at": "2023-10-20T00:00:00Z"
+    },
+    {
+      "id": "OBL-2023-0015",
+      "regulador": "SHCP",
+      "descripcion": "Reporte preventivo de operaciones inusuales 4.1.2",
+      "nombre": "Reporte Operaciones Inusuales",
+      "responsable": "J. Martínez",
+      "area": "Cumplimiento",
+      "fecha_limite": "2023-10-25",
+      "periodicidad": "Mensual",
+      "estado": "pausada",
+      "reglas_alertamiento": {
+        "alerta1": 30,
+        "alerta2": 10,
+        "critica": 5
+      },
+      "created_at": "2023-01-15T00:00:00Z",
+      "updated_at": "2023-10-18T00:00:00Z"
+    },
+    {
+      "id": "OBL-2023-0001",
+      "regulador": "CNBV",
+      "descripcion": "Vencimiento Próxima Obligación Tributaria",
+      "nombre": "Obligación Tributaria",
+      "responsable": "Carlos Rodríguez",
+      "area": "Impuestos",
+      "fecha_limite": "2023-10-15",
+      "periodicidad": "Mensual",
+      "estado": "atendida",
+      "reglas_alertamiento": {
+        "alerta1": 30,
+        "alerta2": 10,
+        "critica": 5
+      },
+      "created_at": "2023-01-01T00:00:00Z",
+      "updated_at": "2023-10-10T00:00:00Z"
+    }
+  ],
+  "configuracion": {
+    "remitente": "alertia-noreply@alertia.com",
+    "nombre_remitente": "AlertIA - Centro de Alertas",
+    "cc_global": [
+      "admin-monitor@empresa.com",
+      "auditoria@empresa.com"
+    ]
+  },
+  "usuarios": {
+    "current": {
+      "nombre": "Admin Usuario",
+      "email": "admin@alertia.com",
+      "rol": "Administrador"
+    }
+  }
+}

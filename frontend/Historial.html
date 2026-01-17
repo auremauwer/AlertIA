@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AlertIA</title>
+    <link rel="icon" type="image/x-icon" href="Alertia.ico" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec0000",
+                        "accent-black": "#1a1a1a",
+                        "surface-light": "#1a1a1a",
+                        "background-base": "#ffffff",
+                        "border-subtle": "#2a2a2a",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-background-base text-accent-black font-display;
+            }
+        }
+    </style>
+    <style>
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="h-screen overflow-hidden flex selection:bg-primary selection:text-accent-black">
+    <aside class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display">
+        <div class="flex h-full flex-col justify-between">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-3 px-6 py-8">
+                    <div class="flex items-center justify-center size-9">
+                        <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-xl font-extrabold tracking-tighter leading-none">
+                            <span class="text-black">Alert</span><span class="text-primary">IA</span>
+                        </h1>
+                    </div>
+                </div>
+                <nav class="flex flex-col px-3">
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Dashboard.html">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-semibold">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Obligaciones.html">
+                        <span class="material-symbols-outlined text-[20px]">assignment</span>
+                        <span class="text-sm font-semibold">Obligaciones</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Correos.html">
+                        <span class="material-symbols-outlined text-[20px]">mail</span>
+                        <span class="text-sm font-semibold">Envío de correos</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 bg-gray-100 text-primary border-r-[6px] border-primary transition-all mb-1"
+                        href="Historial.html">
+                        <span class="material-symbols-outlined text-[20px] filled">history</span>
+                        <span class="text-sm font-semibold">Historial de envíos</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Configuración.html">
+                        <span class="material-symbols-outlined text-[20px]">settings</span>
+                        <span class="text-sm font-semibold">Configuración</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Auditoria.html">
+                        <span class="material-symbols-outlined text-[20px]">list_alt</span>
+                        <span class="text-sm font-semibold">Auditoría / Logs</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="flex flex-col gap-2 border-t border-gray-200 p-6">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
+                        <span class="material-symbols-outlined text-gray-500 text-lg">person</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-black">Analista Riesgos</span>
+                        <span class="text-[10px] text-gray-500">Lectura Exclusiva</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <header
+            class="w-full h-16 border-b border-border-subtle bg-white flex items-center justify-between px-8 flex-shrink-0 z-10">
+            <div class="flex items-center gap-5">
+                <h2 class="text-lg font-extrabold text-accent-black">Historial de envíos</h2>
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 border border-green-100">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span class="text-[11px] font-bold text-green-700 uppercase tracking-tight">Sincronización
+                        activa</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-600">
+                        <span class="material-symbols-outlined text-[20px]">search</span>
+                    </span>
+                    <input
+                        class="pl-10 pr-4 py-2 bg-gray-50 border-border-subtle rounded-xl text-sm focus:ring-primary focus:border-primary border w-64"
+                        placeholder="Buscar en historial..." type="text" />
+                </div>
+                <button
+                    class="flex items-center justify-center h-10 w-10 rounded-full bg-white border border-border-subtle hover:bg-gray-50 transition-colors text-accent-black shadow-sm">
+                    <span class="material-symbols-outlined text-[20px]">refresh</span>
+                </button>
+            </div>
+        </header>
+        <div class="flex-1 overflow-y-auto p-8 bg-white">
+            <div class="max-w-[1400px] mx-auto flex flex-col gap-8">
+                <div
+                    class="flex justify-between items-center bg-white p-4 rounded-2xl border border-border-subtle shadow-sm mb-2">
+                    <div class="flex gap-2">
+                        <button
+                            class="px-4 py-2 rounded-lg text-xs font-bold bg-accent-black text-accent-black shadow-sm">Todos</button>
+                        <button
+                            class="px-4 py-2 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-accent-black transition-all border border-transparent">Exitosos</button>
+                        <button
+                            class="px-4 py-2 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-accent-black transition-all border border-transparent">Fallidos</button>
+                    </div>
+                    <div class="flex gap-3">
+                        <button
+                            class="flex items-center gap-2 px-5 py-2 bg-white border-2 border-gray-200 rounded-xl text-sm font-bold hover:border-gray-300 hover:bg-gray-50 transition-colors text-accent-black shadow-sm group">
+                            <span
+                                class="material-symbols-outlined text-[20px] text-gray-600 group-hover:text-accent-black transition-colors">filter_list</span>
+                            <span>Filtros Avanzados</span>
+                        </button>
+                        <button
+                            class="flex items-center gap-2 px-5 py-2 bg-primary text-accent-black rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg">
+                            <span class="material-symbols-outlined text-[20px]">download</span>
+                            <span>Exportar Listado</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="rounded-2xl bg-white border border-border-subtle shadow-sm overflow-hidden flex flex-col">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead
+                                class="text-[10px] text-gray-600 uppercase tracking-widest font-extrabold bg-gray-50/50 border-b border-border-subtle">
+                                <tr>
+                                    <th class="px-6 py-5" scope="col">Fecha (Timestamp)</th>
+                                    <th class="px-6 py-5" scope="col">Obligación</th>
+                                    <th class="px-6 py-5" scope="col">Destinatario</th>
+                                    <th class="px-6 py-5" scope="col">Tipo de alerta</th>
+                                    <th class="px-6 py-5" scope="col">Asunto</th>
+                                    <th class="px-6 py-5" scope="col">Estado</th>
+                                    <th class="px-6 py-5" scope="col">Usuario que ejecutó</th>
+                                    <th class="px-6 py-5 text-center" scope="col">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border-subtle">
+                                <tr class="bg-white hover:bg-gray-50/80 transition-colors">
+                                    <td class="px-6 py-5 whitespace-nowrap font-bold text-accent-black">25 Oct 2023,
+                                        09:15</td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <span
+                                            class="px-2.5 py-1 bg-gray-50 text-gray-700 text-[11px] font-bold rounded border border-gray-200">OBL-2023-0001</span>
+                                    </td>
+                                    <td class="px-6 py-5">
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-accent-black font-bold">carlos.rodriguez@example.com</span>
+                                            <span class="text-[10px] text-gray-600 font-bold uppercase">Persona
+                                                Jurídica</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 font-semibold text-gray-600">1ra Alerta</td>
+                                    <td
+                                        class="px-6 py-5 font-semibold text-gray-600 max-w-xs line-clamp-2 text-ellipsis overflow-hidden">
+                                        Vencimiento Próxima Obligación Tributaria</td>
+                                    <td class="px-6 py-5">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-green-50 text-green-700 border border-green-100">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                                            Enviado
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="h-6 w-6 rounded-full bg-gray-50 flex items-center justify-center text-[10px] font-bold">
+                                                AM</div>
+                                            <span class="text-gray-700 font-medium">Ana Martínez</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 text-center">
+                                        <button
+                                            class="px-4 py-1.5 rounded-lg border border-border-subtle text-xs font-bold text-accent-black hover:bg-gray-50 transition-colors">Ver
+                                            Detalle</button>
+                                    </td>
+                                </tr>
+                                <tr class="bg-white hover:bg-gray-50/80 transition-colors">
+                                    <td class="px-6 py-5 whitespace-nowrap font-bold text-accent-black">25 Oct 2023,
+                                        08:42</td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <span
+                                            class="px-2.5 py-1 bg-gray-50 text-gray-700 text-[11px] font-bold rounded border border-gray-200">OBL-2023-0042</span>
+                                    </td>
+                                    <td class="px-6 py-5">
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-accent-black font-bold">marta.garcia@corporation.net</span>
+                                            <span class="text-[10px] text-gray-600 font-bold uppercase">Gerencia
+                                                Riesgos</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 font-semibold text-gray-600">2da Alerta</td>
+                                    <td
+                                        class="px-6 py-5 font-semibold text-gray-600 max-w-xs line-clamp-2 text-ellipsis overflow-hidden">
+                                        Actualización de Documentación Trimestral para Cumplimiento Normativo</td>
+                                    <td class="px-6 py-5">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-red-50 text-primary border border-red-100">
+                                            <span class="material-symbols-outlined text-[12px]">error</span>
+                                            Fallido
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="h-6 w-6 rounded-full bg-gray-50 flex items-center justify-center text-[10px] font-bold">
+                                                JD</div>
+                                            <span class="text-gray-700 font-medium">John Doe</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 text-center">
+                                        <button
+                                            class="px-4 py-1.5 rounded-lg border border-border-subtle text-xs font-bold text-accent-black hover:bg-gray-50 transition-colors">Ver
+                                            Detalle</button>
+                                    </td>
+                                </tr>
+                                <tr class="bg-white hover:bg-gray-50/80 transition-colors">
+                                    <td class="px-6 py-5 whitespace-nowrap font-bold text-accent-black">24 Oct 2023,
+                                        17:55</td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <span
+                                            class="px-2.5 py-1 bg-gray-50 text-gray-700 text-[11px] font-bold rounded border border-gray-200">OBL-2023-0109</span>
+                                    </td>
+                                    <td class="px-6 py-5">
+                                        <div class="flex flex-col">
+                                            <span class="text-accent-black font-bold">it.support@external.com</span>
+                                            <span class="text-[10px] text-gray-600 font-bold uppercase">Proveedor
+                                                IT</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 font-semibold text-gray-600">Crítica</td>
+                                    <td
+                                        class="px-6 py-5 font-semibold text-gray-600 max-w-xs line-clamp-2 text-ellipsis overflow-hidden">
+                                        Alerta de Seguridad: Acceso no autorizado detectado en servidores centrales</td>
+                                    <td class="px-6 py-5">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-green-50 text-green-700 border border-green-100">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                                            Enviado
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="h-6 w-6 rounded-full bg-gray-50 flex items-center justify-center text-[10px] font-bold">
+                                                CR</div>
+                                            <span class="text-gray-700 font-medium">Carlos Ruiz</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 text-center">
+                                        <button
+                                            class="px-4 py-1.5 rounded-lg border border-border-subtle text-xs font-bold text-accent-black hover:bg-gray-50 transition-colors">Ver
+                                            Detalle</button>
+                                    </td>
+                                </tr>
+                                <tr class="bg-white hover:bg-gray-50/80 transition-colors">
+                                    <td class="px-6 py-5 whitespace-nowrap font-bold text-accent-black">24 Oct 2023,
+                                        14:10</td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <span
+                                            class="px-2.5 py-1 bg-gray-50 text-gray-700 text-[11px] font-bold rounded border border-gray-200">OBL-2023-0015</span>
+                                    </td>
+                                    <td class="px-6 py-5">
+                                        <div class="flex flex-col">
+                                            <span class="text-accent-black font-bold">finance@global_solutions.es</span>
+                                            <span class="text-[10px] text-gray-600 font-bold uppercase">Departamento
+                                                Finanzas</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 font-semibold text-gray-600">1ra Alerta</td>
+                                    <td
+                                        class="px-6 py-5 font-semibold text-gray-600 max-w-xs line-clamp-2 text-ellipsis overflow-hidden">
+                                        Notificación Cambio de Políticas de Envío y Facturación Electrónica</td>
+                                    <td class="px-6 py-5">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-green-50 text-green-700 border border-green-100">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                                            Enviado
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="h-6 w-6 rounded-full bg-gray-50 flex items-center justify-center text-[10px] font-bold">
+                                                SM</div>
+                                            <span class="text-gray-700 font-medium">Sandra Murillo</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 text-center">
+                                        <button
+                                            class="px-4 py-1.5 rounded-lg border border-border-subtle text-xs font-bold text-accent-black hover:bg-gray-50 transition-colors">Ver
+                                            Detalle</button>
+                                    </td>
+                                </tr>
+                                <tr class="bg-white hover:bg-gray-50/80 transition-colors">
+                                    <td class="px-6 py-5 whitespace-nowrap font-bold text-accent-black">24 Oct 2023,
+                                        10:02</td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <span
+                                            class="px-2.5 py-1 bg-gray-50 text-gray-700 text-[11px] font-bold rounded border border-gray-200">OBL-2023-0088</span>
+                                    </td>
+                                    <td class="px-6 py-5">
+                                        <div class="flex flex-col">
+                                            <span class="text-accent-black font-bold">juan.p@innova.com</span>
+                                            <span class="text-[10px] text-gray-600 font-bold uppercase">Legal</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 font-semibold text-gray-600">Crítica</td>
+                                    <td
+                                        class="px-6 py-5 font-semibold text-gray-600 max-w-xs line-clamp-2 text-ellipsis overflow-hidden">
+                                        Cierre de Proceso de Auditoría 2022</td>
+                                    <td class="px-6 py-5">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-red-50 text-primary border border-red-100">
+                                            <span class="material-symbols-outlined text-[12px]">error</span>
+                                            Fallido
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="h-6 w-6 rounded-full bg-gray-50 flex items-center justify-center text-[10px] font-bold">
+                                                JD</div>
+                                            <span class="text-gray-700 font-medium">John Doe</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 text-center">
+                                        <button
+                                            class="px-4 py-1.5 rounded-lg border border-border-subtle text-xs font-bold text-accent-black hover:bg-gray-50 transition-colors">Ver
+                                            Detalle</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-8 py-5 border-t border-border-subtle flex items-center justify-between bg-white">
+                        <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">Mostrando <span
+                                class="text-accent-black">1 - 5</span> de 2,430 registros</span>
+                        <div class="flex items-center gap-4">
+                            <div class="flex gap-1">
+                                <button
+                                    class="h-8 w-8 flex items-center justify-center rounded-lg bg-accent-black text-accent-black text-xs font-bold shadow-sm">1</button>
+                                <button
+                                    class="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-gray-50 text-gray-500 text-xs font-bold transition-colors">2</button>
+                                <button
+                                    class="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-gray-50 text-gray-500 text-xs font-bold transition-colors">3</button>
+                                <span class="h-8 w-8 flex items-center justify-center text-gray-600">...</span>
+                                <button
+                                    class="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-gray-50 text-gray-500 text-xs font-bold transition-colors">48</button>
+                            </div>
+                            <div class="flex gap-2">
+                                <button
+                                    class="flex items-center gap-1 px-3 py-2 rounded-lg bg-white border border-gray-300 text-accent-black text-xs font-bold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                                    disabled="">
+                                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                                    Anterior
+                                </button>
+                                <button
+                                    class="flex items-center gap-1 px-3 py-2 rounded-lg bg-white border border-gray-300 text-accent-black text-xs font-bold hover:bg-gray-50 transition-colors shadow-sm">
+                                    Siguiente
+                                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-4">
+                    <div
+                        class="bg-white p-4 rounded-2xl border border-border-subtle shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                        <div class="p-3 bg-green-50 rounded-xl text-green-600">
+                            <span class="material-symbols-outlined">check_circle</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">Tasa de Éxito Mensual</p>
+                            <p class="text-2xl font-extrabold text-accent-black">98.4%</p>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white p-4 rounded-2xl border border-border-subtle shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                        <div class="p-3 bg-red-50 rounded-xl text-primary">
+                            <span class="material-symbols-outlined">error</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">Alertas Fallidas Hoy</p>
+                            <p class="text-2xl font-extrabold text-primary">12</p>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white p-4 rounded-2xl border border-border-subtle shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                        <div class="p-3 bg-gray-50 rounded-xl text-accent-black">
+                            <span class="material-symbols-outlined">mail_lock</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">En Colas de Envío</p>
+                            <p class="text-2xl font-extrabold text-accent-black">345</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Cargar scripts de la aplicación -->
+    <script src="js/app-init.js"></script>
+    <script src="js/controllers/historial-controller.js"></script>
+</body>
+
+</html>

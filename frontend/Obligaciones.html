@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AlertIA</title>
+    <link rel="icon" type="image/x-icon" href="Alertia.ico" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec0000",
+                        "background": "#ffffff",
+                        "surface": "#ffffff",
+                        "border-subtle": "#e5e7eb",
+                        "text-main": "#000000",
+                        "text-muted": "#6b7280",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffffff; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db; 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #000000; 
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            border-left: 4px solid #ec0000;
+            background-color: #fef2f2;
+            color: #ec0000;
+        }.status-pill {
+            @apply inline-flex items-center justify-center w-28 h-7 text-[10px] font-bold uppercase tracking-wider border rounded-md;
+        }
+        .status-pendiente { @apply bg-amber-50 text-amber-700 border-amber-200; }
+        .status-ventana { @apply bg-red-50 text-red-700 border-red-200; }
+        .status-pausada { @apply bg-gray-50 text-gray-600 border-gray-200; }
+        .status-atendida { @apply bg-green-50 text-green-700 border-green-200; }.filter-chip {
+            @apply px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-colors flex items-center gap-1.5;
+        }
+        .filter-chip.active {
+            @apply bg-gray-100 border-gray-300 text-gray-900;
+        }
+        .filter-count {
+            @apply bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold group-hover:bg-white;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-text-main font-display flex flex-col h-screen overflow-hidden">
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display">
+            <div class="flex h-full flex-col justify-between">
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-3 px-6 py-8">
+                        <div class="flex items-center justify-center size-9">
+                            <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
+                        </div>
+                        <div class="flex flex-col">
+                            <h1 class="text-xl font-extrabold tracking-tighter leading-none">
+                                <span class="text-black">Alert</span><span class="text-primary">IA</span>
+                            </h1>
+                        </div>
+                    </div>
+                    <nav class="flex flex-col px-3">
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Dashboard.html">
+                            <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                            <span class="text-sm font-semibold">Dashboard</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 bg-gray-100 text-primary border-r-[6px] border-primary transition-all mb-1"
+                            href="Obligaciones.html">
+                            <span class="material-symbols-outlined text-[20px] filled">assignment</span>
+                            <span class="text-sm font-semibold">Obligaciones</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Correos.html">
+                            <span class="material-symbols-outlined text-[20px]">mail</span>
+                            <span class="text-sm font-semibold">Envío de correos</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Historial.html">
+                            <span class="material-symbols-outlined text-[20px]">history</span>
+                            <span class="text-sm font-semibold">Historial de envíos</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Configuración.html">
+                            <span class="material-symbols-outlined text-[20px]">settings</span>
+                            <span class="text-sm font-semibold">Configuración</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                            href="Auditoria.html">
+                            <span class="material-symbols-outlined text-[20px]">list_alt</span>
+                            <span class="text-sm font-semibold">Auditoría / Logs</span>
+                        </a>
+                    </nav>
+                </div>
+                <div class="flex flex-col gap-2 border-t border-gray-200 p-6">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
+                            <span class="material-symbols-outlined text-gray-500 text-lg">person</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-black">Analista Riesgos</span>
+                            <span class="text-[10px] text-gray-500">Lectura Exclusiva</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 overflow-y-auto bg-white">
+            <div class="p-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+                    <div class="space-y-1">
+                        <h2 class="text-2xl font-extrabold text-text-main tracking-tight">Gestión de Obligaciones</h2>
+                        <p class="text-text-muted text-sm">Visualización y control de cumplimiento normativo.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="flex items-center gap-2 px-3 py-1.5 rounded bg-gray-50 border border-gray-100 hidden md:flex">
+                            <span class="material-symbols-outlined text-green-600 text-sm">database</span>
+                            <span
+                                class="text-[10px] font-bold text-gray-600 uppercase tracking-widest leading-none">Excel
+                                Sync: OK</span>
+                        </div>
+                        <div class="relative">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
+                            <input
+                                class="pl-9 pr-4 py-2 border border-border-subtle rounded-md text-sm w-80 lg:w-96 focus:ring-1 focus:ring-primary-black focus:border-primary-black transition-all shadow-sm"
+                                placeholder="Buscar por ID, regulador o área..." type="text" />
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-4 mb-4">
+                    <div class="flex flex-wrap gap-4 mb-6 relative z-10">
+                        <!-- Dropdown Criticidad -->
+                        <div class="relative group filter-dropdown" id="dropdown-criticidad">
+                            <button
+                                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-sm font-semibold text-gray-700 w-48 justify-between trigger">
+                                <span>Criticidad</span>
+                                <span
+                                    class="material-symbols-outlined text-gray-400 text-lg transition-transform duration-200">expand_more</span>
+                            </button>
+                            <div
+                                class="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl hidden opacity-0 translate-y-2 transition-all duration-200 z-50 menu p-1.5 space-y-0.5">
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="criticidad" data-value="critica">
+                                    <span class="font-medium">Críticas</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Críticas">3</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="criticidad" data-value="ventana">
+                                    <span class="font-medium">En ventana</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="En ventana">5</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="estado" data-value="pausada">
+                                    <span class="font-medium">Pausadas</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Pausadas">2</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="estado" data-value="atendida">
+                                    <span class="font-medium">Atendidas</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Atendidas">14</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Área -->
+                        <div class="relative group filter-dropdown" id="dropdown-area">
+                            <button
+                                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-sm font-semibold text-gray-700 w-48 justify-between trigger">
+                                <span>Área</span>
+                                <span
+                                    class="material-symbols-outlined text-gray-400 text-lg transition-transform duration-200">expand_more</span>
+                            </button>
+                            <div
+                                class="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl hidden opacity-0 translate-y-2 transition-all duration-200 z-50 menu p-1.5 space-y-0.5">
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="area" data-value="Cumplimiento">
+                                    <span class="font-medium">Cumplimiento</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Cumplimiento">8</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="area" data-value="Tesorería">
+                                    <span class="font-medium">Tesorería</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Tesorería">5</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="area" data-value="Impuestos">
+                                    <span class="font-medium">Impuestos</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Impuestos">3</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="area" data-value="Auditoría">
+                                    <span class="font-medium">Auditoría</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Auditoría">4</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="area" data-value="Seguridad">
+                                    <span class="font-medium">Seguridad</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Seguridad">2</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="area" data-value="Operaciones">
+                                    <span class="font-medium">Operaciones</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Operaciones">2</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Periodicidad -->
+                        <div class="relative group filter-dropdown" id="dropdown-periodicidad">
+                            <button
+                                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-sm font-semibold text-gray-700 w-48 justify-between trigger">
+                                <span>Periodicidad</span>
+                                <span
+                                    class="material-symbols-outlined text-gray-400 text-lg transition-transform duration-200">expand_more</span>
+                            </button>
+                            <div
+                                class="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl hidden opacity-0 translate-y-2 transition-all duration-200 z-50 menu p-1.5 space-y-0.5">
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="periodicidad" data-value="Diario">
+                                    <span class="font-medium">Diario</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Diario">2</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="periodicidad" data-value="Mensual">
+                                    <span class="font-medium">Mensual</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Mensual">12</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="periodicidad" data-value="Trimestral">
+                                    <span class="font-medium">Trimestral</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Trimestral">5</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="periodicidad" data-value="Semestral">
+                                    <span class="font-medium">Semestral</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Semestral">3</span>
+                                </button>
+                                <button
+                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
+                                    data-filter="periodicidad" data-value="Anual">
+                                    <span class="font-medium">Anual</span>
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
+                                        data-key="Anual">2</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg border border-border-subtle shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b-2 border-gray-200">
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">ID
+                                        Obligación</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
+                                        Regulador</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
+                                        Disposición</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Área
+                                    </th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
+                                        Periodicidad</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Límite
+                                    </th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Días
+                                    </th>
+                                    <th
+                                        class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800 text-center">
+                                        Estado</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Última
+                                        Acción</th>
+                                    <th
+                                        class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800 text-right">
+                                        Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border-subtle">
+                                <tr class="group hover:bg-gray-50 cursor-pointer transition-colors">
+                                    <td class="p-4 text-xs font-bold text-primary group-hover:underline">OBL-00124</td>
+                                    <td class="p-4 text-xs font-semibold">CNBV</td>
+                                    <td class="p-4 text-xs text-text-muted max-w-xs truncate">Reporte preventivo de
+                                        operaciones inusuales 4.1.2</td>
+                                    <td class="p-4 text-xs font-medium">Cumplimiento</td>
+                                    <td class="p-4 text-xs">Mensual</td>
+                                    <td class="p-4 text-xs font-mono">25/10/2023</td>
+                                    <td class="p-4 text-xs font-bold text-red-600">-2</td>
+                                    <td class="p-4 text-center">
+                                        <span class="status-pill status-ventana">En ventana</span>
+                                    </td>
+                                    <td class="p-4 text-xs text-text-muted italic">Correo enviado</td>
+                                    <td class="p-4 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button
+                                                class="p-1.5 hover:bg-gray-50 rounded-full text-text-muted hover:text-primary-black transition-colors"
+                                                title="Ver detalles">
+                                                <span class="material-symbols-outlined">visibility</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 hover:bg-gray-50 rounded-full text-text-muted hover:text-gray-900 transition-colors"
+                                                title="Pausar">
+                                                <span class="material-symbols-outlined">pause_circle</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 hover:bg-green-50 rounded-full text-text-muted hover:text-green-600 transition-colors"
+                                                title="Marcar como atendida">
+                                                <span class="material-symbols-outlined">check_circle</span>
+                                            </button>
+                                            <span
+                                                class="material-symbols-outlined text-gray-300 group-hover:text-gray-500 transition-colors ml-1 !text-lg">chevron_right</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="group hover:bg-gray-50 cursor-pointer transition-colors">
+                                    <td class="p-4 text-xs font-bold text-primary group-hover:underline">OBL-00130</td>
+                                    <td class="p-4 text-xs font-semibold">BANXICO</td>
+                                    <td class="p-4 text-xs text-text-muted max-w-xs truncate">Anexo 12 bis: Flujos de
+                                        capitales diarios</td>
+                                    <td class="p-4 text-xs font-medium">Tesorería</td>
+                                    <td class="p-4 text-xs">Diario</td>
+                                    <td class="p-4 text-xs font-mono">28/10/2023</td>
+                                    <td class="p-4 text-xs font-bold text-amber-600 relative">
+                                        0
+                                        <span
+                                            class="absolute -top-1 left-3 bg-primary text-white text-[8px] font-bold px-1 py-0.5 rounded leading-none whitespace-nowrap shadow-sm">VENCE
+                                            HOY</span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <span class="status-pill status-pendiente">Pendiente</span>
+                                    </td>
+                                    <td class="p-4 text-xs text-text-muted italic">Actualizado Excel</td>
+                                    <td class="p-4 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button
+                                                class="p-1.5 hover:bg-gray-50 rounded-full text-text-muted hover:text-primary-black transition-colors"><span
+                                                    class="material-symbols-outlined">visibility</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-gray-50 rounded-full text-text-muted hover:text-gray-900 transition-colors"><span
+                                                    class="material-symbols-outlined">pause_circle</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-green-50 rounded-full text-text-muted hover:text-green-600 transition-colors"><span
+                                                    class="material-symbols-outlined">check_circle</span></button>
+                                            <span
+                                                class="material-symbols-outlined text-gray-300 group-hover:text-gray-500 transition-colors ml-1 !text-lg">chevron_right</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="group hover:bg-gray-50 cursor-pointer transition-colors">
+                                    <td class="p-4 text-xs font-bold text-primary group-hover:underline">OBL-00142</td>
+                                    <td class="p-4 text-xs font-semibold">SAT</td>
+                                    <td class="p-4 text-xs text-text-muted max-w-xs truncate">Declaración Informativa de
+                                        Operaciones con Terceros</td>
+                                    <td class="p-4 text-xs font-medium">Impuestos</td>
+                                    <td class="p-4 text-xs">Anual</td>
+                                    <td class="p-4 text-xs font-mono">15/11/2023</td>
+                                    <td class="p-4 text-xs font-bold text-gray-400">19</td>
+                                    <td class="p-4 text-center">
+                                        <span class="status-pill status-pausada">Pausada</span>
+                                    </td>
+                                    <td class="p-4 text-xs text-text-muted italic">En espera de datos</td>
+                                    <td class="p-4 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button
+                                                class="p-1.5 hover:bg-gray-50 rounded-full text-text-muted hover:text-primary-black transition-colors"><span
+                                                    class="material-symbols-outlined">visibility</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-gray-50 rounded-full text-primary hover:text-red-700 transition-colors"><span
+                                                    class="material-symbols-outlined">play_circle</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-green-50 rounded-full text-text-muted hover:text-green-600 transition-colors"><span
+                                                    class="material-symbols-outlined">check_circle</span></button>
+                                            <span
+                                                class="material-symbols-outlined text-gray-300 group-hover:text-gray-500 transition-colors ml-1 !text-lg">chevron_right</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="group hover:bg-gray-50 cursor-pointer transition-colors">
+                                    <td class="p-4 text-xs font-bold text-primary group-hover:underline">OBL-00098</td>
+                                    <td class="p-4 text-xs font-semibold">SHCP</td>
+                                    <td class="p-4 text-xs text-text-muted max-w-xs truncate">Certificación de procesos
+                                        PLD/FT</td>
+                                    <td class="p-4 text-xs font-medium">Auditoría</td>
+                                    <td class="p-4 text-xs">Semestral</td>
+                                    <td class="p-4 text-xs font-mono">10/10/2023</td>
+                                    <td class="p-4 text-xs font-bold text-green-600">0</td>
+                                    <td class="p-4 text-center">
+                                        <span class="status-pill status-atendida">Atendida</span>
+                                    </td>
+                                    <td class="p-4 text-xs text-text-muted italic">Finalizado 09/10</td>
+                                    <td class="p-4 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button
+                                                class="p-1.5 hover:bg-gray-50 rounded-full text-text-muted hover:text-primary-black transition-colors"><span
+                                                    class="material-symbols-outlined">visibility</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-gray-50 rounded-full text-text-muted hover:text-gray-900 transition-colors"><span
+                                                    class="material-symbols-outlined">pause_circle</span></button>
+                                            <button
+                                                class="p-1.5 bg-green-50 rounded-full text-green-600 cursor-default"><span
+                                                    class="material-symbols-outlined">check_circle</span></button>
+                                            <span
+                                                class="material-symbols-outlined text-gray-300 group-hover:text-gray-500 transition-colors ml-1 !text-lg">chevron_right</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-border-subtle">
+                        <div class="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+                            Mostrando 4 de 24 registros
+                        </div>
+                        <div class="flex gap-1">
+                            <button
+                                class="p-1.5 border border-border-subtle rounded bg-white text-text-muted hover:bg-gray-50 transition-colors"><span
+                                    class="material-symbols-outlined">chevron_left</span></button>
+                            <button
+                                class="px-3 py-1 border border-primary bg-primary text-white text-xs font-bold rounded">1</button>
+                            <button
+                                class="px-3 py-1 border border-border-subtle bg-white text-text-muted text-xs font-bold rounded hover:bg-gray-100 hover:text-primary-black-black transition-colors">2</button>
+                            <button
+                                class="px-3 py-1 border border-border-subtle bg-white text-text-muted text-xs font-bold rounded hover:bg-gray-100 hover:text-primary-black-black transition-colors">3</button>
+                            <button
+                                class="p-1.5 border border-border-subtle rounded bg-white text-text-muted hover:bg-gray-50 transition-colors"><span
+                                    class="material-symbols-outlined">chevron_right</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- Cargar scripts de la aplicación -->
+    <script src="js/app-init.js"></script>
+    <script src="js/controllers/obligaciones-controller.js"></script>
+</body>
+
+</html>

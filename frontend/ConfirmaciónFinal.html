@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AlertIA - Confirmación de Envío Final</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec0000",
+                        "background-light": "#f8f5f5",
+                        "background-dark": "#230f0f",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark min-h-screen relative overflow-hidden">
+<div class="blur-sm pointer-events-none select-none opacity-40">
+<div class="layout-container flex h-full grow flex-col">
+<div class="px-4 md:px-40 flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e6dbdb] px-10 py-3">
+<div class="flex items-center gap-4 text-[#181111] dark:text-white">
+<div class="size-6 text-primary">
+<span class="material-symbols-outlined">campaign</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">AlertIA</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="flex items-center gap-9">
+<a class="text-sm font-medium leading-normal" href="#">Dashboard</a>
+<a class="text-sm font-medium leading-normal underline decoration-primary decoration-2" href="#">Cálculo de Envíos</a>
+<a class="text-sm font-medium leading-normal" href="#">Historial</a>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-gray-200" data-alt="Avatar of the system administrator" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCo2fmtoK-cXSmCBtXcTmD1nEXIDC7vaPNyDjpeD3x19d9ek2qD36Esxf3K5EHu1ZBfhF-hos4jSVwFM4JPgoXgdGG8GT1NEEiU4sC1xRbYd0bQjAbRCEF6K0yTY6B-4TP4tTwsLuipm9mV0WmuWTj49On1uJ8XeDGAeDwdgNQCHvS9Xjlv-nhFN6B82p0wYWw67-4-_lMvrTjhcXjLoNp20LhCoXS6C0CST5xXiVoySG_LxpqkKpR6_WfsTsQaSucJwNWtfSSO81i8");'></div>
+</div>
+</header>
+<h2 class="text-[#181111] dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Resumen de Cálculo de Envíos</h2>
+<div class="px-4 py-3 @container">
+<div class="flex overflow-hidden rounded-lg border border-[#e6dbdb] bg-white dark:bg-[#1a0a0a]">
+<table class="flex-1">
+<thead>
+<tr class="bg-gray-50 dark:bg-black/20">
+<th class="px-4 py-3 text-left text-[#181111] dark:text-white text-sm font-medium">Remitente</th>
+<th class="px-4 py-3 text-left text-[#181111] dark:text-white text-sm font-medium">Destinatario</th>
+<th class="px-4 py-3 text-left text-[#181111] dark:text-white text-sm font-medium">Asunto</th>
+<th class="px-4 py-3 text-left text-[#181111] dark:text-white text-sm font-medium">Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-t border-t-[#e6dbdb]">
+<td class="h-[72px] px-4 py-2 text-sm">Soporte Santander</td>
+<td class="h-[72px] px-4 py-2 text-sm text-[#8c5f5f]">clientes_global@santander.com</td>
+<td class="h-[72px] px-4 py-2 text-sm text-[#8c5f5f]">Aviso de seguridad urgente</td>
+<td class="px-4 py-2">
+<span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">Pendiente</span>
+</td>
+</tr>
+<tr class="border-t border-t-[#e6dbdb]">
+<td class="h-[72px] px-4 py-2 text-sm">AlertIA System</td>
+<td class="h-[72px] px-4 py-2 text-sm text-[#8c5f5f]">marketing_list@santander.com</td>
+<td class="h-[72px] px-4 py-2 text-sm text-[#8c5f5f]">Nuevas tasas de interés 2024</td>
+<td class="px-4 py-2">
+<span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">Pendiente</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/70 backdrop-blur-[2px] z-40 flex items-center justify-center p-4">
+<div class="bg-white dark:bg-[#2a1414] w-full max-w-[520px] rounded-xl shadow-2xl overflow-hidden border border-white/10 flex flex-col">
+<div class="p-8 flex flex-col items-center text-center">
+<div class="mb-5 text-primary">
+<span class="material-symbols-outlined !text-7xl" style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;">warning</span>
+</div>
+<h3 class="text-[#181111] dark:text-white text-3xl font-extrabold leading-tight mb-6 tracking-tight">
+                    Confirmación Final
+                </h3>
+<div class="bg-gray-50 dark:bg-black/30 rounded-lg p-6 mb-8 w-full border-l-4 border-primary text-left">
+<p class="text-[#181111] dark:text-gray-200 text-lg font-medium leading-relaxed">
+                        Esta acción enviará <span class="text-primary font-black text-3xl mx-1">1,250</span> correos y quedará registrada en el historial del sistema.
+                    </p>
+<p class="text-[#8c5f5f] dark:text-gray-400 text-sm mt-3 font-normal italic">
+                        El proceso de envío masivo es irreversible una vez iniciado.
+                    </p>
+</div>
+<div class="flex flex-col gap-4 w-full">
+<button class="flex w-full items-center justify-center overflow-hidden rounded-lg h-14 bg-primary hover:bg-red-700 text-white text-lg font-bold transition-all active:scale-[0.98] shadow-md shadow-primary/20">
+<span class="material-symbols-outlined mr-2">send</span>
+                        Enviar correos seleccionados
+                    </button>
+<button class="flex w-full items-center justify-center h-auto bg-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-sm font-semibold hover:underline underline-offset-4 transition-colors p-2">
+                        Cancelar y volver al cálculo
+                    </button>
+</div>
+</div>
+<div class="bg-gray-50 dark:bg-black/20 px-8 py-4 flex items-center justify-center gap-2 border-t border-gray-100 dark:border-white/5">
+<span class="material-symbols-outlined text-sm text-gray-600 dark:text-gray-400">lock</span>
+<span class="text-xs uppercase tracking-wider text-gray-600 dark:text-gray-400 font-bold">Autorización de Seguridad Requerida</span>
+</div>
+</div>
+</div>
+</body></html>

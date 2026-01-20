@@ -87,6 +87,132 @@ const Utils = {
     },
 
     /**
+     * Obtener fecha del consejo (15-septiembre del año actual)
+     */
+    getFechaConsejo() {
+        const hoy = new Date();
+        const año = hoy.getFullYear();
+        // 15 de septiembre (mes 8 porque enero es 0)
+        return new Date(año, 8, 15);
+    },
+
+    /**
+     * Determinar qué alerta corresponde según las nuevas reglas
+     * Retorna: { alerta1: boolean, alerta2: boolean, alerta3: boolean, alerta4: boolean }
+     * o null si no aplica ninguna alerta
+     */
+    getAlertaSegunReglas(obligacion) {
+        if (!obligacion || !obligacion.fecha_limite || !obligacion.periodicidad) {
+            return null;
+        }
+
+        // Determinar fecha límite a usar
+        let fechaLimite;
+        const periodicidad = String(obligacion.periodicidad).trim();
+        
+        // Caso especial: "Anual, una vez al año" usa fecha del consejo (15-septiembre)
+        if (periodicidad.toLowerCase() === 'anual, una vez al año' || 
+            periodicidad.toLowerCase().includes('anual, una vez')) {
+            fechaLimite = this.getFechaConsejo();
+        } else {
+            fechaLimite = new Date(obligacion.fecha_limite);
+        }
+
+        // Calcular días restantes
+        const diasRestantes = this.getDaysUntil(fechaLimite.toISOString().split('T')[0]);
+        
+        if (diasRestantes === null || diasRestantes < 0) {
+            return null; // Fecha vencida o inválida
+        }
+
+        const periodicidadLower = periodicidad.toLowerCase();
+        const resultado = {
+            alerta1: false,
+            alerta2: false,
+            alerta3: false,
+            alerta4: false
+        };
+
+        // Normalizar periodicidad para comparaciones
+        const esAnual = periodicidadLower.includes('anual') && !periodicidadLower.includes('semestral') && !periodicidadLower.includes('trimestral');
+        const esAnioYMedio = periodicidadLower.includes('año y medio') || periodicidadLower.includes('año y medio');
+        const esBianual = periodicidadLower.includes('bianual') || periodicidadLower.includes('bi-anual');
+        const esSemestral = periodicidadLower.includes('semestral');
+        const esTrimestral = periodicidadLower.includes('trimestral');
+        const esBimestral = periodicidadLower.includes('bimestral') || periodicidadLower.includes('bi-mestral');
+        const esMensual = periodicidadLower.includes('mensual');
+        const esEventual = periodicidadLower.includes('eventual');
+        const esAnualUnaVez = periodicidadLower === 'anual, una vez al año' || periodicidadLower.includes('anual, una vez');
+
+        // 1ª Alerta (Áreas)
+        if (esAnual || esAnioYMedio || esBianual) {
+            if (diasRestantes <= 90) {
+                resultado.alerta1 = true;
+            }
+        } else if (esSemestral || esTrimestral || esBimestral || esEventual) {
+            if (diasRestantes <= 30) {
+                resultado.alerta1 = true;
+            }
+        } else if (esMensual) {
+            if (diasRestantes <= 20) {
+                resultado.alerta1 = true;
+            }
+        } else if (esAnualUnaVez) {
+            if (diasRestantes <= 90) {
+                resultado.alerta1 = true;
+            }
+        }
+
+        // 2ª Alerta (Áreas) - Eventual no tiene 2ª alerta
+        if (!esEventual) {
+            if (esAnual || esAnioYMedio || esBianual || esAnualUnaVez) {
+                if (diasRestantes <= 30) {
+                    resultado.alerta2 = true;
+                }
+            } else if (esSemestral || esTrimestral || esBimestral) {
+                if (diasRestantes <= 10) {
+                    resultado.alerta2 = true;
+                }
+            } else if (esMensual) {
+                if (diasRestantes <= 7) {
+                    resultado.alerta2 = true;
+                }
+            }
+        }
+
+        // 3ª Alerta (CN) - Eventual no tiene 3ª alerta
+        if (!esEventual) {
+            if (esAnual || esAnioYMedio || esBianual || esAnualUnaVez) {
+                if (diasRestantes <= 20) {
+                    resultado.alerta3 = true;
+                }
+            } else if (esSemestral || esTrimestral || esBimestral) {
+                if (diasRestantes <= 7) {
+                    resultado.alerta3 = true;
+                }
+            } else if (esMensual) {
+                if (diasRestantes <= 5) {
+                    resultado.alerta3 = true;
+                }
+            }
+        }
+
+        // 4ª Alerta (CN) - Solo para Semestral, Trimestral, Bimestral y "Anual, una vez al año"
+        if (esSemestral || esTrimestral || esBimestral || esAnualUnaVez) {
+            if (diasRestantes <= 3) {
+                resultado.alerta4 = true;
+            }
+        }
+
+        // Retornar null si ninguna alerta aplica
+        if (!resultado.alerta1 && !resultado.alerta2 && !resultado.alerta3 && !resultado.alerta4) {
+            return null;
+        }
+
+        return resultado;
+    },
+
+    /**
      * Validar email
      */
     isValidEmail(email) {
@@ -146,8 +272,16 @@ const Utils = {
      * Mostrar notificación
      */
     showNotification(message, type = 'info') {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:274',message:'showNotification entry',data:{message,type,bodyExists:!!document.body},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        
         // Crear elemento de notificación
         const notification = document.createElement('div');
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:277',message:'After createElement',data:{notificationExists:!!notification,notificationClassList:notification?.classList?.toString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B,C'})}).catch(()=>{});
+        // #endregion
+        
         notification.className = `notification notification-${type}`;
         notification.textContent = message;
         notification.style.cssText = `
@@ -163,13 +297,31 @@ const Utils = {
             animation: slideIn 0.3s ease-out;
         `;
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:292',message:'Before appendChild',data:{bodyExists:!!document.body,notificationExists:!!notification},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B,C'})}).catch(()=>{});
+        // #endregion
+        
         document.body.appendChild(notification);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:295',message:'After appendChild',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         
         // Remover después de 3 segundos
         setTimeout(() => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:299',message:'In setTimeout callback',data:{notificationExists:!!notification,notificationParent:notification?.parentNode?.tagName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+            
             notification.style.animation = 'slideOut 0.3s ease-out';
             setTimeout(() => {
-                document.body.removeChild(notification);
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:301',message:'Before removeChild',data:{notificationExists:!!notification,notificationParent:notification?.parentNode?.tagName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B,C'})}).catch(()=>{});
+                // #endregion
+                
+                if (notification.parentNode) {
+                    document.body.removeChild(notification);
+                }
             }, 300);
         }, 3000);
     },

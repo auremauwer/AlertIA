@@ -11,9 +11,9 @@ class ExcelService {
     }
 
     /**
-     * Procesar archivo Excel
+     * Obtener lista de hojas del Excel
      */
-    async processExcelFile(file) {
+    async getSheetNames(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
 
@@ -21,20 +21,60 @@ class ExcelService {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    // Obtener la primera hoja
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    
+                    resolve(workbook.SheetNames);
+                } catch (error) {
+                    reject(new Error(`Error al leer el archivo: ${error.message}`));
+                }
+            };
+
+            reader.onerror = () => {
+                reject(new Error('Error al leer el archivo'));
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    /**
+     * Procesar archivo Excel
+     */
+    async processExcelFile(file, sheetName = null) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    // Si no se proporcionó el nombre de la hoja, rechazar para que se pregunte
+                    if (!sheetName) {
+                        reject(new Error('SHEET_SELECTION_REQUIRED'));
+                        return;
+                    }
+
+                    // Validar que la hoja existe
+                    if (!workbook.SheetNames.includes(sheetName)) {
+                        reject(new Error(`La hoja "${sheetName}" no existe en el archivo. Hojas disponibles: ${workbook.SheetNames.join(', ')}`));
+                        return;
+                    }
+
+                    const worksheet = workbook.Sheets[sheetName];
+
+                    // Obtener el rango completo de la hoja para contar todas las filas
+                    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+                    const totalFilasEnExcel = range.e.r + 1; // +1 porque es 0-indexed (fila 1 = índice 0)
+                    console.log('[ExcelService] Total filas en Excel (incluyendo encabezados):', totalFilasEnExcel, 'Rango:', worksheet['!ref'], 'Hoja:', sheetName);
+
                     // Convertir a JSON
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
                         header: 1,
                         defval: null
                     });
-                    
-                    // Procesar datos
-                    const obligaciones = this.parseExcelData(jsonData);
-                    
+
+                    // Procesar datos con fila 4 como cabecera (índice 3)
+                    const obligaciones = this.parseExcelData(jsonData, totalFilasEnExcel, 3);
+
                     resolve(obligaciones);
                 } catch (error) {
                     reject(new Error(`Error al procesar Excel: ${error.message}`));
@@ -52,65 +92,109 @@ class ExcelService {
     /**
      * Parsear datos del Excel a formato de obligaciones
      */
-    parseExcelData(jsonData) {
-        if (!jsonData || jsonData.length < 5) {
-            throw new Error('El archivo Excel debe tener al menos una fila de encabezados (fila 4) y una fila de datos');
+    parseExcelData(jsonData, totalFilasEnExcel = null, headerRowIndex = 3) {
+        // Validar que hay suficientes filas (fila 4 como cabecera + al menos una fila de datos)
+        if (!jsonData || jsonData.length < headerRowIndex + 2) {
+            throw new Error(`El archivo Excel debe tener al menos ${headerRowIndex + 1} filas (cabecera en fila ${headerRowIndex + 1}) y una fila de datos`);
         }
 
-        // Buscar la fila de encabezados (normalmente fila 4, índice 3)
-        // Buscar fila que contenga "Disposición resumida" o "Órgano / Regulador"
-        let headerRowIndex = 3; // Por defecto fila 4 (índice 3)
-        
-        for (let i = 0; i < Math.min(10, jsonData.length); i++) {
-            const row = jsonData[i];
-            if (row && row.some(cell => {
-                const cellStr = String(cell || '').toLowerCase();
-                return cellStr.includes('disposición resumida') || 
-                       cellStr.includes('disposicion resumida') ||
-                       cellStr.includes('órgano / regulador') ||
-                       cellStr.includes('organo / regulador');
-            })) {
-                headerRowIndex = i;
-                break;
-            }
-        }
+        // Usar siempre la fila 4 (índice 3) como cabecera
+        console.log(`[ExcelService] Usando fila ${headerRowIndex + 1} (índice ${headerRowIndex}) como cabecera`);
 
         // Obtener encabezados de la fila encontrada
         const headers = jsonData[headerRowIndex].map(h => h ? String(h).toLowerCase().trim() : '');
         
+        // Log de headers para debugging
+        console.log('[ExcelService] Headers encontrados:', headers);
+
         // Mapear nombres de columnas
         const columnMap = this.mapColumns(headers);
-        
-        // Validar columnas requeridas
-        this.validateColumns(columnMap);
-        
+        console.log('[ExcelService] Mapeo de columnas:', columnMap);
+
+        // Validar columnas requeridas y obtener información de problemas
+        const problemasColumnas = this.validateColumns(columnMap, headers);
+
         // Procesar filas de datos (empezar después de los encabezados)
         const obligaciones = [];
-        
+        const problemasFilas = []; // Array para almacenar problemas por fila
+        let filasVacias = 0;
+        let filasConError = 0;
+        const timestamp = Date.now(); // Timestamp para IDs únicos
+
         for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
             const row = jsonData[i];
-            
+
             // Saltar filas vacías
             if (!row || row.every(cell => !cell || (cell !== null && String(cell).trim() === ''))) {
+                filasVacias++;
                 continue;
             }
-            
+
             try {
-                const obligacion = this.parseRow(row, headers, columnMap, i, headerRowIndex);
-                if (obligacion) {
-                    obligaciones.push(obligacion);
+                const resultado = this.parseRow(row, headers, columnMap, i, headerRowIndex, timestamp);
+                if (resultado.obligacion) {
+                    obligaciones.push(resultado.obligacion);
+                }
+                if (resultado.problemas && resultado.problemas.length > 0) {
+                    problemasFilas.push({
+                        fila: i + 1,
+                        problemas: resultado.problemas
+                    });
+                    // Si no hay obligación debido a problemas (como falta de ID), contar como error
+                    if (!resultado.obligacion) {
+                        filasConError++;
+                    }
                 }
             } catch (error) {
                 console.warn(`Error al procesar fila ${i + 1}:`, error.message);
+                problemasFilas.push({
+                    fila: i + 1,
+                    problemas: [{
+                        tipo: 'error',
+                        campo: 'general',
+                        mensaje: error.message,
+                        valor: null
+                    }]
+                });
+                filasConError++;
                 // Continuar con las siguientes filas
             }
         }
-        
-        if (obligaciones.length === 0) {
-            throw new Error('No se encontraron obligaciones válidas en el archivo');
+
+        // Log de estadísticas
+        // Usar el total de filas del Excel si está disponible, sino calcular desde jsonData
+        let totalFilas;
+        if (totalFilasEnExcel !== null) {
+            // Total de filas en el Excel menos la fila de encabezados
+            // Si headerRowIndex es 3, significa que la fila de encabezados es la fila 4 (índice 3)
+            // Entonces hay 3 filas antes (0,1,2) + 1 fila de encabezados = 4 filas de cabecera
+            // Total de filas de datos = totalFilasEnExcel - (headerRowIndex + 1)
+            totalFilas = totalFilasEnExcel - (headerRowIndex + 1);
+        } else {
+            // Fallback: contar desde jsonData
+            totalFilas = jsonData.length - (headerRowIndex + 1);
         }
-        
-        return obligaciones;
+
+        console.log(`Procesamiento Excel: ${totalFilasEnExcel || jsonData.length} filas en archivo, ${headerRowIndex + 1} filas de encabezados/cabecera, ${totalFilas} filas de datos, ${obligaciones.length} procesadas, ${filasVacias} vacías, ${filasConError} con errores`);
+
+        if (obligaciones.length === 0) {
+            throw new Error(`No se encontraron obligaciones válidas en el archivo. Total filas: ${totalFilas}, Vacías: ${filasVacias}, Errores: ${filasConError}`);
+        }
+
+        // Retornar objeto con obligaciones y problemas detallados
+        return {
+            obligaciones: obligaciones,
+            problemas: {
+                columnas: problemasColumnas,
+                filas: problemasFilas,
+                estadisticas: {
+                    total: totalFilas,
+                    procesadas: obligaciones.length,
+                    vacias: filasVacias,
+                    conErrores: filasConError
+                }
+            }
+        };
     }
 
     /**
@@ -118,82 +202,105 @@ class ExcelService {
      */
     mapColumns(headers) {
         const map = {};
-        
-        // Mapeos específicos para la estructura real del Excel
+
+        // Mapeos específicos para la estructura real del Excel y variaciones comunes
         const mappings = {
-            nombre: ['disposición resumida', 'disposicion resumida', 'disposicion resumida'],
-            regulador: ['órgano / regulador', 'organo / regulador', 'órgano regulador', 'organo regulador'],
-            descripcion: ['tema', 'disposición aplicable', 'disposicion aplicable'],
-            area: ['área responsable', 'area responsable', 'area', 'área'],
-            periodicidad: ['periodicidad'],
-            fecha_limite: ['fecha límite de entrega', 'fecha limite de entrega', 'fecha límite', 'fecha limite'],
-            mes_entrega: ['mes de entrega'],
-            plazo_entrega: ['plazo de entrega'],
-            articulo: ['artículo', 'articulo'],
-            requerimiento: ['requerimiento'],
-            regulador_destino: ['órgano / regulador al que se envía', 'organo / regulador al que se envia', 'órgano regulador al que se envía'],
-            consejo_admin: ['consejo de admón', 'consejo de admin'],
-            aprobacion_comite: ['aprobación del comité', 'aprobacion del comite'],
-            director_general: ['director general'],
-            pagina_internet: ['página de internet', 'pagina de internet'],
-            notas: ['notas']
+            id: ['id', 'identificador', 'código', 'codigo', 'id obligación', 'id obligacion'],
+            estatus: ['estatus', 'estado', 'status', 'situación', 'situacion'],
+            sub_estatus: ['sub estatus', 'sub_estatus', 'subestatus', 'sub-estatus', 'detalle estatus', 'subestatus'],
+            alerta_1: ['1er alerta', '1er alerta (1 vez)', 'alerta 1', 'primera alerta'],
+            alerta_2: ['2da alerta', '2da alerta (semanal)', 'alerta 2', 'segunda alerta'],
+            alerta_3: ['3er alerta', '3er alerta (tercer dia)', 'alerta 3', 'tercera alerta'],
+            alerta_4: ['4ta alerta', '4ta alerta (diaria)', 'alerta 4', 'cuarta alerta'],
+            area: ['responsable área', 'responsable area', 'area', 'área', 'departamento', 'área responsable', 'area responsable', 'área responsable'],
+            responsable_cn: ['responsable cn', 'responsable c.n.', 'cn'],
+            responsable_juridico: ['responsable juridico', 'responsable jurídico', 'juridico'],
+
+            // Mapeos antiguos (fallback)
+            nombre: ['disposición resumida', 'disposicion resumida', 'disposicion resumida', 'nombre', 'obligación', 'obligacion', 'título', 'titulo'],
+            regulador: ['órgano / regulador', 'organo / regulador', 'órgano regulador', 'organo regulador', 'regulador', 'autoridad'],
+            descripcion: ['tema', 'disposición aplicable', 'disposicion aplicable', 'descripción', 'descripcion'],
+            fecha_limite: ['fecha límite de entrega', 'fecha limite de entrega', 'fecha límite', 'fecha limite', 'fecha de vencimiento', 'vencimiento', 'fecha'],
+            periodicidad: ['periodicidad', 'frecuencia'],
+            dias_para_vencer: ['días para vencer', 'dias para vencer', 'días restantes', 'dias restantes', 'días hasta vencimiento', 'dias hasta vencimiento']
         };
-        
+
         for (const [field, possibleNames] of Object.entries(mappings)) {
             for (let j = 0; j < headers.length; j++) {
                 const header = headers[j];
                 if (header) {
-                    // Comparación más flexible
                     const headerLower = header.toLowerCase();
-                    if (possibleNames.some(name => {
-                        const nameLower = name.toLowerCase();
-                        return headerLower === nameLower || 
-                               headerLower.includes(nameLower) || 
-                               nameLower.includes(headerLower);
-                    })) {
+                    // Buscar coincidencia exacta primero
+                    if (possibleNames.includes(headerLower)) {
                         map[field] = j;
                         break;
+                    }
+                    // Si no, buscar coincidencia parcial (más arriesgado pero útil)
+                    if (possibleNames.some(name => headerLower.includes(name))) {
+                        // Evitar falsos positivos (ej. "sub estatus" matcheando "estatus")
+                        // Si ya mapeamos este campo con un match exacto, no lo sobreescribimos con parcial
+                        if (map[field] === undefined) {
+                            map[field] = j;
+                        }
                     }
                 }
             }
         }
-        
+
         return map;
     }
 
     /**
      * Validar que existan las columnas requeridas
      */
-    validateColumns(columnMap) {
-        // Regulador y nombre son requeridos, fecha puede ser eventual
-        const required = ['regulador', 'nombre'];
-        const missing = required.filter(field => columnMap[field] === undefined);
-        
-        if (missing.length > 0) {
-            const fieldNames = {
-                'regulador': 'Órgano / Regulador',
-                'nombre': 'Disposición resumida'
-            };
-            throw new Error(`Faltan columnas requeridas: ${missing.map(f => fieldNames[f] || f).join(', ')}`);
+    validateColumns(columnMap, headers) {
+        const problemas = {
+            columnasFaltantes: [],
+            columnasEncontradas: [],
+            advertencias: []
+        };
+
+        // Validar columnas críticas para el nuevo requerimiento
+        // ID es fundamental ahora, o Estatus
+        const required = [];
+        if (!columnMap.id && !columnMap.nombre) {
+            required.push({ field: 'id', nombres: ['ID', 'Disposición resumida'] });
         }
-        
-        // Advertir si falta fecha pero no es crítico (puede ser eventual)
-        if (!columnMap.fecha_limite && !columnMap.mes_entrega) {
-            console.warn('No se encontró columna de fecha límite ni mes de entrega. Las fechas se calcularán como eventuales.');
+
+        required.forEach(({ field, nombres }) => {
+            if (columnMap[field] === undefined) {
+                problemas.columnasFaltantes.push({
+                    campo: field,
+                    nombresEsperados: nombres,
+                    descripcion: field
+                });
+            } else {
+                problemas.columnasEncontradas.push({
+                    campo: field,
+                    columna: headers[columnMap[field]],
+                    indice: columnMap[field]
+                });
+            }
+        });
+
+        if (problemas.columnasFaltantes.length > 0) {
+            const nombresFaltantes = problemas.columnasFaltantes.map(p => p.descripcion).join(', ');
+            throw new Error(`Faltan columnas requeridas: ${nombresFaltantes}`);
         }
+
+        return problemas;
     }
 
     /**
      * Parsear una fila del Excel
      */
-    parseRow(row, headers, columnMap, rowIndex, headerRowIndex) {
+    parseRow(row, headers, columnMap, rowIndex, headerRowIndex, timestamp = null) {
         const getValue = (field) => {
             const colIndex = columnMap[field];
             if (colIndex === undefined || colIndex >= row.length) {
                 return null;
             }
             const value = row[colIndex];
-            // Convertir null, undefined, o strings vacíos a null
             if (value === null || value === undefined) {
                 return null;
             }
@@ -202,141 +309,133 @@ class ExcelService {
             }
             return value;
         };
-        
-        // Obtener valores
-        const nombre = getValue('nombre');
-        const regulador = getValue('regulador');
-        const descripcion = getValue('descripcion') || nombre; // Usar tema o nombre
-        const area = getValue('area');
-        let fechaLimite = getValue('fecha_limite');
-        const mesEntrega = getValue('mes_entrega');
-        const periodicidad = getValue('periodicidad');
-        const articulo = getValue('articulo');
-        const requerimiento = getValue('requerimiento');
-        const reguladorDestino = getValue('regulador_destino');
-        const plazoEntrega = getValue('plazo_entrega');
-        const consejoAdmin = getValue('consejo_admin');
-        const aprobacionComite = getValue('aprobacion_comite');
-        const directorGeneral = getValue('director_general');
-        const paginaInternet = getValue('pagina_internet');
-        const notas = getValue('notas');
-        
-        // Validar campos requeridos
-        if (!regulador || !nombre) {
-            throw new Error('Faltan campos requeridos: Regulador o Disposición resumida');
-        }
-        
-        // Generar ID basado en número de fila
-        const year = new Date().getFullYear();
-        const numFila = rowIndex - headerRowIndex; // Número relativo desde encabezados
-        const id = `OBL-${year}-${String(numFila).padStart(4, '0')}`;
-        
-        // Procesar fecha
-        let fechaLimiteDate = null;
-        const fechaLimiteStr = fechaLimite ? String(fechaLimite).trim() : '';
-        
-        if (fechaLimiteStr && fechaLimiteStr.toLowerCase() !== 'eventual') {
-            // Intentar parsear como fecha
-            if (fechaLimite instanceof Date) {
-                fechaLimiteDate = fechaLimite;
-            } else if (typeof fechaLimite === 'number') {
-                // Excel serial date
-                try {
-                    fechaLimiteDate = XLSX.SSF.parse_date_code(fechaLimite);
-                } catch (e) {
-                    // Si falla, intentar como timestamp
-                    fechaLimiteDate = new Date((fechaLimite - 25569) * 86400 * 1000);
+
+        const parseDate = (val) => {
+            if (!val) return null;
+            let date = null;
+            if (val instanceof Date) {
+                date = val;
+            } else if (typeof val === 'number') {
+                if (val > 1000) {
+                    const excelEpoch = new Date(1899, 11, 30);
+                    date = new Date(excelEpoch.getTime() + (val - 1) * 86400 * 1000);
                 }
             } else {
-                // String date - intentar varios formatos
-                fechaLimiteDate = new Date(fechaLimiteStr);
+                try {
+                    date = new Date(val);
+                    if (isNaN(date.getTime())) {
+                        // Try DD/MM/YYYY
+                        const dateParts = String(val).match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                        if (dateParts) {
+                            const [, day, month, year] = dateParts;
+                            date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        }
+                    }
+                } catch (e) { }
             }
-            
-            // Validar fecha
-            if (isNaN(fechaLimiteDate.getTime())) {
-                fechaLimiteDate = null;
+
+            if (date && !isNaN(date.getTime()) && date.getFullYear() > 1900 && date.getFullYear() < 2100) {
+                return date;
             }
+            return null;
+        };
+
+        // Obtener ID directamente de la columna V (índice 21) - OBLIGATORIO
+        const idOriginal = row[21] ? String(row[21]).trim() : null;
+        
+        // Validar que el ID oficial exista (es obligatorio)
+        // rowIndex es el índice en el array JSON (0-based)
+        // La fila real del Excel = rowIndex + 1 (porque Excel cuenta desde 1)
+        if (!idOriginal || idOriginal === '') {
+            const filaExcel = rowIndex + 1; // Fila real del Excel
+            return {
+                obligacion: null,
+                problemas: [{
+                    tipo: 'error',
+                    campo: 'id_oficial',
+                    mensaje: `Fila ${filaExcel} del Excel: La columna V está vacía. El ID es obligatorio. Revisa la fila ${filaExcel} en tu archivo Excel.`,
+                    valor: null,
+                    filaExcel: filaExcel
+                }]
+            };
         }
         
-        // Si no hay fecha válida y hay mes de entrega, calcular fecha
-        if (!fechaLimiteDate && mesEntrega) {
-            const mes = parseInt(mesEntrega);
-            if (mes >= 1 && mes <= 12) {
-                const year = new Date().getFullYear();
-                // Último día del mes especificado
-                // new Date(year, mes + 1, 0) donde mes es 1-12 da el último día del mes correcto
-                // Ejemplo: mes=1 (enero) → new Date(year, 2, 0) = 31 de enero
-                // Ejemplo: mes=12 (diciembre) → new Date(year, 13, 0) = 31 de diciembre
-                fechaLimiteDate = new Date(year, mes + 1, 0);
+        // Obtener Área Responsable directamente de la columna H (índice 7)
+        const area = row[7] ? String(row[7]).trim() : (getValue('area') || 'Sin asignar');
+        
+        // Obtener valores básicos
+        const nombre = getValue('nombre') || idOriginal;
+        const regulador = getValue('regulador') || 'General';
+
+        // Nuevos campos
+        // No asignar valor por defecto a estatus - debe venir del Excel
+        // Si está vacío, se guardará como null y se filtrará en los filtros
+        const estatusVal = getValue('estatus');
+        const estatus = estatusVal ? String(estatusVal).trim() : null;
+        const subEstatus = getValue('sub_estatus');
+        const alerta1 = parseDate(getValue('alerta_1'));
+        const alerta2 = parseDate(getValue('alerta_2'));
+        const alerta3 = parseDate(getValue('alerta_3'));
+        const alerta4 = parseDate(getValue('alerta_4'));
+        const respCN = getValue('responsable_cn');
+        const respJur = getValue('responsable_juridico');
+        
+        // Leer "Días para vencer" del Excel si existe
+        const diasParaVencerVal = getValue('dias_para_vencer');
+        let diasParaVencer = null;
+        if (diasParaVencerVal !== null && diasParaVencerVal !== undefined) {
+            // Intentar convertir a número
+            const numVal = Number(diasParaVencerVal);
+            if (!isNaN(numVal)) {
+                diasParaVencer = Math.round(numVal);
             }
         }
-        
-        // Si aún no hay fecha, usar fecha por defecto (fin de año actual)
+
+        // Determinar Fecha Límite
+        // Si existe columna fecha_limite, usarla. Si no, usar alerta_4 como fecha limite aproximada
+        let fechaLimiteVal = getValue('fecha_limite');
+        let fechaLimiteDate = parseDate(fechaLimiteVal);
+
+        if (!fechaLimiteDate && alerta4) {
+            fechaLimiteDate = alerta4;
+        }
         if (!fechaLimiteDate) {
             const year = new Date().getFullYear();
-            fechaLimiteDate = new Date(year, 11, 31); // 31 de diciembre
+            fechaLimiteDate = new Date(year, 11, 31);
         }
-        
-        // Normalizar periodicidad
-        let periodicidadNormalizada = periodicidad ? String(periodicidad).trim() : 'Mensual';
-        const periodicidadesValidas = ['Mensual', 'Anual', 'Trimestral', 'Semestral', 'Eventual', 'Diario'];
-        if (!periodicidadesValidas.includes(periodicidadNormalizada)) {
-            periodicidadNormalizada = 'Mensual';
-        }
-        
-        // Crear objeto de obligación
+
+        // Usar el ID oficial como ID principal (no generar IDs automáticos)
+        // El ID oficial viene de la columna V y es obligatorio
+        // IMPORTANTE: No usar fallbacks ni generar IDs - si no hay ID, la fila debe rechazarse
+
+        // Crear objeto
         const obligacion = {
-            id: id,
+            id: idOriginal, // Usar SOLO el ID oficial (columna V)
+            id_oficial: idOriginal, // También guardarlo como id_oficial para compatibilidad
             regulador: String(regulador).trim(),
-            descripcion: descripcion ? String(descripcion).trim() : String(nombre).trim(),
+            descripcion: String(nombre).trim(), // Usamos nombre/id como descripción
             nombre: String(nombre).trim(),
-            responsable: 'Sin asignar', // No hay campo en el Excel
-            area: area ? String(area).trim() : 'General',
+            area: String(area).trim(),
             fecha_limite: fechaLimiteDate.toISOString().split('T')[0],
-            periodicidad: periodicidadNormalizada,
-            estado: 'activa',
-            reglas_alertamiento: {
-                alerta1: 30,
-                alerta2: 10,
-                critica: 5
+            estatus: estatus ? String(estatus).toLowerCase().trim() : null,
+            sub_estatus: subEstatus ? String(subEstatus).trim() : null,
+            responsable_cn: respCN,
+            responsable_juridico: respJur,
+            dias_para_vencer_excel: diasParaVencer, // Guardar el valor del Excel
+            alertas: {
+                alerta_1: alerta1 ? alerta1.toISOString().split('T')[0] : null,
+                alerta_2: alerta2 ? alerta2.toISOString().split('T')[0] : null,
+                alerta_3: alerta3 ? alerta3.toISOString().split('T')[0] : null,
+                alerta_4: alerta4 ? alerta4.toISOString().split('T')[0] : null
             },
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
-        
-        // Agregar campos adicionales si existen
-        if (articulo) {
-            obligacion.articulo = String(articulo).trim();
-        }
-        if (requerimiento) {
-            obligacion.requerimiento = String(requerimiento).trim();
-        }
-        if (reguladorDestino) {
-            obligacion.regulador_destino = String(reguladorDestino).trim();
-        }
-        if (plazoEntrega) {
-            obligacion.plazo_entrega = String(plazoEntrega).trim();
-        }
-        
-        // Metadata
-        obligacion.metadata = {};
-        if (consejoAdmin) {
-            obligacion.metadata.consejo_admin = String(consejoAdmin).trim();
-        }
-        if (aprobacionComite) {
-            obligacion.metadata.aprobacion_comite = String(aprobacionComite).trim();
-        }
-        if (directorGeneral) {
-            obligacion.metadata.director_general = String(directorGeneral).trim();
-        }
-        if (paginaInternet) {
-            obligacion.metadata.pagina_internet = String(paginaInternet).trim();
-        }
-        if (notas) {
-            obligacion.metadata.notas = String(notas).trim();
-        }
-        
-        return obligacion;
+
+        return {
+            obligacion: obligacion,
+            problemas: []
+        };
     }
 }
 

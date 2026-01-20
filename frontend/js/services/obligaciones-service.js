@@ -42,7 +42,14 @@ class ObligacionesService {
      * Enriquecer obligación con información calculada
      */
     enrichObligacion(obligacion) {
-        const diasRestantes = Utils.getDaysUntil(obligacion.fecha_limite);
+        // Usar "Días para vencer" del Excel si existe, sino calcular desde fecha_limite
+        let diasRestantes = null;
+        if (obligacion.dias_para_vencer_excel !== null && obligacion.dias_para_vencer_excel !== undefined) {
+            diasRestantes = obligacion.dias_para_vencer_excel;
+        } else {
+            diasRestantes = Utils.getDaysUntil(obligacion.fecha_limite);
+        }
+        
         const criticidad = Utils.getCriticidad(
             diasRestantes,
             obligacion.reglas_alertamiento
@@ -167,6 +174,42 @@ class ObligacionesService {
             return obligacion;
         } catch (error) {
             console.error(`Error al marcar obligación ${id} como atendida:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener obligaciones por número de alerta según las nuevas reglas
+     * @param {number} numeroAlerta - Número de alerta (1, 2, 3, o 4)
+     * @returns {Promise<Array>} Array de obligaciones que están en esa alerta
+     */
+    async getObligacionesPorAlerta(numeroAlerta) {
+        try {
+            // Obtener solo obligaciones activas
+            const obligaciones = await this.getAll({ estado: 'activa' });
+            
+            // Filtrar obligaciones que están en la alerta especificada
+            const obligacionesEnAlerta = obligaciones.filter(obl => {
+                const alertas = Utils.getAlertaSegunReglas(obl);
+                if (!alertas) return false;
+                
+                switch (numeroAlerta) {
+                    case 1:
+                        return alertas.alerta1;
+                    case 2:
+                        return alertas.alerta2;
+                    case 3:
+                        return alertas.alerta3;
+                    case 4:
+                        return alertas.alerta4;
+                    default:
+                        return false;
+                }
+            });
+            
+            return obligacionesEnAlerta;
+        } catch (error) {
+            console.error(`Error al obtener obligaciones por alerta ${numeroAlerta}:`, error);
             throw error;
         }
     }

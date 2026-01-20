@@ -54,6 +54,7 @@ class ObligacionesController {
                 e.stopPropagation();
 
                 const menu = trigger.nextElementSibling;
+                if (!menu) return; // Protección: si menu es null, salir
                 const isCurrentlyHidden = menu.classList.contains('hidden');
 
                 // Close all other dropdowns

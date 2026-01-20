@@ -2,29 +2,29 @@
  * Inicialización de la aplicación
  * Carga todos los scripts necesarios en el orden correcto
  */
-(function() {
+(function () {
     'use strict';
 
     // Orden de carga de scripts
     const scripts = [
         // Configuración
         'js/config/env.js',
-        
+
         // Core (deben cargarse después de ENV)
         'js/core/local-storage.js',
         'js/core/api-client.js',
         'js/core/data-adapter.js',
-        
+
         // Utilidades
         'js/utils.js',
-        
+
         // Servicios
         'js/services/obligaciones-service.js',
         'js/services/alertas-service.js',
         'js/services/envios-service.js',
         'js/services/auditoria-service.js',
         'js/services/config-service.js',
-        
+
         // Plantillas
         'js/email-template.js'
     ];
@@ -71,10 +71,11 @@
         // Verificar que dataAdapter esté disponible
         if (window.dataAdapter) {
             console.log('✅ AlertIA inicializado correctamente');
-            
+
             // Cargar datos iniciales si LocalStorage está vacío
             if (ENV.USE_LOCAL_STORAGE) {
-                // Cargar script de seed data
+                // Auto-seeding desactivado para evitar datos fantasma
+                /*
                 const seedScript = document.createElement('script');
                 seedScript.src = 'js/scripts/seed-data.js';
                 seedScript.onload = () => {
@@ -94,6 +95,7 @@
                     }, 500);
                 };
                 document.head.appendChild(seedScript);
+                */
             }
         } else {
             console.warn('⚠️ dataAdapter no está disponible');

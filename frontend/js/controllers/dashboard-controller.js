@@ -37,7 +37,7 @@ class DashboardController {
 
         await this.loadDashboard();
         this.setupFilters();
-        
+
         // Configurar descarga después de que todo esté cargado
         if (document.readyState === 'complete') {
             this.setupCardDownload();
@@ -55,27 +55,36 @@ class DashboardController {
         try {
             // Cargar todas las obligaciones
             this.allObligaciones = await this.obligacionesService.getAll();
-            
+
             // Filtrar obligaciones que no tienen ID oficial (no deben mostrarse)
-            const obligacionesSinID = this.allObligaciones.filter(obl => !obl.id_oficial || obl.id_oficial.trim() === '');
+            const obligacionesSinID = this.allObligaciones.filter(obl => (!obl.id_oficial || obl.id_oficial.trim() === '') && (!obl.id || obl.id.trim() === ''));
             if (obligacionesSinID.length > 0) {
                 console.warn(`[Dashboard] Se encontraron ${obligacionesSinID.length} obligaciones sin ID oficial. Estas se excluirán del dashboard.`);
                 console.warn('[Dashboard] Obligaciones sin ID:', obligacionesSinID.map(obl => ({ id: obl.id, nombre: obl.nombre })));
             }
-            this.allObligaciones = this.allObligaciones.filter(obl => obl.id_oficial && obl.id_oficial.trim() !== '');
-            
+            this.allObligaciones = this.allObligaciones.filter(obl => (obl.id_oficial && obl.id_oficial.trim() !== '') || (obl.id && obl.id.trim() !== ''));
+
             // Mostrar alerta de filas excluidas si existen
             this.mostrarAlertaFilasExcluidas();
-            
+
             // Poblar filtros con valores únicos
             this.populateFilterOptions();
-            
+
             // Calcular y mostrar KPIs iniciales (sin filtros)
             this.applyFilters();
-            
+
         } catch (error) {
             console.error('Error al cargar dashboard:', error);
             Utils.showNotification('Error al cargar datos del dashboard', 'error');
+        } finally {
+            // Exponer función de limpieza globalmente para debug
+            window.clearData = () => {
+                if (window.dataAdapter && window.dataAdapter.storage) {
+                    window.dataAdapter.storage.clear();
+                    console.log('🧹 LocalStorage limpiado. Recargue la página.');
+                    alert('Datos limpiados. Recargue la página.');
+                }
+            };
         }
     }
 
@@ -86,13 +95,13 @@ class DashboardController {
         const alertContainer = document.getElementById('alert-filas-excluidas');
         const alertContent = document.getElementById('alert-filas-excluidas-content');
         const btnCerrar = document.getElementById('btn-cerrar-alerta-excluidas');
-        
+
         if (!alertContainer || !alertContent) return;
-        
+
         // Obtener filas excluidas de la configuración
         if (this.config && this.config.filas_excluidas && this.config.filas_excluidas.length > 0) {
             const filasExcluidas = this.config.filas_excluidas;
-            
+
             // Agrupar por razón
             const agrupadas = {};
             filasExcluidas.forEach(({ fila, razon }) => {
@@ -101,25 +110,25 @@ class DashboardController {
                 }
                 agrupadas[razon].push(fila);
             });
-            
+
             // Construir contenido de la alerta
             let contenido = '';
             Object.entries(agrupadas).forEach(([razon, filas]) => {
                 filas.sort((a, b) => a - b); // Ordenar filas numéricamente
-                const filasTexto = filas.length <= 5 
+                const filasTexto = filas.length <= 5
                     ? filas.join(', ')
                     : `${filas.slice(0, 5).join(', ')} y ${filas.length - 5} más`;
-                
+
                 contenido += `<div class="mb-2">
                     <span class="font-semibold">${razon}</span>
                     <br>
                     <span class="text-yellow-600">Filas excluidas: ${filasTexto}</span>
                 </div>`;
             });
-            
+
             alertContent.innerHTML = contenido;
             alertContainer.classList.remove('hidden');
-            
+
             // Agregar listener para cerrar alerta
             if (btnCerrar) {
                 btnCerrar.addEventListener('click', () => {
@@ -179,7 +188,7 @@ class DashboardController {
                 const option = document.createElement('option');
                 option.value = val;
                 // Capitalizar primera letra de cada palabra
-                const capitalized = val.split(' ').map(word => 
+                const capitalized = val.split(' ').map(word =>
                     word.charAt(0).toUpperCase() + word.slice(1)
                 ).join(' ');
                 option.textContent = capitalized;
@@ -190,7 +199,7 @@ class DashboardController {
         populateSelect('filter-area', areas);
         populateSelect('filter-estatus', estatus);
         populateSelect('filter-sub-estatus', subEstatus);
-        
+
         console.log('[Dashboard] Filtros cargados:', {
             areas: areas.length,
             estatus: estatus,
@@ -222,14 +231,14 @@ class DashboardController {
             // Separar las que tienen dias_para_vencer_excel (del Excel) de las que no
             const delExcel = filtered.filter(obl => obl.dias_para_vencer_excel !== null && obl.dias_para_vencer_excel !== undefined);
             const otras = filtered.filter(obl => obl.dias_para_vencer_excel === null || obl.dias_para_vencer_excel === undefined);
-            
+
             // Ordenar por fecha de creación (más recientes primero) y tomar las primeras N
             const todasOrdenadas = [...delExcel, ...otras].sort((a, b) => {
                 const fechaA = new Date(a.created_at || 0);
                 const fechaB = new Date(b.created_at || 0);
                 return fechaB - fechaA; // Más recientes primero
             });
-            
+
             filtered = todasOrdenadas.slice(0, this.config.total_filas_excel);
         }
 
@@ -268,7 +277,7 @@ class DashboardController {
         this.updateKPI('ids-less-90', between60_90);
         this.updateKPI('ids-more-90', more90);
         this.updateKPI('ids-sin-fecha', sinFecha);
-        
+
         // Verificar que la suma sea correcta (solo para debugging)
         if (totalIds !== datos.length) {
             console.warn('[Dashboard] La suma de categorías no coincide con el total de datos:', {
@@ -286,7 +295,7 @@ class DashboardController {
         // Normalizamos comparación a lowercase y manejamos variaciones
         const countStatus = (status) => {
             const statusBuscado = String(status).toLowerCase().trim();
-            
+
             return datos.filter(d => {
                 if (!d.estatus) return false;
                 const estatusNormalizado = String(d.estatus).toLowerCase().trim();
@@ -308,9 +317,9 @@ class DashboardController {
             const estatus = d.estatus ? String(d.estatus).toLowerCase().trim() : 'sin estatus';
             estatusConConteo[estatus] = (estatusConConteo[estatus] || 0) + 1;
         });
-        
+
         const sumaEstatus = recordatorio + solicitud + cerrado + apagado;
-        
+
         // Log detallado
         console.log('[Dashboard] Conteo de estatus - DETALLE COMPLETO:', {
             totalDatos: datos.length,
@@ -340,16 +349,16 @@ class DashboardController {
                     apagado
                 }
             });
-            
+
             // Mostrar qué estatus no están siendo contados
             const estatusNoContados = Object.keys(estatusConConteo).filter(est => {
                 const estLower = est.toLowerCase().trim();
-                return estLower !== 'recordatorio' && 
-                       estLower !== 'solicitud' && 
-                       estLower !== 'cerrado' && 
-                       estLower !== 'apagado';
+                return estLower !== 'recordatorio' &&
+                    estLower !== 'solicitud' &&
+                    estLower !== 'cerrado' &&
+                    estLower !== 'apagado';
             });
-            
+
             if (estatusNoContados.length > 0) {
                 console.warn('[Dashboard] Estatus no contemplados en las tarjetas:', estatusNoContados);
             }
@@ -360,7 +369,7 @@ class DashboardController {
         this.updateKPI('status-cerrado', cerrado);
         this.updateKPI('status-apagado', apagado);
         this.updateKPI('status-sin-estatus', sinEstatus);
-        
+
         // Verificar que la suma de estatus coincida con el total
         const sumaEstatusFinal = recordatorio + solicitud + cerrado + apagado + sinEstatus;
         if (sumaEstatusFinal !== datos.length) {
@@ -372,7 +381,7 @@ class DashboardController {
         } else {
             console.log('[Dashboard] ✅ Suma de estatus correcta:', sumaEstatusFinal, '=', datos.length);
         }
-        
+
     }
 
     /**
@@ -413,10 +422,8 @@ class DashboardController {
      * Descargar CSV con IDs de una categoría
      */
     downloadIDsAsCSV(category, obligaciones) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:345',message:'downloadIDsAsCSV entry',data:{category,obligacionesCount:obligaciones?.length,obligacionesIsArray:Array.isArray(obligaciones)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
+
         if (!obligaciones || obligaciones.length === 0) {
             Utils.showNotification('No hay IDs para descargar en esta categoría', 'info');
             return;
@@ -459,7 +466,7 @@ class DashboardController {
         const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM para Excel
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
-        
+
         // Nombre del archivo basado en la categoría
         const categoryNames = {
             'total': 'Total_IDs',
@@ -475,30 +482,26 @@ class DashboardController {
             'apagado': 'Estatus_Apagado',
             'sin-estatus': 'Sin_Estatus'
         };
-        
+
         const fileName = `${categoryNames[category] || category}_${new Date().toISOString().split('T')[0]}.csv`;
-        
+
         link.setAttribute('href', url);
         link.setAttribute('download', fileName);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Limpiar el URL del blob después de un breve delay
         setTimeout(() => {
             URL.revokeObjectURL(url);
         }, 100);
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:409',message:'Before showNotification call',data:{idsCount:ids.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
+
+
         Utils.showNotification(`${ids.length} IDs descargados correctamente`, 'success');
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:412',message:'After showNotification call',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
+
+
     }
 
     /**
@@ -511,104 +514,86 @@ class DashboardController {
                 return; // Ya está configurado
             }
             this._cardDownloadSetup = true;
-            
+
             // Esperar a que el DOM esté completamente renderizado
             const setupListeners = () => {
                 try {
                     const cards = document.querySelectorAll('.kpi-card[data-kpi-category]');
-                    
+
                     if (cards.length === 0) {
                         console.warn('[Dashboard] No se encontraron tarjetas KPI para configurar descarga');
                         return;
                     }
-                    
+
                     cards.forEach(card => {
                         try {
-                            // #region agent log
-                            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:445',message:'Processing card in forEach',data:{cardExists:!!card,cardClassList:card?.classList?.toString(),cardId:card?.id,cardDataset:card?.dataset?.kpiCategory},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,D,E'})}).catch(()=>{});
-                            // #endregion
-                            
+
+
                             // Verificar que la tarjeta existe y tiene las propiedades necesarias
                             if (!card) return;
                             if (!card.dataset) return;
-                            
+
                             // Verificar que la tarjeta no tenga ya listeners (evitar duplicados)
                             if (card.dataset.downloadSetup === 'true') {
                                 return;
                             }
                             card.dataset.downloadSetup = 'true';
-                            
+
                             // Click en la tarjeta completa para descargar
                             card.addEventListener('click', (e) => {
                                 try {
-                                    // #region agent log
-                                    fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:442',message:'Card click event started',data:{cardExists:!!card,cardId:card?.id,category:card?.getAttribute('data-kpi-category'),targetTag:e.target?.tagName,targetClass:e.target?.className},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C'})}).catch(()=>{});
-                                    // #endregion
-                                    
+
+
                                     // Si el click fue en el icono de descarga, no hacer nada adicional (ya se maneja abajo)
                                     const closestIcon = e.target.closest('.download-icon');
-                                    // #region agent log
-                                    fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:446',message:'After closest check',data:{closestIconExists:!!closestIcon,closestIconClassList:closestIcon?.classList?.toString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                                    // #endregion
-                                    
+
+
                                     if (closestIcon) {
                                         return;
                                     }
-                                    
+
                                     const category = card.getAttribute('data-kpi-category');
                                     if (!category) return;
-                                    
+
                                     // Usar currentFilteredData si existe, sino usar allObligaciones
-                                    const datos = this.currentFilteredData && this.currentFilteredData.length > 0 
-                                        ? this.currentFilteredData 
+                                    const datos = this.currentFilteredData && this.currentFilteredData.length > 0
+                                        ? this.currentFilteredData
                                         : (this.allObligaciones || []);
-                                    
+
                                     const obligaciones = this.getObligacionesPorCategoria(datos, category);
-                                    // #region agent log
-                                    fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:458',message:'Before downloadIDsAsCSV call',data:{category,obligacionesCount:obligaciones?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                                    // #endregion
-                                    
+
+
                                     this.downloadIDsAsCSV(category, obligaciones);
                                 } catch (error) {
-                                    // #region agent log
-                                    fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:460',message:'Error in card click handler',data:{errorMessage:error?.message,errorStack:error?.stack,errorName:error?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C,D,E'})}).catch(()=>{});
-                                    // #endregion
+
                                     console.error('[Dashboard] Error en click de tarjeta:', error);
                                 }
                             });
-                            
+
                             // Click específico en el icono de descarga
                             const downloadIcon = card.querySelector('.download-icon');
-                            // #region agent log
-                            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:465',message:'Querying download icon',data:{downloadIconExists:!!downloadIcon,downloadIconClassList:downloadIcon?.classList?.toString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-                            // #endregion
-                            
+
+
                             if (downloadIcon) {
                                 downloadIcon.addEventListener('click', (e) => {
                                     try {
-                                        // #region agent log
-                                        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:468',message:'Download icon click started',data:{targetTag:e.target?.tagName,targetClass:e.target?.className},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C'})}).catch(()=>{});
-                                        // #endregion
-                                        
+
+
                                         e.stopPropagation(); // Evitar doble descarga
                                         const category = card.getAttribute('data-kpi-category');
                                         if (!category) return;
-                                        
+
                                         // Usar currentFilteredData si existe, sino usar allObligaciones
-                                        const datos = this.currentFilteredData && this.currentFilteredData.length > 0 
-                                            ? this.currentFilteredData 
+                                        const datos = this.currentFilteredData && this.currentFilteredData.length > 0
+                                            ? this.currentFilteredData
                                             : (this.allObligaciones || []);
-                                        
+
                                         const obligaciones = this.getObligacionesPorCategoria(datos, category);
-                                        // #region agent log
-                                        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:479',message:'Before downloadIDsAsCSV call from icon',data:{category,obligacionesCount:obligaciones?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                                        // #endregion
-                                        
+
+
                                         this.downloadIDsAsCSV(category, obligaciones);
                                     } catch (error) {
-                                        // #region agent log
-                                        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard-controller.js:481',message:'Error in download icon click handler',data:{errorMessage:error?.message,errorStack:error?.stack,errorName:error?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C,D,E'})}).catch(()=>{});
-                                        // #endregion
+
                                         console.error('[Dashboard] Error en click de icono descarga:', error);
                                     }
                                 });
@@ -621,7 +606,7 @@ class DashboardController {
                     console.error('[Dashboard] Error en setupListeners:', error);
                 }
             };
-            
+
             // Intentar configurar inmediatamente
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
                 setTimeout(setupListeners, 200);
@@ -650,7 +635,7 @@ class DashboardController {
 // Manejador global de errores para capturar errores de classList
 window.addEventListener('error', (event) => {
     if (event.message && event.message.includes('classList')) {
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'global-error-handler',message:'Global error caught - classList',data:{errorMessage:event.message,errorFilename:event.filename,errorLineno:event.lineno,errorColno:event.colno,errorStack:event.error?.stack,targetTag:event.target?.tagName,targetId:event.target?.id,targetClass:event.target?.className},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C,D,E'})}).catch(()=>{});
+
     }
 }, true);
 

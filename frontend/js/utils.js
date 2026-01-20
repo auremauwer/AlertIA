@@ -7,16 +7,16 @@ const Utils = {
      */
     formatDate(date, format = 'DD/MM/YYYY') {
         if (!date) return '';
-        
+
         const d = new Date(date);
         if (isNaN(d.getTime())) return '';
-        
+
         const day = String(d.getDate()).padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const year = d.getFullYear();
         const hours = String(d.getHours()).padStart(2, '0');
         const minutes = String(d.getMinutes()).padStart(2, '0');
-        
+
         switch (format) {
             case 'DD/MM/YYYY':
                 return `${day}/${month}/${year}`;
@@ -40,7 +40,7 @@ const Utils = {
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor(diff / (1000 * 60));
-        
+
         if (days > 0) {
             return `Hace ${days} día${days > 1 ? 's' : ''}`;
         } else if (hours > 0) {
@@ -57,15 +57,15 @@ const Utils = {
      */
     getDaysUntil(date) {
         if (!date) return null;
-        
+
         const fechaLimite = new Date(date);
         const hoy = new Date();
         hoy.setHours(0, 0, 0, 0);
         fechaLimite.setHours(0, 0, 0, 0);
-        
+
         const diff = fechaLimite - hoy;
         const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-        
+
         return days;
     },
 
@@ -109,9 +109,9 @@ const Utils = {
         // Determinar fecha límite a usar
         let fechaLimite;
         const periodicidad = String(obligacion.periodicidad).trim();
-        
+
         // Caso especial: "Anual, una vez al año" usa fecha del consejo (15-septiembre)
-        if (periodicidad.toLowerCase() === 'anual, una vez al año' || 
+        if (periodicidad.toLowerCase() === 'anual, una vez al año' ||
             periodicidad.toLowerCase().includes('anual, una vez')) {
             fechaLimite = this.getFechaConsejo();
         } else {
@@ -120,7 +120,7 @@ const Utils = {
 
         // Calcular días restantes
         const diasRestantes = this.getDaysUntil(fechaLimite.toISOString().split('T')[0]);
-        
+
         if (diasRestantes === null || diasRestantes < 0) {
             return null; // Fecha vencida o inválida
         }
@@ -225,10 +225,10 @@ const Utils = {
      */
     validateEmails(emailsString) {
         if (!emailsString) return { valid: true, emails: [] };
-        
+
         const emails = emailsString.split(',').map(e => e.trim()).filter(e => e);
         const invalid = emails.filter(e => !this.isValidEmail(e));
-        
+
         return {
             valid: invalid.length === 0,
             emails: emails,
@@ -272,16 +272,12 @@ const Utils = {
      * Mostrar notificación
      */
     showNotification(message, type = 'info') {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:274',message:'showNotification entry',data:{message,type,bodyExists:!!document.body},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
+
         // Crear elemento de notificación
         const notification = document.createElement('div');
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:277',message:'After createElement',data:{notificationExists:!!notification,notificationClassList:notification?.classList?.toString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B,C'})}).catch(()=>{});
-        // #endregion
-        
+
+
         notification.className = `notification notification-${type}`;
         notification.textContent = message;
         notification.style.cssText = `
@@ -296,29 +292,21 @@ const Utils = {
             z-index: 10000;
             animation: slideIn 0.3s ease-out;
         `;
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:292',message:'Before appendChild',data:{bodyExists:!!document.body,notificationExists:!!notification},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B,C'})}).catch(()=>{});
-        // #endregion
-        
+
+
+
         document.body.appendChild(notification);
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:295',message:'After appendChild',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
+
+
         // Remover después de 3 segundos
         setTimeout(() => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:299',message:'In setTimeout callback',data:{notificationExists:!!notification,notificationParent:notification?.parentNode?.tagName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
-            
+
+
             notification.style.animation = 'slideOut 0.3s ease-out';
             setTimeout(() => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'utils.js:301',message:'Before removeChild',data:{notificationExists:!!notification,notificationParent:notification?.parentNode?.tagName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B,C'})}).catch(()=>{});
-                // #endregion
-                
+
+
                 if (notification.parentNode) {
                     document.body.removeChild(notification);
                 }

@@ -103,7 +103,7 @@ class ExcelService {
 
         // Obtener encabezados de la fila encontrada
         const headers = jsonData[headerRowIndex].map(h => h ? String(h).toLowerCase().trim() : '');
-        
+
         // Log de headers para debugging
         console.log('[ExcelService] Headers encontrados:', headers);
 
@@ -340,46 +340,74 @@ class ExcelService {
             return null;
         };
 
+        // DEBUG: Logging de fila para verificar columnas
+        if (rowIndex < headerRowIndex + 5) { // Loguear solo las primeras 5 filas de datos
+            console.log(`[ExcelService] DEBUG Row ${rowIndex + 1} (Data):`, {
+                'Col H (7) Area': row[7],
+                'Col T (19) Estatus': row[19],
+                'Col U (20) SubEstatus': row[20],
+                'Col V (21) ID': row[21]
+            });
+        }
+
         // Obtener ID directamente de la columna V (índice 21) - OBLIGATORIO
         const idOriginal = row[21] ? String(row[21]).trim() : null;
-        
+
         // Validar que el ID oficial exista (es obligatorio)
         // rowIndex es el índice en el array JSON (0-based)
         // La fila real del Excel = rowIndex + 1 (porque Excel cuenta desde 1)
         if (!idOriginal || idOriginal === '') {
+            // Verificar si la fila tiene otros datos relevantes para determinar si es un error o una fila vacía
+            // Muchas veces Excel lee filas vacías al final si tienen formato
+            const hasNombre = getValue('nombre');
+            const hasArea = row[7] ? String(row[7]).trim() : null;
+
+            // Comprobar si hay *algún* dato en la fila
+            const hasAnyData = row.some((cell, idx) => {
+                if (idx === 21) return false; // Ignorar columna ID (ya sabemos que está vacía)
+                return cell !== null && cell !== undefined && String(cell).trim() !== '';
+            });
+
+            if (!hasNombre && !hasArea && !hasAnyData) {
+                return { obligacion: null, problemas: [] }; // Ignorar fila completamente vacía o irrelevante
+            }
+
             const filaExcel = rowIndex + 1; // Fila real del Excel
             return {
                 obligacion: null,
                 problemas: [{
                     tipo: 'error',
                     campo: 'id_oficial',
-                    mensaje: `Fila ${filaExcel} del Excel: La columna V está vacía. El ID es obligatorio. Revisa la fila ${filaExcel} en tu archivo Excel.`,
+                    mensaje: `Fila ${filaExcel} del Excel: La columna V (ID) está vacía, pero se detectaron datos en otras columnas. El ID es obligatorio.`,
                     valor: null,
                     filaExcel: filaExcel
                 }]
             };
         }
-        
+
         // Obtener Área Responsable directamente de la columna H (índice 7)
-        const area = row[7] ? String(row[7]).trim() : (getValue('area') || 'Sin asignar');
-        
+        const area = row[7] ? String(row[7]).trim() : 'Sin asignar';
+
         // Obtener valores básicos
         const nombre = getValue('nombre') || idOriginal;
         const regulador = getValue('regulador') || 'General';
 
         // Nuevos campos
-        // No asignar valor por defecto a estatus - debe venir del Excel
-        // Si está vacío, se guardará como null y se filtrará en los filtros
-        const estatusVal = getValue('estatus');
+        // Mapeo estricto solicitado por el usuario:
+        // Columna T (19) -> Estatus
+        // Columna U (20) -> Subestatus
+        const estatusVal = row[19];
         const estatus = estatusVal ? String(estatusVal).trim() : null;
-        const subEstatus = getValue('sub_estatus');
+
+        const subEstatusVal = row[20];
+        const subEstatus = subEstatusVal ? String(subEstatusVal).trim() : null;
         const alerta1 = parseDate(getValue('alerta_1'));
         const alerta2 = parseDate(getValue('alerta_2'));
         const alerta3 = parseDate(getValue('alerta_3'));
         const alerta4 = parseDate(getValue('alerta_4'));
         const respCN = getValue('responsable_cn');
         const respJur = getValue('responsable_juridico');
-        
+
         // Leer "Días para vencer" del Excel si existe
         const diasParaVencerVal = getValue('dias_para_vencer');
         let diasParaVencer = null;

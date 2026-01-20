@@ -94,10 +94,11 @@ class ConfiguracionController {
         try {
             Utils.showNotification('Procesando archivo...', 'info');
 
-            // 1. Procesar Excel (Devuelve array de obligaciones)
-            const obligaciones = await this.excelService.processExcelFile(file);
+            // 1. Procesar Excel (Devuelve array de obligaciones o objeto con obligaciones y problemas)
+            const result = await this.excelService.processExcelFile(file);
+            const obligaciones = Array.isArray(result) ? result : (result.obligaciones || []);
 
-            if (obligaciones && Array.isArray(obligaciones) && obligaciones.length > 0) {
+            if (obligaciones && obligaciones.length > 0) {
                 // 2. Guardar en Base de Datos
                 await window.dataAdapter.saveAllObligaciones(obligaciones);
 

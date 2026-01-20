@@ -10,12 +10,12 @@ async function seedInitialData() {
 
     try {
         // Cargar datos iniciales
-        const response = await fetch('../../data/initial-data.json');
+        const response = await fetch('/data/initial-data.json');
         if (!response.ok) {
             console.warn('No se pudo cargar initial-data.json, usando datos por defecto');
             return;
         }
-        
+
         const data = await response.json();
 
         // Verificar si ya hay datos

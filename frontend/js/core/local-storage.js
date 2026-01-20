@@ -309,30 +309,17 @@ class LocalStorageManager {
             nombre_remitente: 'AlertIA - Centro de Alertas',
             cc_global: []
         };
-        // #region agent log
-        console.log('[DEBUG] local-storage getConfiguracion: stored =', stored, 'config.total_filas_excel =', config?.total_filas_excel, 'isDefault =', !stored);
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'local-storage.js:306',message:'local-storage getConfiguracion: returned value',data:{configTotalFilas:config?.total_filas_excel,configKeys:Object.keys(config||{}),isDefault:!stored},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
+
         return config;
     }
 
     async saveConfiguracion(config) {
         const current = await this.getConfiguracion();
-        // #region agent log
-        console.log('[DEBUG] local-storage saveConfiguracion BEFORE merge: current.total_filas_excel =', current?.total_filas_excel, 'config.total_filas_excel =', config?.total_filas_excel);
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'local-storage.js:314',message:'local-storage saveConfiguracion: BEFORE merge',data:{currentTotalFilas:current?.total_filas_excel,configTotalFilas:config?.total_filas_excel,configKeys:Object.keys(config||{})},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,D'})}).catch(()=>{});
-        // #endregion
+
         const updated = { ...current, ...config, updated_at: new Date().toISOString() };
-        // #region agent log
-        console.log('[DEBUG] local-storage saveConfiguracion AFTER merge: updated.total_filas_excel =', updated?.total_filas_excel, 'updated keys =', Object.keys(updated||{}));
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'local-storage.js:316',message:'local-storage saveConfiguracion: AFTER merge, BEFORE set',data:{updatedTotalFilas:updated?.total_filas_excel,updatedKeys:Object.keys(updated||{})},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,D'})}).catch(()=>{});
-        // #endregion
+
         this.set('configuracion', updated);
-        // #region agent log
-        const verify = this.get('configuracion');
-        console.log('[DEBUG] local-storage saveConfiguracion AFTER set: verify.total_filas_excel =', verify?.total_filas_excel);
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'local-storage.js:317',message:'local-storage saveConfiguracion: AFTER set',data:{savedTotalFilas:verify?.total_filas_excel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,D'})}).catch(()=>{});
-        // #endregion
+
         return updated;
     }
 

@@ -1,7 +1,8 @@
 {
   "obligaciones": [
     {
-      "id": "OBL-2023-0045",
+      "id": "OBL-2023-0045", "id_oficial": "OBL-2023-0045",
+      "id_oficial": "OBL-2023-0045",
       "regulador": "CNBV",
       "descripcion": "Presentación Informe Trimestral de Auditoría Externa de Riesgos Financieros",
       "nombre": "Informe Trimestral de Auditoría Externa",
@@ -19,7 +20,7 @@
       "updated_at": "2023-10-20T00:00:00Z"
     },
     {
-      "id": "OBL-2023-0082",
+      "id": "OBL-2023-0082", "id_oficial": "OBL-2023-0082",
       "regulador": "CNBV",
       "descripcion": "Renovación de Póliza de Ciberseguridad - Sector Infraestructura IT",
       "nombre": "Renovación Póliza Ciberseguridad",
@@ -37,7 +38,7 @@
       "updated_at": "2023-10-20T00:00:00Z"
     },
     {
-      "id": "OBL-2023-0112",
+      "id": "OBL-2023-0112", "id_oficial": "OBL-2023-0112",
       "regulador": "CNBV",
       "descripcion": "Actualización de Protocolos de Emergencia - Sucursales Zona Norte",
       "nombre": "Actualización Protocolos Emergencia",
@@ -55,7 +56,7 @@
       "updated_at": "2023-10-20T00:00:00Z"
     },
     {
-      "id": "OBL-2023-0125",
+      "id": "OBL-2023-0125", "id_oficial": "OBL-2023-0125",
       "regulador": "SAT",
       "descripcion": "Certificación Anual de Proveedores de Servicios Críticos",
       "nombre": "Certificación Proveedores Críticos",
@@ -73,7 +74,7 @@
       "updated_at": "2023-10-20T00:00:00Z"
     },
     {
-      "id": "OBL-2023-0102",
+      "id": "OBL-2023-0102", "id_oficial": "OBL-2023-0102",
       "regulador": "SAT",
       "descripcion": "Declaración Jurada Anual",
       "nombre": "Declaración Jurada Anual",
@@ -91,7 +92,7 @@
       "updated_at": "2023-10-20T00:00:00Z"
     },
     {
-      "id": "OBL-2023-0441",
+      "id": "OBL-2023-0441", "id_oficial": "OBL-2023-0441",
       "regulador": "CNBV",
       "descripcion": "Auditoría Interna Q3",
       "nombre": "Auditoría Interna Q3",
@@ -109,7 +110,7 @@
       "updated_at": "2023-10-20T00:00:00Z"
     },
     {
-      "id": "OBL-2023-0988",
+      "id": "OBL-2023-0988", "id_oficial": "OBL-2023-0988",
       "regulador": "ISO",
       "descripcion": "Renovación Certificación ISO",
       "nombre": "Renovación Certificación ISO",
@@ -127,7 +128,7 @@
       "updated_at": "2023-10-20T00:00:00Z"
     },
     {
-      "id": "OBL-2023-0015",
+      "id": "OBL-2023-0015", "id_oficial": "OBL-2023-0015",
       "regulador": "SHCP",
       "descripcion": "Reporte preventivo de operaciones inusuales 4.1.2",
       "nombre": "Reporte Operaciones Inusuales",
@@ -145,7 +146,7 @@
       "updated_at": "2023-10-18T00:00:00Z"
     },
     {
-      "id": "OBL-2023-0001",
+      "id": "OBL-2023-0001", "id_oficial": "OBL-2023-0001",
       "regulador": "CNBV",
       "descripcion": "Vencimiento Próxima Obligación Tributaria",
       "nombre": "Obligación Tributaria",

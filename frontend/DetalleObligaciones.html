@@ -86,10 +86,11 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h3 class="text-lg font-extrabold text-text-main">Detalle de Obligación</h3>
-                            <span class="text-xs font-bold text-primary bg-red-50 px-2 py-0.5 rounded">OBL-00124</span>
+                            <span id="header-id"
+                                class="text-xs font-bold text-primary bg-red-50 px-2 py-0.5 rounded"></span>
                         </div>
-                        <p class="text-[11px] text-text-muted font-semibold uppercase tracking-wider">CNBV •
-                            Cumplimiento • Mensual</p>
+                        <p id="header-subtitle"
+                            class="text-[11px] text-text-muted font-semibold uppercase tracking-wider"></p>
                     </div>
                 </div>
                 <button onclick="history.back()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -105,20 +106,24 @@
                             <div class="grid grid-cols-2 gap-y-4 gap-x-6">
                                 <div>
                                     <p class="text-[10px] text-text-muted uppercase font-bold">Disposición resumida</p>
-                                    <p class="text-sm font-semibold">Reporte preventivo de operaciones inusuales 4.1.2
+                                    <p class="text-sm font-semibold" data-field="descripcion">Reporte preventivo de
+                                        operaciones inusuales 4.1.2
                                     </p>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-text-muted uppercase font-bold">Regulador</p>
-                                    <p class="text-sm font-semibold">Comisión Nacional Bancaria y de Valores</p>
+                                    <p class="text-sm font-semibold" data-field="regulador">Comisión Nacional Bancaria y
+                                        de Valores</p>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-text-muted uppercase font-bold">Fecha Límite</p>
-                                    <p class="text-sm font-mono font-bold text-primary">25/10/2023</p>
+                                    <p class="text-sm font-mono font-bold text-primary" data-field="fecha_limite">
+                                        25/10/2023</p>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-text-muted uppercase font-bold">Estado Actual</p>
-                                    <div class="mt-1"><span class="status-pill status-ventana">En ventana de
+                                    <div class="mt-1" data-field="estado"><span class="status-pill status-ventana">En
+                                            ventana de
                                             alerta</span></div>
                                 </div>
                             </div>

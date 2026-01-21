@@ -393,7 +393,8 @@ class ExcelService {
 
         // Obtener valores básicos
         const nombre = getValue('nombre') || idOriginal;
-        const regulador = getValue('regulador') || 'General';
+        // Obtener Regulador directamente de la columna C (índice 2)
+        const regulador = row[2] ? String(row[2]).trim() : 'General';
 
         // Nuevos campos
         // Mapeo estricto solicitado por el usuario:

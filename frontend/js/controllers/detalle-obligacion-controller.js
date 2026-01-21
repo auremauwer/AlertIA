@@ -39,7 +39,7 @@ class DetalleObligacionController {
      */
     setupEventListeners() {
         // Botón cerrar
-        const btnCerrar = Array.from(document.querySelectorAll('button')).find(btn => 
+        const btnCerrar = Array.from(document.querySelectorAll('button')).find(btn =>
             btn.textContent.includes('Cerrar')
         );
         if (btnCerrar) {
@@ -49,7 +49,7 @@ class DetalleObligacionController {
         }
 
         // Botón pausar
-        const btnPausar = Array.from(document.querySelectorAll('button')).find(btn => 
+        const btnPausar = Array.from(document.querySelectorAll('button')).find(btn =>
             btn.textContent.includes('Pausar')
         );
         if (btnPausar) {
@@ -57,7 +57,7 @@ class DetalleObligacionController {
         }
 
         // Botón agregar comentario
-        const btnComentario = Array.from(document.querySelectorAll('button')).find(btn => 
+        const btnComentario = Array.from(document.querySelectorAll('button')).find(btn =>
             btn.textContent.includes('Comentario')
         );
         if (btnComentario) {
@@ -65,7 +65,7 @@ class DetalleObligacionController {
         }
 
         // Botón marcar atendida
-        const btnAtendida = Array.from(document.querySelectorAll('button')).find(btn => 
+        const btnAtendida = Array.from(document.querySelectorAll('button')).find(btn =>
             btn.textContent.includes('Marcar Atendida')
         );
         if (btnAtendida) {
@@ -91,12 +91,22 @@ class DetalleObligacionController {
      * Renderizar detalle
      */
     renderDetalle(obligacion) {
-        // Actualizar título
-        const titulo = Array.from(document.querySelectorAll('h3')).find(h3 => 
-            h3.textContent.includes('Detalle')
-        );
-        if (titulo) {
-            titulo.innerHTML = `Detalle de Obligación <span class="text-xs font-bold text-primary bg-red-50 px-2 py-0.5 rounded">${obligacion.id}</span>`;
+        // Actualizar header
+        const headerId = document.getElementById('header-id');
+        const headerSubtitle = document.getElementById('header-subtitle');
+
+        if (headerId) {
+            headerId.textContent = obligacion.id || obligacion.id_oficial || '---';
+        }
+
+        if (headerSubtitle) {
+            const parts = [];
+            // Agregar partes solo si existen y no están vacías
+            if (obligacion.regulador) parts.push(obligacion.regulador);
+            if (obligacion.area && obligacion.area !== 'Sin asignar') parts.push(obligacion.area);
+            if (obligacion.periodicidad && obligacion.periodicidad !== 'No definida') parts.push(obligacion.periodicidad);
+
+            headerSubtitle.textContent = parts.join(' • ');
         }
 
         // Actualizar información general
@@ -130,7 +140,7 @@ class DetalleObligacionController {
         try {
             // Obtener eventos relacionados con esta obligación
             const eventos = await this.auditoriaService.getEventos();
-            const eventosObligacion = eventos.filter(e => 
+            const eventosObligacion = eventos.filter(e =>
                 e.contexto?.obligacion_id === obligacion.id
             );
 
@@ -152,19 +162,19 @@ class DetalleObligacionController {
         eventos.forEach((evento, index) => {
             const item = document.createElement('div');
             item.className = 'flex gap-4';
-            
+
             const iconClass = evento.accion.includes('envió') ? 'bg-slate-600' :
-                            evento.accion.includes('Pausó') ? 'bg-orange-50 border border-orange-300 text-orange-600' :
-                            evento.accion.includes('Reanudó') ? 'bg-red-50 border border-red-300 text-red-500' :
-                            evento.accion.includes('comentario') ? 'bg-amber-50 border border-amber-300 text-amber-600' :
+                evento.accion.includes('Pausó') ? 'bg-orange-50 border border-orange-300 text-orange-600' :
+                    evento.accion.includes('Reanudó') ? 'bg-red-50 border border-red-300 text-red-500' :
+                        evento.accion.includes('comentario') ? 'bg-amber-50 border border-amber-300 text-amber-600' :
                             'bg-slate-600';
 
             const icon = evento.accion.includes('envió') ? 'mail' :
-                        evento.accion.includes('Calculó') ? 'calculate' :
-                        evento.accion.includes('Pausó') ? 'pause_circle' :
+                evento.accion.includes('Calculó') ? 'calculate' :
+                    evento.accion.includes('Pausó') ? 'pause_circle' :
                         evento.accion.includes('Reanudó') ? 'play_arrow' :
-                        evento.accion.includes('comentario') ? 'comment' :
-                        'event';
+                            evento.accion.includes('comentario') ? 'comment' :
+                                'event';
 
             item.innerHTML = `
                 <div class="shrink-0 flex flex-col items-center">

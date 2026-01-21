@@ -5,6 +5,8 @@
 class ObligacionesController {
     constructor() {
         this.obligacionesService = null;
+        this.fileStorageService = null;
+        this.excelService = null;
         this.currentFilters = {
             area: null,
             periodicidad: null,
@@ -26,6 +28,26 @@ class ObligacionesController {
         }
 
         this.obligacionesService = new ObligacionesService(window.dataAdapter);
+        
+        // Inicializar servicio de Excel (esperar a que esté disponible)
+        if (typeof XLSX !== 'undefined' && window.ExcelService) {
+            this.excelService = new ExcelService();
+            console.log('✅ ExcelService inicializado');
+        } else {
+            console.warn('⚠️ ExcelService no disponible. XLSX:', typeof XLSX, 'ExcelService:', typeof window.ExcelService);
+            // Intentar esperar un poco y volver a intentar
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (typeof XLSX !== 'undefined' && window.ExcelService) {
+                this.excelService = new ExcelService();
+                console.log('✅ ExcelService inicializado (segundo intento)');
+            }
+        }
+        
+        // Inicializar servicio de almacenamiento de archivos
+        if (window.FileStorageService) {
+            this.fileStorageService = new FileStorageService();
+            await this.fileStorageService.init();
+        }
 
         this.setupEventListeners();
         await this.loadObligaciones();
@@ -63,6 +85,22 @@ class ObligacionesController {
                 this.currentFilters.search = e.target.value;
                 this.loadObligaciones();
             }, 300));
+        }
+
+        // Botón Exportar Excel
+        const exportarExcelBtn = document.getElementById('exportar-excel-btn');
+        if (exportarExcelBtn) {
+            exportarExcelBtn.addEventListener('click', () => {
+                this.exportarExcel();
+            });
+        }
+
+        // Botón Exportar Calendario
+        const exportarBtn = document.getElementById('exportar-calendario-btn');
+        if (exportarBtn) {
+            exportarBtn.addEventListener('click', () => {
+                this.exportarCalendarioNotificaciones();
+            });
         }
 
         // Botones de acción
@@ -328,7 +366,7 @@ class ObligacionesController {
     updatePagination(total) {
         const totalPages = Math.ceil(total / this.itemsPerPage);
 
-        // Actualizar texto
+            // Actualizar texto
         const infoEl = document.getElementById('pagination-info');
         if (infoEl) {
             const start = total === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
@@ -451,6 +489,407 @@ class ObligacionesController {
         } catch (error) {
             Utils.showNotification('Error al marcar obligación como atendida', 'error');
         }
+    }
+
+    /**
+     * Exportar Excel actualizado
+     * Genera un archivo Excel con todas las obligaciones en el estado actual
+     */
+    async exportarExcel() {
+        try {
+            if (!this.excelService) {
+                Utils.showNotification('Servicio de Excel no disponible', 'error');
+                return;
+            }
+
+            // Obtener todas las obligaciones (sin filtros)
+            const todasObligaciones = await this.obligacionesService.getAll();
+            
+            if (todasObligaciones.length === 0) {
+                Utils.showNotification('No hay obligaciones para exportar', 'warning');
+                return;
+            }
+
+            // Obtener estructura del Excel original desde configuración
+            let excelStructure = null;
+            if (window.configService) {
+                try {
+                    const config = await window.configService.getConfiguracion();
+                    excelStructure = config.excelStructure || null;
+                } catch (error) {
+                    console.warn('No se pudo obtener estructura del Excel desde configuración:', error);
+                }
+            }
+
+            // Generar Excel
+            const blob = this.excelService.exportToExcel(todasObligaciones, excelStructure);
+            
+            // Generar nombre de archivo con timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const fileName = `obligaciones_actualizadas_${timestamp}.xlsx`;
+            
+            // Guardar en almacenamiento de archivos si está disponible
+            if (this.fileStorageService) {
+                try {
+                    await this.fileStorageService.saveFile(fileName, blob, 'exports', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                    
+                    // Guardar metadatos del export
+                    await this.fileStorageService.saveMetadata(`excel_export_${timestamp}`, {
+                        fileName: fileName,
+                        totalObligaciones: todasObligaciones.length,
+                        fechaGeneracion: new Date().toISOString(),
+                        tieneEstructuraOriginal: excelStructure !== null
+                    });
+                    
+                    console.log(`✅ Excel guardado en almacenamiento: ${fileName}`);
+                    
+                    // Descargar usando el servicio
+                    const filePath = `exports/${fileName}`;
+                    await this.fileStorageService.downloadFile(filePath, fileName);
+                } catch (error) {
+                    console.warn('Error al guardar/descargar con servicio de almacenamiento, usando método tradicional:', error);
+                    // Fallback a método tradicional
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', fileName);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }
+            } else {
+                // Método tradicional si no hay servicio de almacenamiento
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', fileName);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+
+            // Mostrar notificación
+            Utils.showNotification(`Excel exportado: ${todasObligaciones.length} obligaciones`, 'success');
+
+        } catch (error) {
+            console.error('Error al exportar Excel:', error);
+            Utils.showNotification('Error al exportar Excel: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Exportar calendario de notificaciones
+     * Genera un CSV con las fechas de alertas según las reglas de las columnas W, X, Y, Z
+     */
+    async exportarCalendarioNotificaciones() {
+        try {
+            // Obtener todas las obligaciones (sin filtros)
+            const todasObligaciones = await this.obligacionesService.getAll();
+            
+            const MAX_FECHAS_POR_ID = 100;
+            const resultados = [];
+            const logs = [];
+
+            for (const obligacion of todasObligaciones) {
+                const id = obligacion.id_oficial || obligacion.id;
+                if (!id || id.trim() === '') {
+                    continue;
+                }
+
+                // Parsear fecha límite
+                const deadline = this.parseFecha(obligacion.fecha_limite || obligacion.fecha_limite_original);
+                if (!deadline) {
+                    logs.push(`ID=${id}: sin 'Fecha límite de entrega' válida (no se generaron alertas).`);
+                    continue;
+                }
+
+                // Obtener fechas de reglas de alertamiento
+                const reglas = obligacion.reglas_alertamiento || {};
+                const a1 = this.parseFecha(reglas.regla_1_vez);      // 1 Vez
+                const a2 = this.parseFecha(reglas.regla_semanal);    // Semanal
+                const a3 = this.parseFecha(reglas.regla_saltado);     // Saltado (cada 2 días)
+                const a4 = this.parseFecha(reglas.regla_diaria);     // Diaria
+
+                // Verificar incongruencias (solo para log)
+                const warnings = this.checkIncongruence(a1, a2, a3, a4, deadline);
+                warnings.forEach(w => logs.push(`ID=${id}: ${w}`));
+
+                // Generar calendario con prioridad: 4TA (Diaria) > 3ER (Saltado) > 2DA (Semanal) > 1ER (1 Vez)
+                const fechas = this.generateScheduleForRow(a1, a2, a3, a4, deadline);
+
+                // Regla: si >100 fechas, cancelar ese ID
+                if (fechas.length > MAX_FECHAS_POR_ID) {
+                    logs.push(`ID=${id}: cancelado, generó ${fechas.length} fechas (>${MAX_FECHAS_POR_ID}).`);
+                    continue;
+                }
+
+                // Agregar fechas al resultado
+                fechas.forEach(fecha => {
+                    resultados.push({
+                        ID: id,
+                        Fecha: this.formatFechaCSV(fecha)
+                    });
+                });
+            }
+
+            // Generar CSV
+            const csv = this.generateCSV(resultados);
+            
+            // Generar nombre de archivo con timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const fileName = `calendario_alertas_${timestamp}.csv`;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            
+            // Guardar en almacenamiento de archivos y descargar si está disponible
+            if (this.fileStorageService) {
+                try {
+                    // Guardar en almacenamiento
+                    const filePath = await this.fileStorageService.saveFile(fileName, blob, 'exports', 'text/csv');
+                    
+                    // Guardar metadatos del export
+                    await this.fileStorageService.saveMetadata(`export_${timestamp}`, {
+                        fileName: fileName,
+                        totalFechas: resultados.length,
+                        totalObligaciones: todasObligaciones.length,
+                        fechaGeneracion: new Date().toISOString(),
+                        logs: logs.length > 0 ? logs : null
+                    });
+                    
+                    console.log(`✅ Calendario guardado en almacenamiento: ${fileName}`);
+                    
+                    // Descargar usando el servicio
+                    await this.fileStorageService.downloadFile(filePath, fileName);
+                } catch (error) {
+                    console.warn('Error al guardar/descargar con servicio de almacenamiento, usando método tradicional:', error);
+                    // Fallback a método tradicional
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', fileName);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }
+            } else {
+                // Método tradicional si no hay servicio de almacenamiento
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', fileName);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+
+            // Mostrar notificación
+            Utils.showNotification(`Calendario exportado: ${resultados.length} fechas generadas`, 'success');
+            
+            // Log en consola si hay advertencias
+            if (logs.length > 0) {
+                console.warn('Advertencias al generar calendario:', logs);
+            }
+
+        } catch (error) {
+            console.error('Error al exportar calendario:', error);
+            Utils.showNotification('Error al exportar calendario de notificaciones', 'error');
+        }
+    }
+
+    /**
+     * Parsea una fecha desde string DD/MM/YYYY o YYYY-MM-DD a Date
+     */
+    parseFecha(fechaStr) {
+        if (!fechaStr) return null;
+        
+        // Si es string DD/MM/YYYY
+        if (typeof fechaStr === 'string' && fechaStr.includes('/')) {
+            const parts = fechaStr.split('/');
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // Mes es 0-based
+                const year = parseInt(parts[2], 10);
+                if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                    return new Date(Date.UTC(year, month, day));
+                }
+            }
+        }
+        
+        // Si es string YYYY-MM-DD
+        if (typeof fechaStr === 'string' && fechaStr.includes('-')) {
+            const date = new Date(fechaStr + 'T00:00:00Z');
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+        
+        // Si ya es Date
+        if (fechaStr instanceof Date && !isNaN(fechaStr.getTime())) {
+            return fechaStr;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Formatea una fecha a DD/MM/YYYY para el CSV
+     */
+    formatFechaCSV(fecha) {
+        if (!fecha) return '';
+        const d = new Date(fecha);
+        const day = String(d.getUTCDate()).padStart(2, '0');
+        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const year = d.getUTCFullYear();
+        return `${day}/${month}/${year}`;
+    }
+
+    /**
+     * Verifica incongruencias temporales entre alertas
+     */
+    checkIncongruence(a1, a2, a3, a4, deadline) {
+        const warnings = [];
+        
+        const fmt = (d) => d ? this.formatFechaCSV(d) : 'NA';
+        
+        // Incongruencias: una alerta de MAYOR prioridad con fecha menor que una de menor prioridad
+        const pairs = [
+            ['2DA', a2, '1ER', a1],
+            ['3ER', a3, '2DA', a2],
+            ['3ER', a3, '1ER', a1],
+            ['4TA', a4, '3ER', a3],
+            ['4TA', a4, '2DA', a2],
+            ['4TA', a4, '1ER', a1],
+        ];
+        
+        for (const [higherName, higherDate, lowerName, lowerDate] of pairs) {
+            if (higherDate && lowerDate && higherDate < lowerDate) {
+                warnings.push(
+                    `Incongruencia: ${higherName} (${fmt(higherDate)}) < ${lowerName} (${fmt(lowerDate)}). Se aplicó prioridad.`
+                );
+            }
+        }
+        
+        // Alertas que arrancan después de la fecha límite
+        if (deadline) {
+            for (const [name, d] of [['1ER', a1], ['2DA', a2], ['3ER', a3], ['4TA', a4]]) {
+                if (d && d > deadline) {
+                    warnings.push(
+                        `Alerta ${name} (${fmt(d)}) > Fecha límite (${fmt(deadline)}). No generó envíos.`
+                    );
+                }
+            }
+        }
+        
+        return warnings;
+    }
+
+    /**
+     * Genera rango de fechas desde start hasta end (inclusive) avanzando stepDays
+     */
+    genRange(start, end, stepDays) {
+        const fechas = [];
+        let cur = new Date(start);
+        const endDate = new Date(end);
+        
+        while (cur <= endDate) {
+            fechas.push(new Date(cur));
+            cur = new Date(cur);
+            cur.setUTCDate(cur.getUTCDate() + stepDays);
+        }
+        
+        return fechas;
+    }
+
+    /**
+     * Obtiene la fecha mínima no nula
+     */
+    minNonNull(...dates) {
+        const clean = dates.filter(d => d !== null && d !== undefined);
+        return clean.length > 0 ? new Date(Math.min(...clean.map(d => d.getTime()))) : null;
+    }
+
+    /**
+     * Genera el calendario de fechas para una obligación aplicando prioridad
+     * Prioridad: 4TA (Diaria) > 3ER (Saltado) > 2DA (Semanal) > 1ER (1 Vez)
+     */
+    generateScheduleForRow(a1, a2, a3, a4, deadline) {
+        if (!deadline) return [];
+        
+        const fechas = [];
+        
+        // 4TA (diaria): desde a4 hasta deadline (inclusive)
+        if (a4 && a4 <= deadline) {
+            fechas.push(...this.genRange(a4, deadline, 1));
+        }
+        
+        // 3ER (cada 2 días): desde a3 hasta min(a4-1, deadline)
+        if (a3 && a3 <= deadline) {
+            const a4Minus1 = a4 ? new Date(a4.getTime() - 86400000) : null; // a4 - 1 día
+            const upper = this.minNonNull(a4Minus1, deadline) || deadline;
+            if (a3 <= upper) {
+                fechas.push(...this.genRange(a3, upper, 2));
+            }
+        }
+        
+        // 2DA (semanal): desde a2 hasta min(a3-1, a4-1, deadline)
+        if (a2 && a2 <= deadline) {
+            const a3Minus1 = a3 ? new Date(a3.getTime() - 86400000) : null;
+            const a4Minus1 = a4 ? new Date(a4.getTime() - 86400000) : null;
+            const upper = this.minNonNull(a3Minus1, a4Minus1, deadline) || deadline;
+            if (a2 <= upper) {
+                fechas.push(...this.genRange(a2, upper, 7));
+            }
+        }
+        
+        // 1ER (única): sólo si queda antes del arranque de cualquier alerta de mayor prioridad
+        if (a1 && a1 <= deadline) {
+            const cutoff = this.minNonNull(a2, a3, a4);
+            if (!cutoff) {
+                fechas.push(a1);
+            } else {
+                if (a1 < cutoff) {
+                    fechas.push(a1);
+                }
+            }
+        }
+        
+        // Unificar y ordenar (y asegurar <= deadline)
+        const fechasUnicas = [...new Set(fechas.map(f => f.getTime()))]
+            .map(t => new Date(t))
+            .filter(f => f <= deadline)
+            .sort((a, b) => a.getTime() - b.getTime());
+        
+        return fechasUnicas;
+    }
+
+    /**
+     * Genera CSV desde array de objetos
+     */
+    generateCSV(data) {
+        if (data.length === 0) {
+            return 'ID,Fecha\n';
+        }
+        
+        const headers = Object.keys(data[0]);
+        const rows = data.map(row => 
+            headers.map(header => {
+                const value = row[header];
+                // Escapar comillas y envolver en comillas si contiene comas o comillas
+                if (value && (value.toString().includes(',') || value.toString().includes('"'))) {
+                    return `"${value.toString().replace(/"/g, '""')}"`;
+                }
+                return value || '';
+            }).join(',')
+        );
+        
+        return [headers.join(','), ...rows].join('\n');
     }
 }
 

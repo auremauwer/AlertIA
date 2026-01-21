@@ -1,0 +1,3 @@
+# Este directorio almacena archivos generados por la aplicación
+# Los archivos se guardan en IndexedDB del navegador, no en el sistema de archivos
+# Este archivo .gitkeep mantiene el directorio en el repositorio

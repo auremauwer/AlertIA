@@ -6,7 +6,7 @@
     'use strict';
 
     // Versión de la aplicación para verificación
-    window.APP_VERSION = '3.0.1';
+    window.APP_VERSION = '3.0.3';
     console.log(`%c AlertIA v${window.APP_VERSION} Iniciando... `, 'background: #ec0000; color: white; font-weight: bold; padding: 4px; border-radius: 2px;');
 
     // Orden de carga de scripts
@@ -28,6 +28,8 @@
         'js/services/envios-service.js',
         'js/services/auditoria-service.js',
         'js/services/config-service.js',
+        'js/services/excel-service.js',
+        'js/services/file-storage-service.js',
 
         // Plantillas
         'js/email-template.js'

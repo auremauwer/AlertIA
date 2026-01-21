@@ -46,7 +46,7 @@ class ExcelService {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-
+                    
                     // Si no se proporcionó el nombre de la hoja, rechazar para que se pregunte
                     if (!sheetName) {
                         reject(new Error('SHEET_SELECTION_REQUIRED'));
@@ -65,20 +65,34 @@ class ExcelService {
                     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
                     const totalFilasEnExcel = range.e.r + 1; // +1 porque es 0-indexed (fila 1 = índice 0)
                     console.log('[ExcelService] Total filas en Excel (incluyendo encabezados):', totalFilasEnExcel, 'Rango:', worksheet['!ref'], 'Hoja:', sheetName);
-
+                    
                     // Convertir a JSON
                     // raw: true para obtener valores raw (números seriales para fechas)
                     // Esto nos permite controlar la conversión de fechas nosotros mismos
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
                         header: 1,
                         defval: null,
                         raw: true // Obtener valores raw para controlar la conversión de fechas
                     });
 
+                    // Guardar estructura del Excel para exportación futura
+                    const headers = jsonData[3] || []; // Fila 4 (índice 3) con encabezados
+                    const headersLower = headers.map(h => h ? String(h).toLowerCase().trim() : '');
+                    const columnMap = this.mapColumns(headersLower);
+                    
                     // Procesar datos con fila 4 como cabecera (índice 3)
-                    const obligaciones = this.parseExcelData(jsonData, totalFilasEnExcel, 3);
+                    const result = this.parseExcelData(jsonData, totalFilasEnExcel, 3);
+                    
+                    // Agregar estructura del Excel al resultado
+                    result.excelStructure = {
+                        headers: headers,
+                        columnMap: columnMap,
+                        sheetName: sheetName,
+                        headerRowIndex: 3,
+                        totalRows: totalFilasEnExcel
+                    };
 
-                    resolve(obligaciones);
+                    resolve(result);
                 } catch (error) {
                     reject(new Error(`Error al procesar Excel: ${error.message}`));
                 }
@@ -109,30 +123,30 @@ class ExcelService {
 
         // Log de headers para debugging
         console.log('[ExcelService] Headers encontrados:', headers);
-
+        
         // Mapear nombres de columnas
         const columnMap = this.mapColumns(headers);
         console.log('[ExcelService] Mapeo de columnas:', columnMap);
-
+        
         // Validar columnas requeridas y obtener información de problemas
         const problemasColumnas = this.validateColumns(columnMap, headers);
-
+        
         // Procesar filas de datos (empezar después de los encabezados)
         const obligaciones = [];
         const problemasFilas = []; // Array para almacenar problemas por fila
         let filasVacias = 0;
         let filasConError = 0;
         const timestamp = Date.now(); // Timestamp para IDs únicos
-
+        
         for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
             const row = jsonData[i];
-
+            
             // Saltar filas vacías
             if (!row || row.every(cell => !cell || (cell !== null && String(cell).trim() === ''))) {
                 filasVacias++;
                 continue;
             }
-
+            
             try {
                 const resultado = this.parseRow(row, headers, columnMap, i, headerRowIndex, timestamp);
                 if (resultado.obligacion) {
@@ -179,7 +193,7 @@ class ExcelService {
         }
 
         console.log(`Procesamiento Excel: ${totalFilasEnExcel || jsonData.length} filas en archivo, ${headerRowIndex + 1} filas de encabezados/cabecera, ${totalFilas} filas de datos, ${obligaciones.length} procesadas, ${filasVacias} vacías, ${filasConError} con errores`);
-
+        
         if (obligaciones.length === 0) {
             throw new Error(`No se encontraron obligaciones válidas en el archivo. Total filas: ${totalFilas}, Vacías: ${filasVacias}, Errores: ${filasConError}`);
         }
@@ -205,7 +219,7 @@ class ExcelService {
      */
     mapColumns(headers) {
         const map = {};
-
+        
         // Mapeos específicos para la estructura real del Excel y variaciones comunes
         const mappings = {
             id: ['id', 'identificador', 'código', 'codigo', 'id obligación', 'id obligacion'],
@@ -227,7 +241,7 @@ class ExcelService {
             periodicidad: ['periodicidad', 'frecuencia'],
             dias_para_vencer: ['días para vencer', 'dias para vencer', 'días restantes', 'dias restantes', 'días hasta vencimiento', 'dias hasta vencimiento']
         };
-
+        
         for (const [field, possibleNames] of Object.entries(mappings)) {
             for (let j = 0; j < headers.length; j++) {
                 const header = headers[j];
@@ -249,7 +263,7 @@ class ExcelService {
                 }
             }
         }
-
+        
         return map;
     }
 
@@ -312,7 +326,7 @@ class ExcelService {
             }
             return value;
         };
-
+        
         const parseDate = (val) => {
             if (val === null || val === undefined) return null;
             let date = null;
@@ -612,10 +626,16 @@ class ExcelService {
                 alerta_3: alerta3 ? alerta3.toISOString().split('T')[0] : null,
                 alerta_4: alerta4 ? alerta4.toISOString().split('T')[0] : null
             },
+            // IMPORTANTE: Guardar la fila original completa del Excel para poder exportarla tal cual
+            row_original: row.map(cell => {
+                // Mantener el valor original, pero convertir null/undefined a string vacío para consistencia
+                if (cell === null || cell === undefined) return '';
+                return cell;
+            }),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
-
+        
         return {
             obligacion: obligacion,
             problemas: []
@@ -671,6 +691,317 @@ class ExcelService {
         }
         
         return null;
+    }
+
+    /**
+     * Exportar obligaciones a Excel
+     * @param {Array} obligaciones - Array de obligaciones a exportar
+     * @param {Object} excelStructure - Estructura del Excel original (headers, columnMap, sheetName)
+     * @returns {Blob} - Blob del archivo Excel generado
+     */
+    exportToExcel(obligaciones, excelStructure = null) {
+        if (typeof XLSX === 'undefined') {
+            throw new Error('SheetJS (XLSX) no está disponible');
+        }
+
+        // Si no hay estructura guardada, usar estructura estándar
+        let headers = [];
+        let columnMap = {};
+        let sheetName = 'Obligaciones';
+        
+        if (excelStructure) {
+            // Usar TODOS los encabezados originales para mantener compatibilidad completa
+            headers = [...(excelStructure.headers || [])];
+            columnMap = { ...(excelStructure.columnMap || {}) };
+            sheetName = excelStructure.sheetName || 'Obligaciones';
+        } else {
+            // Generar encabezados estándar basados en las columnas conocidas
+            headers = this.generateStandardHeaders();
+            columnMap = this.mapColumns(headers.map(h => h ? String(h).toLowerCase().trim() : ''));
+        }
+
+        // Asegurar que los encabezados no estén vacíos y convertir null/undefined a string vacío
+        headers = headers.map(h => h === null || h === undefined ? '' : String(h));
+        
+        // Agregar columna "Seguimiento" al final de los encabezados
+        const headersConSeguimiento = [...headers, 'Seguimiento'];
+        
+        // Asegurar que todos los valores de encabezados sean strings válidos
+        const headersFinales = headersConSeguimiento.map(h => h === null || h === undefined ? '' : String(h));
+        const numColumnas = headersFinales.length;
+        
+        // Crear array de arrays para SheetJS
+        const data = [];
+        
+        // Filas 1-3 vacías (mantener estructura original) - deben tener el mismo número de columnas
+        data.push(new Array(numColumnas).fill(''));
+        data.push(new Array(numColumnas).fill(''));
+        data.push(new Array(numColumnas).fill(''));
+        
+        // Fila 4: Encabezados (incluyendo "Seguimiento" al final)
+        data.push(headersFinales);
+        
+        console.log('[ExcelService] Exportando con encabezados:', headersFinales.length, 'columnas');
+        console.log('[ExcelService] Primeros 5 encabezados:', headersFinales.slice(0, 5));
+        console.log('[ExcelService] Último encabezado:', headersFinales[headersFinales.length - 1]);
+        
+        // Filas de datos (a partir de fila 5)
+        obligaciones.forEach(obligacion => {
+            // Si la obligación tiene row_original, usar esos valores como base
+            // Esto preserva TODAS las columnas originales del Excel, incluso las que no usamos
+            let row = [];
+            if (obligacion.row_original && Array.isArray(obligacion.row_original)) {
+                // Usar la fila original como base, extendiéndola si es necesario
+                row = [...obligacion.row_original];
+                // Asegurar que tenga al menos el mismo número de columnas que los encabezados
+                while (row.length < headers.length) {
+                    row.push(null);
+                }
+            } else {
+                // Si no hay row_original, crear fila vacía
+                row = new Array(headers.length).fill(null);
+            }
+            
+            // Ahora actualizar solo los campos que han cambiado en el sistema
+            // Los demás campos se mantienen con sus valores originales del Excel (row_original)
+            
+            // Columna C (índice 2): regulador
+            if (columnMap.regulador !== undefined && obligacion.regulador) {
+                row[columnMap.regulador] = obligacion.regulador;
+            } else if (headers.length > 2 && obligacion.regulador) {
+                row[2] = obligacion.regulador;
+            }
+            
+            // Columna H (índice 7): area
+            if (columnMap.area !== undefined && obligacion.area) {
+                row[columnMap.area] = obligacion.area;
+            } else if (headers.length > 7 && obligacion.area) {
+                row[7] = obligacion.area;
+            }
+            
+            // Columna N (índice 13): periodicidad
+            if (columnMap.periodicidad !== undefined && obligacion.periodicidad) {
+                row[columnMap.periodicidad] = obligacion.periodicidad;
+            } else if (headers.length > 13 && obligacion.periodicidad) {
+                row[13] = obligacion.periodicidad;
+            }
+            
+            // Columna P (índice 15): fecha_limite (actualizar si cambió)
+            if (columnMap.fecha_limite !== undefined) {
+                const fechaIndex = columnMap.fecha_limite;
+                if (obligacion.fecha_limite_original) {
+                    // Mantener formato original si existe
+                    row[fechaIndex] = obligacion.fecha_limite_original;
+                } else if (obligacion.fecha_limite) {
+                    row[fechaIndex] = this.convertDateToExcelFormat(obligacion.fecha_limite);
+                }
+            } else if (headers.length > 15) {
+                if (obligacion.fecha_limite_original) {
+                    row[15] = obligacion.fecha_limite_original;
+                } else if (obligacion.fecha_limite) {
+                    row[15] = this.convertDateToExcelFormat(obligacion.fecha_limite);
+                }
+            }
+            
+            // Columna T (índice 19): estatus
+            if (columnMap.estatus !== undefined && obligacion.estatus) {
+                row[columnMap.estatus] = obligacion.estatus;
+            } else if (headers.length > 19 && obligacion.estatus) {
+                row[19] = obligacion.estatus;
+            }
+            
+            // Columna U (índice 20): sub_estatus
+            if (columnMap.sub_estatus !== undefined && obligacion.sub_estatus) {
+                row[columnMap.sub_estatus] = obligacion.sub_estatus;
+            } else if (headers.length > 20 && obligacion.sub_estatus) {
+                row[20] = obligacion.sub_estatus;
+            }
+            
+            // Columna V (índice 21): id_oficial (OBLIGATORIO)
+            if (columnMap.id !== undefined) {
+                row[columnMap.id] = obligacion.id_oficial || obligacion.id || '';
+            } else if (headers.length > 21) {
+                row[21] = obligacion.id_oficial || obligacion.id || '';
+            }
+            
+            // Columna W (índice 22): regla_1_vez
+            if (obligacion.reglas_alertamiento && obligacion.reglas_alertamiento.regla_1_vez) {
+                if (headers.length > 22 && (!columnMap.alerta_1 || headers[22])) {
+                    row[22] = this.convertReglaToExcelFormat(obligacion.reglas_alertamiento.regla_1_vez);
+                } else if (columnMap.alerta_1 !== undefined) {
+                    row[columnMap.alerta_1] = this.convertReglaToExcelFormat(obligacion.reglas_alertamiento.regla_1_vez);
+                }
+            }
+            
+            // Columna X (índice 23): regla_semanal
+            if (obligacion.reglas_alertamiento && obligacion.reglas_alertamiento.regla_semanal) {
+                if (headers.length > 23 && (!columnMap.alerta_2 || headers[23])) {
+                    row[23] = this.convertReglaToExcelFormat(obligacion.reglas_alertamiento.regla_semanal);
+                } else if (columnMap.alerta_2 !== undefined) {
+                    row[columnMap.alerta_2] = this.convertReglaToExcelFormat(obligacion.reglas_alertamiento.regla_semanal);
+                }
+            }
+            
+            // Columna Y (índice 24): regla_saltado
+            if (obligacion.reglas_alertamiento && obligacion.reglas_alertamiento.regla_saltado) {
+                if (headers.length > 24 && (!columnMap.alerta_3 || headers[24])) {
+                    row[24] = this.convertReglaToExcelFormat(obligacion.reglas_alertamiento.regla_saltado);
+                } else if (columnMap.alerta_3 !== undefined) {
+                    row[columnMap.alerta_3] = this.convertReglaToExcelFormat(obligacion.reglas_alertamiento.regla_saltado);
+                }
+            }
+            
+            // Columna Z (índice 25): regla_diaria
+            if (obligacion.reglas_alertamiento && obligacion.reglas_alertamiento.regla_diaria) {
+                if (headers.length > 25 && (!columnMap.alerta_4 || headers[25])) {
+                    row[25] = this.convertReglaToExcelFormat(obligacion.reglas_alertamiento.regla_diaria);
+                } else if (columnMap.alerta_4 !== undefined) {
+                    row[columnMap.alerta_4] = this.convertReglaToExcelFormat(obligacion.reglas_alertamiento.regla_diaria);
+                }
+            }
+            
+            // Actualizar otros campos mapeados solo si tienen valores nuevos
+            // Los valores originales del Excel se mantienen automáticamente
+            Object.keys(columnMap).forEach(field => {
+                const colIndex = columnMap[field];
+                if (colIndex !== undefined && colIndex < headers.length) {
+                    // Solo actualizar si el campo tiene un valor nuevo en la obligación
+                    if (field === 'nombre' || field === 'disposicion_resumida' || field === 'obligacion' || field === 'titulo') {
+                        if (obligacion.nombre || obligacion.descripcion) {
+                            row[colIndex] = obligacion.nombre || obligacion.descripcion || '';
+                        }
+                    } else if (field === 'descripcion' || field === 'tema' || field === 'disposicion_aplicable') {
+                        if (obligacion.descripcion) {
+                            row[colIndex] = obligacion.descripcion;
+                        }
+                    } else if (field === 'responsable_cn' || field === 'cn' || field === 'responsable_c.n.') {
+                        if (obligacion.responsable_cn) {
+                            row[colIndex] = obligacion.responsable_cn;
+                        }
+                    } else if (field === 'responsable_juridico' || field === 'juridico') {
+                        if (obligacion.responsable_juridico) {
+                            row[colIndex] = obligacion.responsable_juridico;
+                        }
+                    } else if (field === 'dias_para_vencer' || field === 'dias_restantes' || field === 'dias_hasta_vencimiento') {
+                        if (obligacion.dias_para_vencer_excel !== null && obligacion.dias_para_vencer_excel !== undefined) {
+                            row[colIndex] = obligacion.dias_para_vencer_excel;
+                        } else if (obligacion.dias_restantes !== null && obligacion.dias_restantes !== undefined) {
+                            row[colIndex] = obligacion.dias_restantes;
+                        }
+                    }
+                }
+            });
+            
+            // Calcular estado del toggle: Prendido si estatus = "recordatorio" y sub_estatus = "Sin respuesta"
+            const estatusLower = (obligacion.estatus || '').toLowerCase();
+            const subEstatusLower = (obligacion.sub_estatus || '').toLowerCase();
+            const isRecordatorio = estatusLower === 'recordatorio';
+            const isSinRespuesta = subEstatusLower === 'sin respuesta' || subEstatusLower.includes('sin respuesta');
+            const seguimientoEstado = (isRecordatorio && isSinRespuesta) ? 'Prendido' : 'Apagado';
+            
+            // Agregar columna "Seguimiento" al final de la fila
+            row.push(seguimientoEstado);
+            
+            data.push(row);
+        });
+        
+        // Crear worksheet
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        
+        // Crear workbook
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+        
+        // Convertir a Blob
+        const excelBuffer = XLSX.write(workbook, { 
+            type: 'array', 
+            bookType: 'xlsx' 
+        });
+        
+        return new Blob([excelBuffer], { 
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        });
+    }
+
+    /**
+     * Generar encabezados estándar si no hay estructura guardada
+     */
+    generateStandardHeaders() {
+        // Generar array con suficientes columnas (hasta Z = índice 25)
+        const headers = new Array(26).fill('');
+        
+        // Mapear columnas conocidas
+        headers[2] = 'Órgano / Regulador';
+        headers[7] = 'Área Responsable';
+        headers[13] = 'Periodicidad';
+        headers[15] = 'Fecha límite de entrega';
+        headers[19] = 'Estatus';
+        headers[20] = 'Sub Estatus';
+        headers[21] = 'ID';
+        headers[22] = '1ER ALERTA (1 vez)';
+        headers[23] = '2DA ALERTA (semanal)';
+        headers[24] = '3ER ALERTA (Tercer dia)';
+        headers[25] = '4TA ALERTA (Diaria)';
+        
+        return headers;
+    }
+
+    /**
+     * Convertir fecha YYYY-MM-DD a formato Excel (serial number)
+     */
+    convertDateToExcelFormat(dateStr) {
+        if (!dateStr) return null;
+        
+        // Si ya es un string DD/MM/YYYY, mantenerlo
+        if (typeof dateStr === 'string' && dateStr.includes('/')) {
+            return dateStr;
+        }
+        
+        // Si es YYYY-MM-DD, convertir a serial number de Excel
+        if (typeof dateStr === 'string' && dateStr.includes('-')) {
+            const date = new Date(dateStr + 'T00:00:00Z');
+            if (isNaN(date.getTime())) return dateStr;
+            
+            // Calcular serial number de Excel
+            const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+            const diffTime = date.getTime() - excelEpoch.getTime();
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            
+            return diffDays;
+        }
+        
+        return dateStr;
+    }
+
+    /**
+     * Convertir regla de alertamiento a formato Excel
+     * Puede ser DD/MM/YYYY (string) o serial number
+     */
+    convertReglaToExcelFormat(regla) {
+        if (!regla) return null;
+        
+        // Si ya es un string DD/MM/YYYY, mantenerlo
+        if (typeof regla === 'string' && regla.includes('/')) {
+            return regla;
+        }
+        
+        // Si es un número (serial de Excel), mantenerlo
+        if (typeof regla === 'number') {
+            return regla;
+        }
+        
+        // Intentar convertir string YYYY-MM-DD a serial
+        if (typeof regla === 'string' && regla.includes('-')) {
+            const date = new Date(regla + 'T00:00:00Z');
+            if (!isNaN(date.getTime())) {
+                const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                const diffTime = date.getTime() - excelEpoch.getTime();
+                const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                return diffDays;
+            }
+        }
+        
+        return regla;
     }
 }
 

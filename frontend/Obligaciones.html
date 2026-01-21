@@ -14,6 +14,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
         rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- SheetJS para procesar archivos Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -159,7 +161,7 @@
                     </div>
                     <div
                         class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium sidebar-text whitespace-nowrap transition-opacity duration-300">
-                        AlertIA v3.0.1
+                        AlertIA v3.0.3
                         <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
                             title="Archivo cargado">
                             <!-- El nombre del archivo se inyectará aquí -->
@@ -258,6 +260,20 @@
                             </div>
                         </div>
                     </section>
+                    
+                    <!-- Botones de Exportación -->
+                    <div class="flex justify-end gap-3 mb-4">
+                        <button id="exportar-excel-btn" 
+                            class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm">
+                            <span class="material-symbols-outlined">upload_file</span>
+                            Exportar excel
+                        </button>
+                        <button id="exportar-calendario-btn" 
+                            class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            Exportar calendario de notificaciones
+                        </button>
+                    </div>
                 </div>
                 <div class="bg-white rounded-lg border border-border-subtle shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">

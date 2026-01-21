@@ -197,6 +197,20 @@ class IndexController {
             const resultado = await this.excelService.processExcelFile(file, selectedSheet);
             const obligaciones = resultado.obligaciones || [];
             const problemas = resultado.problemas || { columnas: {}, filas: [], estadisticas: {} };
+            
+            // Guardar estructura del Excel para exportación futura
+            if (resultado.excelStructure && window.configService) {
+                try {
+                    const configActual = await window.configService.getConfiguracion();
+                    await window.configService.saveConfiguracion({
+                        ...configActual,
+                        excelStructure: resultado.excelStructure
+                    });
+                    console.log('✅ Estructura del Excel guardada para exportación futura');
+                } catch (error) {
+                    console.warn('No se pudo guardar la estructura del Excel:', error);
+                }
+            }
 
             // Mostrar problemas de columnas si existen
             if (problemas.columnas && problemas.columnas.advertencias && problemas.columnas.advertencias.length > 0) {

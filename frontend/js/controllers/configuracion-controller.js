@@ -86,6 +86,26 @@ class ConfiguracionController {
                 }
             });
         }
+
+        // Setup Clear DB Button
+        const btnClearDB = document.getElementById('btn-clear-db');
+        if (btnClearDB) {
+            btnClearDB.addEventListener('click', async () => {
+                const confirmed = confirm('¿Estás seguro de que quieres ELIMINAR TODOS LOS DATOS?\n\nEsta acción no se puede deshacer. Se borrarán todas las obligaciones y el historial.');
+                if (confirmed) {
+                    try {
+                        if (window.dataAdapter && window.dataAdapter.storage) {
+                            window.dataAdapter.storage.clear();
+                            Utils.showNotification('🧹 Base de datos eliminada correctamente', 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                        }
+                    } catch (error) {
+                        console.error('Error al limpiar DB:', error);
+                        Utils.showNotification('Error al limpiar datos: ' + error.message, 'error');
+                    }
+                }
+            });
+        }
     }
 
     async handleExcelUpload(file) {
@@ -101,6 +121,18 @@ class ConfiguracionController {
             if (obligaciones && obligaciones.length > 0) {
                 // 2. Guardar en Base de Datos
                 await window.dataAdapter.saveAllObligaciones(obligaciones);
+
+                // 3. Guardar nombre del archivo en configuración
+                try {
+                    const configCurrent = await this.configService.getConfiguracion();
+                    await this.configService.saveConfiguracion({
+                        ...configCurrent,
+                        nombre_archivo_excel: file.name,
+                        ultima_carga_excel: new Date().toISOString()
+                    });
+                } catch (cfgError) {
+                    console.warn('No se pudo guardar el nombre del archivo en configuración', cfgError);
+                }
 
                 Utils.showNotification(`Datos actualizados: ${obligaciones.length} obligaciones cargadas`, 'success');
             } else {

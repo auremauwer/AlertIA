@@ -102,6 +102,13 @@
                         <span class="text-[10px] text-gray-500">Lectura Exclusiva</span>
                     </div>
                 </div>
+                <div class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium">
+                    AlertIA v3.0.0
+                    <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
+                        title="Archivo cargado">
+                        <!-- El nombre del archivo se inyectará aquí -->
+                    </div>
+                </div>
             </div>
         </div>
     </aside>
@@ -109,15 +116,11 @@
         <header
             class="h-16 px-8 bg-white dark:bg-zinc-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 z-10">
             <h1 class="text-lg font-700 text-slate-900 dark:text-white">Configuración del Sistema</h1>
-            <div class="flex items-center gap-4">
-                <button
-                    class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-900 rounded-full transition-colors">
-                    <span class="material-symbols-outlined">help</span>
-                </button>
-                <button
-                    class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-900 rounded-full transition-colors relative">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full ring-1 ring-white"></span>
+            <div class="flex items-center gap-6">
+                <button onclick="Utils.logoutApp()"
+                    class="flex items-center gap-2 px-6 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-red-600 text-sm font-bold uppercase rounded-sm transition-colors tracking-wide">
+                    <span class="material-symbols-outlined text-lg">logout</span>
+                    <span>Salir</span>
                 </button>
             </div>
         </header>
@@ -218,10 +221,17 @@
                                 <input type="file" id="excel-reupload-input" accept=".xlsx,.xls" class="hidden" />
 
                                 <button id="btn-reload-excel"
-                                    class="w-full py-2 px-4 bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 group">
+                                    class="w-full py-2 px-4 bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 group mb-2">
                                     <span
                                         class="material-symbols-outlined group-hover:scale-110 transition-transform">upload_file</span>
                                     Cargar Nuevo Archivo
+                                </button>
+
+                                <button id="btn-clear-db"
+                                    class="w-full py-2 px-4 bg-white dark:bg-zinc-900 border-2 border-red-100 dark:border-red-900 hover:bg-red-50 hover:border-primary hover:text-primary text-red-600 dark:text-red-400 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 group">
+                                    <span
+                                        class="material-symbols-outlined group-hover:scale-110 transition-transform">delete_forever</span>
+                                    Eliminar Todos los Datos
                                 </button>
                             </div>
                         </div>
@@ -331,9 +341,10 @@
         </footer>
     </main>
     <!-- Cargar scripts de la aplicación -->
-    <script src="js/app-init.js"></script>
-    <script src="js/services/excel-service.js"></script>
-    <script src="js/controllers/configuracion-controller.js"></script>
+    <!-- Cargar scripts de la aplicación -->
+    <script src="js/app-init.js?v=3.0.0"></script>
+    <script src="js/services/excel-service.js?v=3.0.0"></script>
+    <script src="js/controllers/configuracion-controller.js?v=3.0.0"></script>
 </body>
 
 </html>

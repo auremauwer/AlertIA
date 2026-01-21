@@ -76,61 +76,84 @@
 
 <body class="font-display selection:bg-primary selection:text-primary-black">
     <div class="relative flex h-screen w-full overflow-hidden bg-bg-main">
-        <aside class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display">
-            <div class="flex h-full flex-col justify-between">
+        <aside id="main-sidebar"
+            class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display transition-all duration-300 relative">
+            <div class="flex h-full flex-col justify-between overflow-hidden">
                 <div class="flex flex-col">
-                    <div class="flex items-center gap-3 px-6 py-8">
-                        <div class="flex items-center justify-center size-9">
+                    <div class="flex items-center gap-3 px-6 py-8 relative">
+                        <div class="flex items-center justify-center size-9 flex-shrink-0">
                             <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
                         </div>
-                        <div class="flex flex-col">
+                        <div
+                            class="flex flex-col sidebar-text overflow-hidden whitespace-nowrap transition-opacity duration-300">
                             <h1 class="text-xl font-extrabold tracking-tighter leading-none">
                                 <span class="text-black">Alert</span><span class="text-primary">IA</span>
                             </h1>
                         </div>
+                        <button id="sidebar-toggle"
+                            class="absolute right-[-12px] top-1/2 -translate-y-1/2 bg-gray-200 border border-gray-300 rounded-full p-1 text-gray-600 hover:text-primary hover:bg-gray-300 shadow-sm z-30 transition-all hover:scale-110 hidden md:flex">
+                            <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                        </button>
                     </div>
                     <nav class="flex flex-col px-3">
-                        <a class="flex items-center gap-3 px-4 py-3 bg-gray-100 text-primary border-r-[6px] border-primary transition-all mb-1"
-                            href="Dashboard.html">
-                            <span class="material-symbols-outlined text-[20px] filled">dashboard</span>
-                            <span class="text-sm font-semibold">Dashboard</span>
+                        <a class="flex items-center gap-3 px-4 py-3 bg-gray-100 text-primary border-r-[6px] border-primary transition-all mb-1 overflow-hidden"
+                            href="Dashboard.html" title="Dashboard">
+                            <span class="material-symbols-outlined text-[20px] filled flex-shrink-0">dashboard</span>
+                            <span
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Dashboard</span>
                         </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
-                            href="Obligaciones.html">
-                            <span class="material-symbols-outlined text-[20px]">assignment</span>
-                            <span class="text-sm font-semibold">Obligaciones</span>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
+                            href="Obligaciones.html" title="Obligaciones">
+                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">assignment</span>
+                            <span
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Obligaciones</span>
                         </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
-                            href="Correos.html">
-                            <span class="material-symbols-outlined text-[20px]">mail</span>
-                            <span class="text-sm font-semibold">Envío de correos</span>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
+                            href="Correos.html" title="Envío de correos">
+                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">mail</span>
+                            <span
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Envío
+                                de correos</span>
                         </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
-                            href="Historial.html">
-                            <span class="material-symbols-outlined text-[20px]">history</span>
-                            <span class="text-sm font-semibold">Historial de envíos</span>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
+                            href="Historial.html" title="Historial de envíos">
+                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">history</span>
+                            <span
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Historial
+                                de envíos</span>
                         </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
-                            href="Configuración.html">
-                            <span class="material-symbols-outlined text-[20px]">settings</span>
-                            <span class="text-sm font-semibold">Configuración</span>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
+                            href="Configuración.html" title="Configuración">
+                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">settings</span>
+                            <span
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Configuración</span>
                         </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
-                            href="Auditoria.html">
-                            <span class="material-symbols-outlined text-[20px]">list_alt</span>
-                            <span class="text-sm font-semibold">Auditoría / Logs</span>
+                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
+                            href="Auditoria.html" title="Auditoría / Logs">
+                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">list_alt</span>
+                            <span
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Auditoría
+                                / Logs</span>
                         </a>
                     </nav>
                 </div>
-                <div class="flex flex-col gap-2 border-t border-gray-200 p-6">
+                <div class="flex flex-col gap-2 border-t border-gray-200 p-6 overflow-hidden">
                     <div class="flex items-center gap-3">
                         <div
-                            class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
+                            class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200 flex-shrink-0">
                             <span class="material-symbols-outlined text-gray-500 text-lg">person</span>
                         </div>
-                        <div class="flex flex-col">
+                        <div class="flex flex-col sidebar-text whitespace-nowrap transition-opacity duration-300">
                             <span class="text-xs font-bold text-black">Analista Riesgos</span>
                             <span class="text-[10px] text-gray-500">Lectura Exclusiva</span>
+                        </div>
+                    </div>
+                    <div
+                        class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium sidebar-text whitespace-nowrap transition-opacity duration-300">
+                        AlertIA v3.0.0
+                        <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
+                            title="Archivo cargado">
+                            <!-- El nombre del archivo se inyectará aquí -->
                         </div>
                     </div>
                 </div>
@@ -147,49 +170,40 @@
                         <h2 class="text-primary-black text-4xl font-extrabold tracking-tight">Dashboard Informativo</h2>
                     </div>
                     <div class="flex items-center gap-6">
-                        <div class="flex flex-col items-end">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span
-                                    class="bg-neutral-100 text-primary-black border border-neutral-200 px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded flex items-center gap-1">
-                                    🔒 Modo manual activo
-                                </span>
-                            </div>
-                            <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Fecha de última
-                                ejecución manual</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="material-symbols-outlined text-primary text-lg">sync</span>
-                                <div class="flex flex-col items-end">
-                                    <span class="text-sm font-black text-primary-black leading-none"
-                                        data-info="ultima-ejecucion-fecha">-</span>
-                                    <span class="text-[10px] font-bold text-text-muted mt-0.5">Ejecutor: <span
-                                            data-info="ultima-ejecucion-usuario">-</span> • <span
-                                            data-info="ultima-ejecucion-volumen">0 Correos</span></span>
-                                </div>
-                            </div>
-                        </div>
+                        <button onclick="Utils.logoutApp()"
+                            class="flex items-center gap-2 px-6 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-red-600 text-sm font-bold uppercase rounded-sm transition-colors tracking-wide">
+                            <span class="material-symbols-outlined text-lg">logout</span>
+                            <span>Salir</span>
+                        </button>
                     </div>
                 </div>
             </header>
             <div class="flex-1 overflow-y-auto custom-scrollbar bg-bg-main p-10">
                 <div class="max-w-[1400px] mx-auto flex flex-col gap-10">
+                    <!-- Alerta de filas excluidas y duplicados (Dinámica) -->
+                    <div id="alert-filas-excluidas"
+                        class="hidden mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-sm shadow-sm relative">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <span class="material-symbols-outlined text-yellow-600 text-xl">warning</span>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <h4 class="text-sm font-bold text-yellow-800 mb-2">Atención: Se han omitido registros
+                                </h4>
+                                <div id="alert-filas-excluidas-content" class="text-xs text-yellow-700 space-y-1">
+                                    <!-- Contenido dinámico -->
+                                </div>
+                            </div>
+                            <button id="btn-cerrar-alerta-excluidas"
+                                class="ml-4 text-yellow-400 hover:text-yellow-600 transition-colors">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Section: Filters -->
                     <section class="bg-white p-6 border border-border-soft shadow-sm rounded-sm">
-                        <!-- Alerta de filas excluidas -->
-                        <div id="alert-filas-excluidas" class="hidden mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-sm">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <span class="material-symbols-outlined text-yellow-600 text-xl">warning</span>
-                                </div>
-                                <div class="ml-3 flex-1">
-                                    <h4 class="text-sm font-bold text-yellow-800 mb-2">Filas excluidas del procesamiento</h4>
-                                    <div id="alert-filas-excluidas-content" class="text-xs text-yellow-700 space-y-1"></div>
-                                </div>
-                                <button id="btn-cerrar-alerta-excluidas" class="ml-4 text-yellow-600 hover:text-yellow-800 transition-colors">
-                                    <span class="material-symbols-outlined text-sm">close</span>
-                                </button>
-                            </div>
-                        </div>
-                        
+
                         <div class="flex items-center gap-2 mb-4">
                             <span class="material-symbols-outlined text-primary">filter_alt</span>
                             <h3 class="text-sm font-bold uppercase tracking-wider text-primary-black">Filtros de
@@ -213,7 +227,7 @@
                                     <option value="">Todos los estatus</option>
                                     <!-- Options populated by JS -->
                                 </select>
-                                </div>
+                            </div>
                             <!-- Filter: Sub Estatus -->
                             <div class="flex flex-col gap-1">
                                 <label class="text-[10px] font-bold uppercase text-text-muted">Sub estatus</label>
@@ -241,12 +255,14 @@
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-4">
                             <!-- Card: Total IDs -->
-                            <div
-                                class="kpi-card bg-white p-5 border-l-4 border-primary-black shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-5 border-l-4 border-primary-black shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="total">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Total de IDs</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Total de
+                                        IDs</p>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-end justify-between">
                                     <h2 class="text-4xl font-black text-primary-black leading-none"
@@ -256,85 +272,107 @@
                             </div>
 
                             <!-- Card: Vencidos -->
-                            <div
-                                class="kpi-card bg-white p-5 border-l-4 border-red-900 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-5 border-l-4 border-red-900 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="vencidos">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Vencidos</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Vencidos
+                                    </p>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-end justify-between">
-                                    <h2 class="text-4xl font-black text-red-900 leading-none" data-kpi="ids-vencidos">-</h2>
+                                    <h2 class="text-4xl font-black text-red-900 leading-none" data-kpi="ids-vencidos">-
+                                    </h2>
                                     <span class="material-symbols-outlined text-red-900/20 text-3xl">warning</span>
                                 </div>
                             </div>
 
                             <!-- Card: <= 30 days -->
-                            <div
-                                class="kpi-card bg-white p-5 border-l-4 border-primary shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-5 border-l-4 border-primary shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="hasta-30">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Hasta 30 días</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Hasta 30
+                                        días</p>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-end justify-between">
-                                    <h2 class="text-4xl font-black text-primary leading-none" data-kpi="ids-less-30">-</h2>
-                                    <span class="material-symbols-outlined text-primary/20 text-3xl">calendar_month</span>
+                                    <h2 class="text-4xl font-black text-primary leading-none" data-kpi="ids-less-30">-
+                                    </h2>
+                                    <span
+                                        class="material-symbols-outlined text-primary/20 text-3xl">calendar_month</span>
                                 </div>
                             </div>
 
                             <!-- Card: 31-60 days -->
-                            <div
-                                class="kpi-card bg-white p-5 border-l-4 border-orange-500 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-5 border-l-4 border-orange-500 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="31-60">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">31 a 60 días</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">31 a 60
+                                        días</p>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-end justify-between">
-                                    <h2 class="text-4xl font-black text-orange-500 leading-none" data-kpi="ids-less-60">-</h2>
-                                    <span class="material-symbols-outlined text-orange-500/20 text-3xl">calendar_view_week</span>
+                                    <h2 class="text-4xl font-black text-orange-500 leading-none" data-kpi="ids-less-60">
+                                        -</h2>
+                                    <span
+                                        class="material-symbols-outlined text-orange-500/20 text-3xl">calendar_view_week</span>
                                 </div>
                             </div>
 
                             <!-- Card: 61-90 days -->
-                            <div
-                                class="kpi-card bg-white p-5 border-l-4 border-yellow-500 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-5 border-l-4 border-yellow-500 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="61-90">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">61 a 90 días</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">61 a 90
+                                        días</p>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-end justify-between">
-                                    <h2 class="text-4xl font-black text-yellow-500 leading-none" data-kpi="ids-less-90">-</h2>
-                                    <span class="material-symbols-outlined text-yellow-500/20 text-3xl">date_range</span>
+                                    <h2 class="text-4xl font-black text-yellow-500 leading-none" data-kpi="ids-less-90">
+                                        -</h2>
+                                    <span
+                                        class="material-symbols-outlined text-yellow-500/20 text-3xl">date_range</span>
                                 </div>
                             </div>
 
                             <!-- Card: > 90 days -->
-                            <div
-                                class="kpi-card bg-white p-5 border-l-4 border-green-600 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-5 border-l-4 border-green-600 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="mas-90">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Mayor a 90 días</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Mayor a
+                                        90 días</p>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-end justify-between">
-                                    <h2 class="text-4xl font-black text-green-600 leading-none" data-kpi="ids-more-90">-</h2>
-                                    <span class="material-symbols-outlined text-green-600/20 text-3xl">event_available</span>
+                                    <h2 class="text-4xl font-black text-green-600 leading-none" data-kpi="ids-more-90">-
+                                    </h2>
+                                    <span
+                                        class="material-symbols-outlined text-green-600/20 text-3xl">event_available</span>
                                 </div>
                             </div>
 
                             <!-- Card: Sin fecha de vencimiento -->
-                            <div
-                                class="kpi-card bg-white p-5 border-l-4 border-gray-400 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-5 border-l-4 border-gray-400 shadow-sm flex flex-col min-h-[7rem] cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="sin-fecha">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Sin fecha de vencimiento</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <p class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Sin fecha
+                                    </p>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-end justify-between">
-                                    <h2 class="text-4xl font-black text-gray-400 leading-none" data-kpi="ids-sin-fecha">-</h2>
+                                    <h2 class="text-4xl font-black text-gray-400 leading-none" data-kpi="ids-sin-fecha">
+                                        -</h2>
                                     <span class="material-symbols-outlined text-gray-400/20 text-3xl">event_busy</span>
                                 </div>
                             </div>
@@ -350,60 +388,69 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                             <!-- Card: Recordatorio -->
-                            <div
-                                class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="recordatorio">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-xs font-bold uppercase text-text-muted">Estatus Recordatorio</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <h3 class="text-3xl font-black text-primary-black" data-kpi="status-recordatorio">-</h3>
+                                    <h3 class="text-3xl font-black text-primary-black" data-kpi="status-recordatorio">-
+                                    </h3>
                                     <div class="size-12 bg-blue-50 flex items-center justify-center rounded-full">
-                                        <span class="material-symbols-outlined text-blue-600 text-2xl">notifications</span>
+                                        <span
+                                            class="material-symbols-outlined text-blue-600 text-2xl">notifications</span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Card: Solicitud -->
-                            <div
-                                class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="solicitud">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-xs font-bold uppercase text-text-muted">Estatus Solicitud</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
-                                        </div>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
+                                </div>
                                 <div class="flex items-center justify-between">
-                                    <h3 class="text-3xl font-black text-primary-black" data-kpi="status-solicitud">-</h3>
+                                    <h3 class="text-3xl font-black text-primary-black" data-kpi="status-solicitud">-
+                                    </h3>
                                     <div class="size-12 bg-purple-50 flex items-center justify-center rounded-full">
-                                        <span class="material-symbols-outlined text-purple-600 text-2xl">assignment</span>
+                                        <span
+                                            class="material-symbols-outlined text-purple-600 text-2xl">assignment</span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Card: Cerrado -->
-                            <div
-                                class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="cerrado">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-xs font-bold uppercase text-text-muted">Estatus Cerrado</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <h3 class="text-3xl font-black text-primary-black" data-kpi="status-cerrado">-</h3>
                                     <div class="size-12 bg-green-50 flex items-center justify-center rounded-full">
-                                        <span class="material-symbols-outlined text-green-600 text-2xl">check_circle</span>
+                                        <span
+                                            class="material-symbols-outlined text-green-600 text-2xl">check_circle</span>
                                     </div>
-                                        </div>
+                                </div>
                             </div>
 
                             <!-- Card: Apagado -->
-                            <div
-                                class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="apagado">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-xs font-bold uppercase text-text-muted">Estatus Apagado</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <h3 class="text-3xl font-black text-primary-black" data-kpi="status-apagado">-</h3>
@@ -414,19 +461,22 @@
                             </div>
 
                             <!-- Card: Sin estatus -->
-                            <div
-                                class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
+                            <div class="kpi-card bg-white p-6 border border-border-soft shadow-sm rounded-sm flex flex-col cursor-pointer hover:shadow-md transition-all"
                                 data-kpi-category="sin-estatus">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-xs font-bold uppercase text-text-muted">Sin Estatus</p>
-                                    <span class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors" title="Descargar IDs en CSV">download</span>
-                                        </div>
+                                    <span
+                                        class="material-symbols-outlined download-icon text-gray-400 text-sm hover:text-primary transition-colors"
+                                        title="Descargar IDs en CSV">download</span>
+                                </div>
                                 <div class="flex items-center justify-between">
-                                    <h3 class="text-3xl font-black text-primary-black" data-kpi="status-sin-estatus">-</h3>
+                                    <h3 class="text-3xl font-black text-primary-black" data-kpi="status-sin-estatus">-
+                                    </h3>
                                     <div class="size-12 bg-gray-50 flex items-center justify-center rounded-full">
-                                        <span class="material-symbols-outlined text-gray-400 text-2xl">help_outline</span>
+                                        <span
+                                            class="material-symbols-outlined text-gray-400 text-2xl">help_outline</span>
                                     </div>
-                                            </div>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -434,9 +484,44 @@
             </div>
         </main>
     </div>
+    <!-- Modal de Detalle de Subestatus -->
+    <div id="modal-subestatus" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity opacity-100"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <!-- Modal panel -->
+                <div
+                    class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="text-lg font-bold leading-6 text-gray-900" id="modal-subestatus-title">
+                                Detalle por Subestatus
+                            </h3>
+                            <button type="button" class="text-gray-400 hover:text-gray-500"
+                                onclick="document.getElementById('modal-subestatus').classList.add('hidden')">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div class="mt-2 text-sm text-gray-500" id="modal-subestatus-subtitle">
+                            <!-- Subtitulo dinámico -->
+                        </div>
+                        <div class="mt-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                            <ul id="modal-subestatus-list" class="divide-y divide-gray-100">
+                                <!-- La lista se llenará dinámicamente -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Cargar scripts de la aplicación -->
-    <script src="js/app-init.js"></script>
-    <script src="js/controllers/dashboard-controller.js"></script>
+    <script src="js/app-init.js?v=3.0.0"></script>
+    <script src="js/controllers/dashboard-controller.js?v=3.0.0"></script>
 </body>
 
 </html>

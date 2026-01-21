@@ -13,7 +13,7 @@ class ObligacionesService {
     async getAll(filters = {}) {
         try {
             const obligaciones = await this.dataAdapter.getObligaciones(filters);
-            
+
             // Enriquecer con información calculada
             return obligaciones.map(obl => this.enrichObligacion(obl));
         } catch (error) {
@@ -49,19 +49,19 @@ class ObligacionesService {
         } else {
             diasRestantes = Utils.getDaysUntil(obligacion.fecha_limite);
         }
-        
+
         const criticidad = Utils.getCriticidad(
             diasRestantes,
             obligacion.reglas_alertamiento
         );
-        
+
         return {
             ...obligacion,
             dias_restantes: diasRestantes,
             criticidad: criticidad,
             requiere_envio: diasRestantes !== null && diasRestantes <= (obligacion.reglas_alertamiento?.critica || 5),
-            en_ventana: diasRestantes !== null && diasRestantes > (obligacion.reglas_alertamiento?.critica || 5) && 
-                       diasRestantes <= (obligacion.reglas_alertamiento?.alerta1 || 30)
+            en_ventana: diasRestantes !== null && diasRestantes > (obligacion.reglas_alertamiento?.critica || 5) &&
+                diasRestantes <= (obligacion.reglas_alertamiento?.alerta1 || 30)
         };
     }
 
@@ -70,35 +70,48 @@ class ObligacionesService {
      */
     async filter(filters) {
         const obligaciones = await this.getAll();
-        
+
         let filtered = [...obligaciones];
-        
+
         if (filters.area) {
             filtered = filtered.filter(obl => obl.area === filters.area);
         }
-        
+
         if (filters.periodicidad) {
             filtered = filtered.filter(obl => obl.periodicidad === filters.periodicidad);
         }
-        
-        if (filters.estado) {
+
+        if (filters.estatus) { // Changed from 'estado' to 'estatus' to match UI/Controller
+            filtered = filtered.filter(obl => obl.estatus === filters.estatus);
+        } else if (filters.estado) { // Fallback for old 'estado' property
             filtered = filtered.filter(obl => obl.estado === filters.estado);
         }
-        
+
+        if (filters.sub_estatus) {
+            filtered = filtered.filter(obl => obl.sub_estatus === filters.sub_estatus);
+        }
+
         if (filters.criticidad) {
             filtered = filtered.filter(obl => obl.criticidad.nivel === filters.criticidad);
         }
-        
-        if (filters.search) {
-            const searchLower = filters.search.toLowerCase();
-            filtered = filtered.filter(obl => 
-                obl.id.toLowerCase().includes(searchLower) ||
-                obl.regulador.toLowerCase().includes(searchLower) ||
-                obl.descripcion.toLowerCase().includes(searchLower) ||
-                obl.area.toLowerCase().includes(searchLower)
+
+        if (filters.id) {
+            const idLower = filters.id.toLowerCase();
+            filtered = filtered.filter(obl =>
+                String(obl.id).toLowerCase().includes(idLower)
             );
         }
-        
+
+        if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            filtered = filtered.filter(obl =>
+                String(obl.id).toLowerCase().includes(searchLower) ||
+                String(obl.regulador || '').toLowerCase().includes(searchLower) ||
+                String(obl.descripcion || obl.nombre || '').toLowerCase().includes(searchLower) ||
+                String(obl.area || '').toLowerCase().includes(searchLower)
+            );
+        }
+
         return filtered;
     }
 
@@ -108,7 +121,7 @@ class ObligacionesService {
     async pausar(id, motivo = '') {
         try {
             const obligacion = await this.dataAdapter.updateObligacionEstado(id, 'pausada');
-            
+
             // Registrar en auditoría
             const user = await this.dataAdapter.getCurrentUser();
             await this.dataAdapter.saveAuditoria({
@@ -120,7 +133,7 @@ class ObligacionesService {
                 },
                 ip: Utils.getUserIP()
             });
-            
+
             return obligacion;
         } catch (error) {
             console.error(`Error al pausar obligación ${id}:`, error);
@@ -134,7 +147,7 @@ class ObligacionesService {
     async reanudar(id) {
         try {
             const obligacion = await this.dataAdapter.updateObligacionEstado(id, 'activa');
-            
+
             // Registrar en auditoría
             const user = await this.dataAdapter.getCurrentUser();
             await this.dataAdapter.saveAuditoria({
@@ -145,7 +158,7 @@ class ObligacionesService {
                 },
                 ip: Utils.getUserIP()
             });
-            
+
             return obligacion;
         } catch (error) {
             console.error(`Error al reanudar obligación ${id}:`, error);
@@ -159,7 +172,7 @@ class ObligacionesService {
     async marcarAtendida(id) {
         try {
             const obligacion = await this.dataAdapter.updateObligacionEstado(id, 'atendida');
-            
+
             // Registrar en auditoría
             const user = await this.dataAdapter.getCurrentUser();
             await this.dataAdapter.saveAuditoria({
@@ -170,7 +183,7 @@ class ObligacionesService {
                 },
                 ip: Utils.getUserIP()
             });
-            
+
             return obligacion;
         } catch (error) {
             console.error(`Error al marcar obligación ${id} como atendida:`, error);
@@ -187,12 +200,12 @@ class ObligacionesService {
         try {
             // Obtener solo obligaciones activas
             const obligaciones = await this.getAll({ estado: 'activa' });
-            
+
             // Filtrar obligaciones que están en la alerta especificada
             const obligacionesEnAlerta = obligaciones.filter(obl => {
                 const alertas = Utils.getAlertaSegunReglas(obl);
                 if (!alertas) return false;
-                
+
                 switch (numeroAlerta) {
                     case 1:
                         return alertas.alerta1;
@@ -206,7 +219,7 @@ class ObligacionesService {
                         return false;
                 }
             });
-            
+
             return obligacionesEnAlerta;
         } catch (error) {
             console.error(`Error al obtener obligaciones por alerta ${numeroAlerta}:`, error);
@@ -219,12 +232,12 @@ class ObligacionesService {
      */
     async getEstadisticas() {
         const obligaciones = await this.getAll();
-        
+
         return {
             total: obligaciones.length,
-            activas: obligaciones.filter(obl => obl.estado === 'activa').length,
-            pausadas: obligaciones.filter(obl => obl.estado === 'pausada').length,
-            atendidas: obligaciones.filter(obl => obl.estado === 'atendida').length,
+            activas: obligaciones.filter(obl => obl.estatus === 'activa').length,
+            pausadas: obligaciones.filter(obl => obl.estatus === 'pausada').length,
+            atendidas: obligaciones.filter(obl => obl.estatus === 'atendida').length,
             criticas: obligaciones.filter(obl => obl.criticidad.nivel === 'critica').length,
             en_ventana: obligaciones.filter(obl => obl.criticidad.nivel === 'ventana').length
         };

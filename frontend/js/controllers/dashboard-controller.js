@@ -89,7 +89,7 @@ class DashboardController {
     }
 
     /**
-     * Mostrar alerta de filas excluidas
+     * Mostrar alerta de filas excluidas y duplicados
      */
     mostrarAlertaFilasExcluidas() {
         const alertContainer = document.getElementById('alert-filas-excluidas');
@@ -98,9 +98,37 @@ class DashboardController {
 
         if (!alertContainer || !alertContent) return;
 
-        // Obtener filas excluidas de la configuración
+        let hayAlertas = false;
+        let contenido = '';
+
+        // 1. Obtener duplicados omitidos de la configuración
+        if (this.config && this.config.duplicados_omitidos && this.config.duplicados_omitidos.length > 0) {
+            const duplicados = this.config.duplicados_omitidos;
+            hayAlertas = true;
+
+            const idsDuplicados = duplicados.map(d => d.id).filter(id => id);
+            const idsTexto = idsDuplicados.length <= 5
+                ? idsDuplicados.join(', ')
+                : `${idsDuplicados.slice(0, 5).join(', ')} y ${idsDuplicados.length - 5} más`;
+
+            contenido += `<div class="mb-3 pb-2 border-b border-yellow-200 last:border-0 last:mb-0 last:pb-0">
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined text-yellow-600 text-lg mt-0.5">warning</span>
+                    <div>
+                        <span class="font-bold text-yellow-800">Registros Duplicados Omitidos (${duplicados.length})</span>
+                        <p class="text-xs text-yellow-700 mt-1">
+                            El sistema detectó IDs que ya existen en la base de datos o se repiten en el archivo. 
+                            Para evitar errores, se omitieron los siguientes IDs: <span class="font-medium">${idsTexto}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // 2. Obtener filas excluidas de la configuración (por falta de ID)
         if (this.config && this.config.filas_excluidas && this.config.filas_excluidas.length > 0) {
             const filasExcluidas = this.config.filas_excluidas;
+            hayAlertas = true;
 
             // Agrupar por razón
             const agrupadas = {};
@@ -111,27 +139,37 @@ class DashboardController {
                 agrupadas[razon].push(fila);
             });
 
-            // Construir contenido de la alerta
-            let contenido = '';
             Object.entries(agrupadas).forEach(([razon, filas]) => {
                 filas.sort((a, b) => a - b); // Ordenar filas numéricamente
-                const filasTexto = filas.length <= 5
+                const filasTexto = filas.length <= 10
                     ? filas.join(', ')
-                    : `${filas.slice(0, 5).join(', ')} y ${filas.length - 5} más`;
+                    : `${filas.slice(0, 10).join(', ')} ...`;
 
-                contenido += `<div class="mb-2">
-                    <span class="font-semibold">${razon}</span>
-                    <br>
-                    <span class="text-yellow-600">Filas excluidas: ${filasTexto}</span>
+                contenido += `<div class="mb-2 last:mb-0 pt-2 first:pt-0">
+                    <div class="flex items-start gap-2">
+                        <span class="material-symbols-outlined text-yellow-600 text-lg mt-0.5">error</span>
+                        <div>
+                            <span class="font-bold text-yellow-800">Filas Excluidas (Sin ID)</span>
+                            <div class="text-xs text-yellow-700 mt-1">
+                                <span class="font-semibold">${razon}</span>: Filas ${filasTexto}
+                            </div>
+                        </div>
+                    </div>
                 </div>`;
             });
+        }
 
+        if (hayAlertas) {
             alertContent.innerHTML = contenido;
             alertContainer.classList.remove('hidden');
 
             // Agregar listener para cerrar alerta
             if (btnCerrar) {
-                btnCerrar.addEventListener('click', () => {
+                // Remover listeners anteriores para evitar duplicados
+                const newBtn = btnCerrar.cloneNode(true);
+                btnCerrar.parentNode.replaceChild(newBtn, btnCerrar);
+
+                newBtn.addEventListener('click', () => {
                     alertContainer.classList.add('hidden');
                 });
             }
@@ -215,6 +253,14 @@ class DashboardController {
         const filterEstatus = document.getElementById('filter-estatus')?.value.toLowerCase() || '';
         const filterSubEstatus = document.getElementById('filter-sub-estatus')?.value.toLowerCase() || '';
         const filterId = document.getElementById('filter-id')?.value.toLowerCase().trim() || '';
+
+        // Guardar filtros en localStorage para persistencia entre páginas
+        localStorage.setItem('alertia_filters', JSON.stringify({
+            area: filterArea,
+            estatus: filterEstatus,
+            sub_estatus: filterSubEstatus,
+            id: filterId
+        }));
 
         let filtered = this.allObligaciones.filter(obl => {
             const matchArea = !filterArea || (obl.area && obl.area.toLowerCase() === filterArea);
@@ -539,33 +585,32 @@ class DashboardController {
                             }
                             card.dataset.downloadSetup = 'true';
 
-                            // Click en la tarjeta completa para descargar
+                            // Click en la tarjeta
                             card.addEventListener('click', (e) => {
                                 try {
-
-
-                                    // Si el click fue en el icono de descarga, no hacer nada adicional (ya se maneja abajo)
-                                    const closestIcon = e.target.closest('.download-icon');
-
-
-                                    if (closestIcon) {
-                                        return;
-                                    }
+                                    // Si el click fue en el icono de descarga, salir
+                                    if (e.target.closest('.download-icon')) return;
 
                                     const category = card.getAttribute('data-kpi-category');
                                     if (!category) return;
 
-                                    // Usar currentFilteredData si existe, sino usar allObligaciones
-                                    const datos = this.currentFilteredData && this.currentFilteredData.length > 0
-                                        ? this.currentFilteredData
-                                        : (this.allObligaciones || []);
+                                    // Lista de categorías que soportan modal de subestatus
+                                    const modalCategories = ['recordatorio', 'solicitud', 'cerrado', 'apagado', 'sin-estatus'];
 
-                                    const obligaciones = this.getObligacionesPorCategoria(datos, category);
+                                    if (modalCategories.includes(category)) {
+                                        // Usar currentFilteredData si existe, sino usar allObligaciones
+                                        const datos = this.currentFilteredData && this.currentFilteredData.length > 0
+                                            ? this.currentFilteredData
+                                            : (this.allObligaciones || []);
 
+                                        const obligaciones = this.getObligacionesPorCategoria(datos, category);
 
-                                    this.downloadIDsAsCSV(category, obligaciones);
+                                        if (obligaciones.length > 0) {
+                                            this.showSubstatusModal(category, obligaciones);
+                                        }
+                                    }
+
                                 } catch (error) {
-
                                     console.error('[Dashboard] Error en click de tarjeta:', error);
                                 }
                             });
@@ -618,6 +663,67 @@ class DashboardController {
         } catch (error) {
             console.error('[Dashboard] Error en setupCardDownload:', error);
         }
+    }
+
+    /**
+     * Mostrar modal con detalle de subestatus
+     */
+    showSubstatusModal(category, obligaciones) {
+        const modal = document.getElementById('modal-subestatus');
+        const titleEl = document.getElementById('modal-subestatus-title');
+        const subtitleEl = document.getElementById('modal-subestatus-subtitle');
+        const listEl = document.getElementById('modal-subestatus-list');
+
+        if (!modal || !listEl) return;
+
+        // Títulos legibles
+        const titles = {
+            'recordatorio': 'Estatus: Recordatorio',
+            'solicitud': 'Estatus: Solicitud',
+            'cerrado': 'Estatus: Cerrado',
+            'apagado': 'Estatus: Apagado',
+            'sin-estatus': 'Sin Estatus Asignado'
+        };
+
+        const title = titles[category] || 'Detalle de Estatus';
+        if (titleEl) titleEl.textContent = title;
+        if (subtitleEl) subtitleEl.textContent = `Total: ${obligaciones.length} obligaciones`;
+
+        // Agrupar por subestatus
+        const counts = {};
+        obligaciones.forEach(obl => {
+            const sub = obl.sub_estatus ? String(obl.sub_estatus).trim() : 'Sin Sub-estatus';
+            counts[sub] = (counts[sub] || 0) + 1;
+        });
+
+        // Generar HTML
+        listEl.innerHTML = '';
+        Object.entries(counts)
+            .sort(([, a], [, b]) => b - a) // Ordenar por cantidad descendente
+            .forEach(([subestatus, count]) => {
+                const percentage = Math.round((count / obligaciones.length) * 100);
+
+                const li = document.createElement('li');
+                li.className = 'flex items-center justify-between py-3';
+                li.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gray-100 p-2 rounded-full">
+                            <span class="material-symbols-outlined text-gray-500 text-sm">subdirectory_arrow_right</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900 capitalize">${subestatus.toLowerCase()}</p>
+                            <p class="text-xs text-gray-500">${percentage}% del total</p>
+                        </div>
+                    </div>
+                    <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                        ${count}
+                    </span>
+                `;
+                listEl.appendChild(li);
+            });
+
+        // Mostrar modal
+        modal.classList.remove('hidden');
     }
 
     /**

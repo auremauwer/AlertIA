@@ -36,8 +36,28 @@ class ObligacionesController {
      * Configurar event listeners
      */
     setupEventListeners() {
-        // Búsqueda
-        const searchInput = document.querySelector('input[placeholder*="Buscar"]');
+        const filters = ['area', 'estatus', 'sub-estatus'];
+        filters.forEach(filter => {
+            const el = document.getElementById(`filter-${filter}`);
+            if (el) {
+                el.addEventListener('change', (e) => {
+                    const key = filter.replace('-', '_'); // estatus, sub_estatus
+                    this.currentFilters[key] = e.target.value || null;
+                    this.loadObligaciones();
+                });
+            }
+        });
+
+        const filterId = document.getElementById('filter-id');
+        if (filterId) {
+            filterId.addEventListener('input', Utils.debounce((e) => {
+                this.currentFilters.id = e.target.value || null;
+                this.loadObligaciones();
+            }, 300));
+        }
+
+        // Búsqueda General (si existe input search global)
+        const searchInput = document.querySelector('input[placeholder*="Buscar por ID, regulador"]');
         if (searchInput) {
             searchInput.addEventListener('input', Utils.debounce((e) => {
                 this.currentFilters.search = e.target.value;
@@ -45,122 +65,18 @@ class ObligacionesController {
             }, 300));
         }
 
-        // Dropdown logic with delegation
-        document.addEventListener('click', (e) => {
-            // Handle Trigger Click
-            const trigger = e.target.closest('.filter-dropdown .trigger');
-            if (trigger) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const menu = trigger.nextElementSibling;
-                if (!menu) return; // Protección: si menu es null, salir
-                const isCurrentlyHidden = menu.classList.contains('hidden');
-
-                // Close all other dropdowns
-                this.closeAllDropdowns();
-
-                // Toggle current
-                if (isCurrentlyHidden) {
-                    menu.classList.remove('hidden');
-                    // Force reflow to ensure transition works
-                    void menu.offsetWidth;
-                    menu.classList.remove('opacity-0', 'translate-y-2');
-                }
-                return;
-            }
-
-            // Handle Item Click
-            const item = e.target.closest('.dropdown-item');
-            if (item) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const filterType = item.dataset.filter;
-                const filterValue = item.dataset.value;
-                this.handleFilterSelection(filterType, filterValue, item);
-
-                this.closeAllDropdowns();
-                return;
-            }
-
-            // Handle Outside Click
-            if (!e.target.closest('.filter-dropdown')) {
-                this.closeAllDropdowns();
-            }
-        });
-
         // Botones de acción
         this.attachActionListeners();
     }
 
-    closeAllDropdowns() {
-        document.querySelectorAll('.filter-dropdown .menu').forEach(m => {
-            // Reset styles for hidden state
-            m.classList.add('opacity-0', 'translate-y-2');
-            m.classList.add('hidden'); // Hide immediately to prevent ghost clicks
-        });
-    }
-
     /**
-     * Manejar selección de filtro
+     * Manejar selección de filtro (Legacy support or removed if not used)
      */
-    handleFilterSelection(type, value, element) {
-        // Toggle logic: if clicking the already active value, clear it
-        let isActive = false;
+    // handleFilterSelection eliminado ya que se usan selects nativos
 
-        switch (type) {
-            case 'criticidad':
-                if (this.currentFilters.criticidad === value) {
-                    this.currentFilters.criticidad = null;
-                } else {
-                    this.currentFilters.criticidad = value;
-                    this.currentFilters.estado = null; // Mutually exclusive in UI group
-                }
-                break;
-            case 'estado':
-                if (this.currentFilters.estado === value) {
-                    this.currentFilters.estado = null;
-                } else {
-                    this.currentFilters.estado = value;
-                    this.currentFilters.criticidad = null;
-                }
-                break;
-            case 'area':
-                this.currentFilters.area = (this.currentFilters.area === value) ? null : value;
-                break;
-            case 'periodicidad':
-                this.currentFilters.periodicidad = (this.currentFilters.periodicidad === value) ? null : value;
-                break;
-        }
+    // updateDropdownStyles eliminado
 
-        this.updateDropdownStyles();
-        this.loadObligaciones();
-    }
-
-    updateDropdownStyles() {
-        // Reset all items
-        document.querySelectorAll('.dropdown-item').forEach(item => {
-            item.classList.remove('bg-gray-100', 'text-primary', 'font-bold');
-            item.classList.add('text-gray-600');
-        });
-
-        // Apply active styles to matching filters
-        const filters = this.currentFilters;
-
-        if (filters.criticidad) this.highlightItem('criticidad', filters.criticidad);
-        if (filters.estado) this.highlightItem('estado', filters.estado);
-        if (filters.area) this.highlightItem('area', filters.area);
-        if (filters.periodicidad) this.highlightItem('periodicidad', filters.periodicidad);
-    }
-
-    highlightItem(type, value) {
-        const item = document.querySelector(`.dropdown-item[data-filter="${type}"][data-value="${value}"]`);
-        if (item) {
-            item.classList.remove('text-gray-600');
-            item.classList.add('bg-gray-100', 'text-primary', 'font-bold');
-        }
-    }
+    // highlightItem eliminado
 
     /**
      * Cargar obligaciones
@@ -204,31 +120,33 @@ class ObligacionesController {
                 'activa': 'status-pendiente',
                 'pausada': 'status-pausada',
                 'atendida': 'status-atendida',
-                'en_ventana': 'status-ventana'
-            }[obl.estado] || 'status-pendiente';
+                'en_ventana': 'status-ventana',
+                'recordatorio': 'status-recordatorio',
+                'solicitud': 'status-solicitud',
+                'cerrado': 'status-cerrado',
+                'apagado': 'status-apagado'
+            }[obl.estatus] || 'status-pendiente';
 
             row.innerHTML = `
-                <td class="p-4 text-xs font-bold text-primary group-hover:underline">${obl.id}</td>
-                <td class="p-4 text-xs font-semibold">${obl.regulador}</td>
-                <td class="p-4 text-xs text-text-muted max-w-xs truncate">${obl.descripcion || obl.nombre}</td>
-                <td class="p-4 text-xs font-medium">${obl.area}</td>
-                <td class="p-4 text-xs">${obl.periodicidad}</td>
+                <td class="p-4 text-xs font-bold text-primary group-hover:underline">${obl.id || obl.id_oficial || '-'}</td>
+                <td class="p-4 text-xs font-semibold">${obl.regulador || '-'}</td>
+                <td class="p-4 text-xs font-medium">${obl.area || '-'}</td>
                 <td class="p-4 text-xs font-mono">${Utils.formatDate(obl.fecha_limite, 'DD/MM/YYYY')}</td>
                 <td class="p-4 text-xs font-bold ${diasClass}">
                     ${diasRestantes !== null ? diasRestantes : 'N/A'}
                     ${diasRestantes === 0 ? '<span class="absolute -top-1 left-3 bg-primary text-white text-[8px] font-bold px-1 py-0.5 rounded leading-none whitespace-nowrap shadow-sm">VENCE HOY</span>' : ''}
                 </td>
-                <td class="p-4 text-center">
-                    <span class="status-pill ${estadoClass}">${this.getEstadoLabel(obl.estado)}</span>
+                <td class="p-4">
+                    <span class="status-pill ${estadoClass}">${this.getEstadoLabel(obl.estatus)}</span>
                 </td>
-                <td class="p-4 text-xs text-text-muted italic">${this.getUltimaAccion(obl)}</td>
+                <td class="p-4 text-xs text-text-muted italic">${obl.sub_estatus || '-'}</td>
                 <td class="p-4 text-right">
                     <div class="flex items-center justify-end gap-1">
                         <button class="p-1.5 hover:bg-gray-100 rounded-full text-text-muted hover:text-primary transition-colors" 
                                 data-action="ver-detalle" data-id="${obl.id}" title="Ver detalles">
                             <span class="material-symbols-outlined">visibility</span>
                         </button>
-                        ${obl.estado === 'pausada' ?
+                        ${obl.estatus === 'pausada' ?
                     `<button class="p-1.5 hover:bg-gray-100 rounded-full text-primary hover:text-red-700 transition-colors" 
                                      data-action="reanudar" data-id="${obl.id}" title="Reanudar">
                                 <span class="material-symbols-outlined">play_circle</span>
@@ -242,7 +160,6 @@ class ObligacionesController {
                                 data-action="marcar-atendida" data-id="${obl.id}" title="Marcar como atendida">
                             <span class="material-symbols-outlined">check_circle</span>
                         </button>
-                        <span class="material-symbols-outlined text-gray-300 group-hover:text-gray-500 transition-colors ml-1 !text-lg">chevron_right</span>
                     </div>
                 </td>
             `;
@@ -310,32 +227,87 @@ class ObligacionesController {
     }
 
     /**
-     * Cargar opciones de filtros
+     * Cargar opciones de filtros y restaurar estado
      */
     async loadFilters() {
         try {
             const obligaciones = await this.obligacionesService.getAll();
 
-            // Contar por área
-            const areas = {};
-            const periodicidades = {};
+            // Colecciones para valores únicos (normalizados a string)
+            const areas = new Set();
+            const estatuses = new Set();
+            const subEstatus = new Set();
 
             obligaciones.forEach(obl => {
-                if (obl.area) areas[obl.area] = (areas[obl.area] || 0) + 1;
-                if (obl.periodicidad) periodicidades[obl.periodicidad] = (periodicidades[obl.periodicidad] || 0) + 1;
+                if (obl.area) areas.add(String(obl.area).trim());
+                if (obl.estatus) estatuses.add(String(obl.estatus).trim());
+                if (obl.sub_estatus) subEstatus.add(String(obl.sub_estatus).trim());
             });
 
-            // Actualizar contadores en filtros de Área
-            Object.entries(areas).forEach(([area, count]) => {
-                const countEl = document.querySelector(`.dropdown-item[data-value="${area}"] .filter-count`);
-                if (countEl) countEl.textContent = count;
-            });
+            // Helper para poblar select
+            const populateSelect = (id, values) => {
+                const select = document.getElementById(id);
+                if (!select) return;
 
-            // Actualizar contadores en filtros de Periodicidad
-            Object.entries(periodicidades).forEach(([per, count]) => {
-                const countEl = document.querySelector(`.dropdown-item[data-value="${per}"] .filter-count`);
-                if (countEl) countEl.textContent = count;
-            });
+                // Mantener primera opción (placeholder)
+                const firstOption = select.options[0];
+                select.innerHTML = '';
+                select.appendChild(firstOption);
+
+                Array.from(values).sort().forEach(val => {
+                    const option = document.createElement('option');
+                    // El valor en el option debe ser el original o lowercase?
+                    // Estandarizamos a el valor real, el filtrado lo maneja el servicio
+                    option.value = val.toLowerCase();
+
+                    // Capitalizar para mostrar
+                    const label = val.split(' ').map(word =>
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    ).join(' ');
+
+                    option.textContent = label;
+                    select.appendChild(option);
+                });
+            };
+
+            populateSelect('filter-area', areas);
+            populateSelect('filter-estatus', estatuses);
+            populateSelect('filter-sub-estatus', subEstatus);
+
+            // Restaurar filtros desde localStorage (herencia del Dashboard)
+            const savedFilters = localStorage.getItem('alertia_filters');
+            if (savedFilters) {
+                try {
+                    const parsed = JSON.parse(savedFilters);
+
+                    if (parsed.area) {
+                        this.currentFilters.area = parsed.area;
+                        const el = document.getElementById('filter-area');
+                        if (el) el.value = parsed.area;
+                    }
+                    if (parsed.estatus) {
+                        this.currentFilters.estatus = parsed.estatus;
+                        const el = document.getElementById('filter-estatus');
+                        if (el) el.value = parsed.estatus;
+                    }
+                    if (parsed.sub_estatus) {
+                        this.currentFilters.sub_estatus = parsed.sub_estatus;
+                        const el = document.getElementById('filter-sub-estatus');
+                        if (el) el.value = parsed.sub_estatus;
+                    }
+                    if (parsed.id) {
+                        this.currentFilters.id = parsed.id;
+                        const el = document.getElementById('filter-id');
+                        if (el) el.value = parsed.id;
+                    }
+
+                    // Recargar con los filtros aplicados
+                    this.loadObligaciones();
+
+                } catch (e) {
+                    console.error('Error al restaurar filtros', e);
+                }
+            }
 
         } catch (error) {
             console.error('Error al cargar filtros:', error);
@@ -347,14 +319,74 @@ class ObligacionesController {
      */
     updatePagination(total) {
         const totalPages = Math.ceil(total / this.itemsPerPage);
-        const paginationEl = document.querySelector('.pagination');
 
-        if (paginationEl) {
-            // Actualizar texto
-            const textEl = paginationEl.querySelector('[data-pagination-text]');
-            if (textEl) {
-                textEl.textContent = `Mostrando ${Math.min((this.currentPage - 1) * this.itemsPerPage + 1, total)} de ${total} registros`;
+        // Actualizar texto
+        const infoEl = document.getElementById('pagination-info');
+        if (infoEl) {
+            const start = total === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
+            const end = Math.min(this.currentPage * this.itemsPerPage, total);
+            infoEl.textContent = `Mostrando ${start} de ${end} de ${total} registros`;
+        }
+
+        // Renderizar controles
+        const controlsEl = document.getElementById('pagination-controls');
+        if (controlsEl) {
+            controlsEl.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // Botón Anterior
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'p-1.5 border border-border-subtle rounded bg-white text-text-muted hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+            prevBtn.innerHTML = '<span class="material-symbols-outlined">chevron_left</span>';
+            prevBtn.disabled = this.currentPage === 1;
+            prevBtn.onclick = () => {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.loadObligaciones();
+                }
+            };
+            controlsEl.appendChild(prevBtn);
+
+            // Páginas (Lógica simple: mostrar todas si son pocas, o rango limitado)
+            // Para simplicidad mostramos rango alrededor de current page
+            let startPage = Math.max(1, this.currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
             }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                const isActive = i === this.currentPage;
+
+                if (isActive) {
+                    pageBtn.className = 'px-3 py-1 border border-primary bg-primary text-white text-xs font-bold rounded';
+                } else {
+                    pageBtn.className = 'px-3 py-1 border border-border-subtle bg-white text-text-muted text-xs font-bold rounded hover:bg-gray-100 hover:text-primary-black-black transition-colors';
+                }
+
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {
+                    this.currentPage = i;
+                    this.loadObligaciones();
+                };
+                controlsEl.appendChild(pageBtn);
+            }
+
+            // Botón Siguiente
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'p-1.5 border border-border-subtle rounded bg-white text-text-muted hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+            nextBtn.innerHTML = '<span class="material-symbols-outlined">chevron_right</span>';
+            nextBtn.disabled = this.currentPage === totalPages;
+            nextBtn.onclick = () => {
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.loadObligaciones();
+                }
+            };
+            controlsEl.appendChild(nextBtn);
         }
     }
 
@@ -415,20 +447,25 @@ class ObligacionesController {
 }
 
 // Inicializar cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (window.dataAdapter) {
-            const controller = new ObligacionesController();
-            controller.init();
-            window.obligacionesController = controller;
-        }
-    });
-} else {
+// Inicializar cuando las dependencias estén listas
+const initObligacionesController = () => {
+    if (window.obligacionesController) return; // Ya inicializado
+
     if (window.dataAdapter) {
         const controller = new ObligacionesController();
         controller.init();
         window.obligacionesController = controller;
+        console.log('✅ ObligacionesController inicializado');
     }
+};
+
+// Intentar inicializar inmediatamente o esperar evento
+if (window.dataAdapter) {
+    initObligacionesController();
+} else {
+    document.addEventListener('alertia-ready', initObligacionesController);
+    // Respaldo por si el evento ya sucedió o hay condiciones de carrera
+    document.addEventListener('DOMContentLoaded', initObligacionesController);
 }
 
 if (typeof window !== 'undefined') {

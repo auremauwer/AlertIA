@@ -388,6 +388,9 @@ class ExcelService {
         // Obtener Área Responsable directamente de la columna H (índice 7)
         const area = row[7] ? String(row[7]).trim() : 'Sin asignar';
 
+        // Obtener Periodicidad directamente de la columna N (índice 13)
+        const periodicidad = row[13] ? String(row[13]).trim() : 'No definida';
+
         // Obtener valores básicos
         const nombre = getValue('nombre') || idOriginal;
         const regulador = getValue('regulador') || 'General';
@@ -444,9 +447,10 @@ class ExcelService {
             descripcion: String(nombre).trim(), // Usamos nombre/id como descripción
             nombre: String(nombre).trim(),
             area: String(area).trim(),
+            periodicidad: periodicidad,
             fecha_limite: fechaLimiteDate.toISOString().split('T')[0],
             estatus: estatus ? String(estatus).toLowerCase().trim() : null,
-            sub_estatus: subEstatus ? String(subEstatus).trim() : null,
+            sub_estatus: subEstatus ? String(subEstatus).trim().charAt(0).toUpperCase() + String(subEstatus).trim().slice(1).replace(/\(cn\)/i, '(CN)') : null,
             responsable_cn: respCN,
             responsable_juridico: respJur,
             dias_para_vencer_excel: diasParaVencer, // Guardar el valor del Excel

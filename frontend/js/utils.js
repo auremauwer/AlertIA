@@ -351,6 +351,32 @@ const Utils = {
             console.error('Error al copiar:', err);
             return false;
         }
+    },
+
+    /**
+     * Cerrar sesión y limpiar datos
+     */
+    logoutApp() {
+        if (confirm('¿Está seguro de que desea salir? Esto borrará la caché local y recargará la aplicación.')) {
+            try {
+                // Borrar LocalStorage y SessionStorage
+                localStorage.clear();
+                sessionStorage.clear();
+
+                // Borrar cookies
+                document.cookie.split(";").forEach(function (c) {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+
+                console.log('🧹 Memorias borradas. Saliendo...');
+
+                // Redirigir a inicio
+                window.location.href = 'index.html';
+            } catch (e) {
+                console.error('Error al salir:', e);
+                window.location.reload();
+            }
+        }
     }
 };
 

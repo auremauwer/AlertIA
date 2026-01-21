@@ -66,7 +66,12 @@
         .status-pendiente { @apply bg-amber-50 text-amber-700 border-amber-200; }
         .status-ventana { @apply bg-red-50 text-red-700 border-red-200; }
         .status-pausada { @apply bg-gray-50 text-gray-600 border-gray-200; }
-        .status-atendida { @apply bg-green-50 text-green-700 border-green-200; }.filter-chip {
+        .status-atendida { @apply bg-green-50 text-green-700 border-green-200; }
+        .status-recordatorio { @apply bg-blue-50 text-blue-700 border-blue-200; }
+        .status-solicitud { @apply bg-purple-50 text-purple-700 border-purple-200; }
+        .status-cerrado { @apply bg-green-50 text-green-700 border-green-200; }
+        .status-apagado { @apply bg-gray-100 text-gray-500 border-gray-300; }
+        .filter-chip {
             @apply px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-colors flex items-center gap-1.5;
         }
         .filter-chip.active {
@@ -140,191 +145,96 @@
                 </div>
             </div>
         </aside>
-        <main class="flex-1 overflow-y-auto bg-white">
-            <div class="p-8">
-                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
-                    <div class="space-y-1">
-                        <h2 class="text-2xl font-extrabold text-text-main tracking-tight">Gestión de Obligaciones</h2>
-                        <p class="text-text-muted text-sm">Visualización y control de cumplimiento normativo.</p>
+        <main class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+            <header class="flex-none px-10 py-8 border-b border-border-soft bg-white">
+                <div class="flex flex-wrap justify-between items-end gap-4">
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-[0.2em]">
+                            <span class="w-8 h-[1px] bg-primary"></span>
+                            Obligaciones Normativas
+                        </div>
+                        <h2 class="text-primary-black text-4xl font-extrabold tracking-tight">Gestión de Obligaciones
+                        </h2>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="flex items-center gap-2 px-3 py-1.5 rounded bg-gray-50 border border-gray-100 hidden md:flex">
-                            <span class="material-symbols-outlined text-green-600 text-sm">database</span>
-                            <span
-                                class="text-[10px] font-bold text-gray-600 uppercase tracking-widest leading-none">Excel
-                                Sync: OK</span>
-                        </div>
-                        <div class="relative">
-                            <span
-                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
-                            <input
-                                class="pl-9 pr-4 py-2 border border-border-subtle rounded-md text-sm w-80 lg:w-96 focus:ring-1 focus:ring-primary-black focus:border-primary-black transition-all shadow-sm"
-                                placeholder="Buscar por ID, regulador o área..." type="text" />
-                        </div>
+                    <div class="flex items-center gap-6">
+                        <button onclick="Utils.logoutApp()"
+                            class="flex items-center gap-2 px-6 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-red-600 text-sm font-bold uppercase rounded-sm transition-colors tracking-wide">
+                            <span class="material-symbols-outlined text-lg">logout</span>
+                            <span>Salir</span>
+                        </button>
                     </div>
                 </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8">
                 <div class="flex flex-col gap-4 mb-4">
-                    <div class="flex flex-wrap gap-4 mb-6 relative z-10">
-                        <!-- Dropdown Criticidad -->
-                        <div class="relative group filter-dropdown" id="dropdown-criticidad">
-                            <button
-                                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-sm font-semibold text-gray-700 w-48 justify-between trigger">
-                                <span>Criticidad</span>
-                                <span
-                                    class="material-symbols-outlined text-gray-400 text-lg transition-transform duration-200">expand_more</span>
-                            </button>
-                            <div
-                                class="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl hidden opacity-0 translate-y-2 transition-all duration-200 z-50 menu p-1.5 space-y-0.5">
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="criticidad" data-value="critica">
-                                    <span class="font-medium">Críticas</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Críticas">3</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="criticidad" data-value="ventana">
-                                    <span class="font-medium">En ventana</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="En ventana">5</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="estado" data-value="pausada">
-                                    <span class="font-medium">Pausadas</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Pausadas">2</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="estado" data-value="atendida">
-                                    <span class="font-medium">Atendidas</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Atendidas">14</span>
-                                </button>
-                            </div>
+                    <!-- Section: Filters -->
+                    <section class="bg-white p-6 border border-gray-200 shadow-sm rounded-sm mb-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="material-symbols-outlined text-primary">filter_alt</span>
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-black">Filtros de Búsqueda</h3>
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <!-- Filter: Area -->
+                            <div class="flex flex-col gap-1">
+                                <label for="filter-area"
+                                    class="text-[10px] font-bold uppercase text-gray-500 tracking-wider">Área</label>
+                                <div class="relative">
+                                    <select id="filter-area"
+                                        class="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-sm px-3 py-2 pr-8 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                                        <option value="">Todas las áreas</option>
+                                    </select>
+                                    <div
+                                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                        <span class="material-symbols-outlined text-sm">expand_more</span>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <!-- Dropdown Área -->
-                        <div class="relative group filter-dropdown" id="dropdown-area">
-                            <button
-                                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-sm font-semibold text-gray-700 w-48 justify-between trigger">
-                                <span>Área</span>
-                                <span
-                                    class="material-symbols-outlined text-gray-400 text-lg transition-transform duration-200">expand_more</span>
-                            </button>
-                            <div
-                                class="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl hidden opacity-0 translate-y-2 transition-all duration-200 z-50 menu p-1.5 space-y-0.5">
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="area" data-value="Cumplimiento">
-                                    <span class="font-medium">Cumplimiento</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Cumplimiento">8</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="area" data-value="Tesorería">
-                                    <span class="font-medium">Tesorería</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Tesorería">5</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="area" data-value="Impuestos">
-                                    <span class="font-medium">Impuestos</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Impuestos">3</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="area" data-value="Auditoría">
-                                    <span class="font-medium">Auditoría</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Auditoría">4</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="area" data-value="Seguridad">
-                                    <span class="font-medium">Seguridad</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Seguridad">2</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="area" data-value="Operaciones">
-                                    <span class="font-medium">Operaciones</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Operaciones">2</span>
-                                </button>
+                            <!-- Filter: Estatus -->
+                            <div class="flex flex-col gap-1">
+                                <label for="filter-estatus"
+                                    class="text-[10px] font-bold uppercase text-gray-500 tracking-wider">Estatus</label>
+                                <div class="relative">
+                                    <select id="filter-estatus"
+                                        class="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-sm px-3 py-2 pr-8 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                                        <option value="">Todos los estatus</option>
+                                    </select>
+                                    <div
+                                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                        <span class="material-symbols-outlined text-sm">expand_more</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Dropdown Periodicidad -->
-                        <div class="relative group filter-dropdown" id="dropdown-periodicidad">
-                            <button
-                                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-sm font-semibold text-gray-700 w-48 justify-between trigger">
-                                <span>Periodicidad</span>
-                                <span
-                                    class="material-symbols-outlined text-gray-400 text-lg transition-transform duration-200">expand_more</span>
-                            </button>
-                            <div
-                                class="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl hidden opacity-0 translate-y-2 transition-all duration-200 z-50 menu p-1.5 space-y-0.5">
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="periodicidad" data-value="Diario">
-                                    <span class="font-medium">Diario</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Diario">2</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="periodicidad" data-value="Mensual">
-                                    <span class="font-medium">Mensual</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Mensual">12</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="periodicidad" data-value="Trimestral">
-                                    <span class="font-medium">Trimestral</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Trimestral">5</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="periodicidad" data-value="Semestral">
-                                    <span class="font-medium">Semestral</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Semestral">3</span>
-                                </button>
-                                <button
-                                    class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-left dropdown-item"
-                                    data-filter="periodicidad" data-value="Anual">
-                                    <span class="font-medium">Anual</span>
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold filter-count"
-                                        data-key="Anual">2</span>
-                                </button>
+                            <!-- Filter: Sub Estatus -->
+                            <div class="flex flex-col gap-1">
+                                <label for="filter-sub-estatus"
+                                    class="text-[10px] font-bold uppercase text-gray-500 tracking-wider">Sub
+                                    Estatus</label>
+                                <div class="relative">
+                                    <select id="filter-sub-estatus"
+                                        class="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-sm px-3 py-2 pr-8 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                                        <option value="">Todos</option>
+                                    </select>
+                                    <div
+                                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                        <span class="material-symbols-outlined text-sm">expand_more</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Filter: ID -->
+                            <div class="flex flex-col gap-1">
+                                <label for="filter-id"
+                                    class="text-[10px] font-bold uppercase text-gray-500 tracking-wider">Buscar por
+                                    ID</label>
+                                <div class="relative">
+                                    <input type="text" id="filter-id" placeholder="Escriba ID..."
+                                        class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-sm px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
                 </div>
                 <div class="bg-white rounded-lg border border-border-subtle shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
@@ -332,24 +242,19 @@
                             <thead>
                                 <tr class="bg-gray-50 border-b-2 border-gray-200">
                                     <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">ID
-                                        Obligación</th>
+                                    </th>
                                     <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
                                         Regulador</th>
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
-                                        Disposición</th>
                                     <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Área
                                     </th>
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
-                                        Periodicidad</th>
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Límite
-                                    </th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Fecha
+                                        Límite</th>
                                     <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Días
                                     </th>
-                                    <th
-                                        class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800 text-center">
-                                        Estado</th>
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Última
-                                        Acción</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
+                                        Estatus</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
+                                        Subestatus</th>
                                     <th
                                         class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800 text-right">
                                         Acciones</th>
@@ -486,23 +391,14 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-border-subtle">
-                        <div class="text-[10px] font-bold text-text-muted uppercase tracking-widest">
-                            Mostrando 4 de 24 registros
+                    <div id="pagination-container"
+                        class="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-border-subtle">
+                        <div id="pagination-info"
+                            class="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+                            Mostrando 0 de 0 registros
                         </div>
-                        <div class="flex gap-1">
-                            <button
-                                class="p-1.5 border border-border-subtle rounded bg-white text-text-muted hover:bg-gray-50 transition-colors"><span
-                                    class="material-symbols-outlined">chevron_left</span></button>
-                            <button
-                                class="px-3 py-1 border border-primary bg-primary text-white text-xs font-bold rounded">1</button>
-                            <button
-                                class="px-3 py-1 border border-border-subtle bg-white text-text-muted text-xs font-bold rounded hover:bg-gray-100 hover:text-primary-black-black transition-colors">2</button>
-                            <button
-                                class="px-3 py-1 border border-border-subtle bg-white text-text-muted text-xs font-bold rounded hover:bg-gray-100 hover:text-primary-black-black transition-colors">3</button>
-                            <button
-                                class="p-1.5 border border-border-subtle rounded bg-white text-text-muted hover:bg-gray-50 transition-colors"><span
-                                    class="material-symbols-outlined">chevron_right</span></button>
+                        <div id="pagination-controls" class="flex gap-1">
+                            <!-- Paginación dinámica -->
                         </div>
                     </div>
                 </div>

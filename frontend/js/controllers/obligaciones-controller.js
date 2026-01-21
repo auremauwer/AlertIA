@@ -131,7 +131,7 @@ class ObligacionesController {
                 <td class="p-4 text-xs font-bold text-primary group-hover:underline">${obl.id || obl.id_oficial || '-'}</td>
                 <td class="p-4 text-xs font-semibold">${obl.regulador || '-'}</td>
                 <td class="p-4 text-xs font-medium">${obl.area || '-'}</td>
-                <td class="p-4 text-xs font-mono">${Utils.formatDate(obl.fecha_limite, 'DD/MM/YYYY')}</td>
+                <td class="p-4 text-xs font-mono">${this.formatFechaLimite(obl)}</td>
                 <td class="p-4 text-xs font-bold ${diasClass}">
                     ${diasRestantes !== null ? diasRestantes : 'N/A'}
                     ${diasRestantes === 0 ? '<span class="absolute -top-1 left-3 bg-primary text-white text-[8px] font-bold px-1 py-0.5 rounded leading-none whitespace-nowrap shadow-sm">VENCE HOY</span>' : ''}
@@ -206,6 +206,21 @@ class ObligacionesController {
     /**
      * Obtener label de estado
      */
+    /**
+     * Formatear fecha límite para mostrar
+     */
+    formatFechaLimite(obligacion) {
+        // Si hay fecha válida, formatearla. Si no, mostrar el valor original del Excel
+        if (obligacion.fecha_limite) {
+            return Utils.formatDate(obligacion.fecha_limite, 'DD/MM/YYYY');
+        } else if (obligacion.fecha_limite_original) {
+            // Mostrar el valor original del Excel si no hay fecha válida
+            return obligacion.fecha_limite_original;
+        } else {
+            return 'No definida';
+        }
+    }
+
     getEstadoLabel(estado) {
         const labels = {
             'activa': 'Pendiente',

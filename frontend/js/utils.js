@@ -8,12 +8,30 @@ const Utils = {
     formatDate(date, format = 'DD/MM/YYYY') {
         if (!date) return '';
 
-        const d = new Date(date);
+        // Si es un string en formato YYYY-MM-DD, parsearlo directamente sin zona horaria
+        let d;
+        if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            // Es un string de fecha pura (YYYY-MM-DD), crear Date en UTC
+            const [year, month, day] = date.split('-').map(Number);
+            d = new Date(Date.UTC(year, month - 1, day));
+        } else {
+            d = new Date(date);
+        }
+        
         if (isNaN(d.getTime())) return '';
 
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
+        // Para fechas guardadas como YYYY-MM-DD, siempre usar UTC
+        // Para otras fechas, verificar si es medianoche UTC
+        const isPureDate = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date);
+        const hasTime = !isPureDate && (d.getHours() !== 0 || d.getMinutes() !== 0 || d.getSeconds() !== 0 || d.getMilliseconds() !== 0);
+        const isMidnightUTC = d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0;
+        
+        // Si es una fecha pura o medianoche UTC sin hora local, usar UTC
+        const useUTC = isPureDate || (isMidnightUTC && !hasTime);
+        
+        const day = String(useUTC ? d.getUTCDate() : d.getDate()).padStart(2, '0');
+        const month = String((useUTC ? d.getUTCMonth() : d.getMonth()) + 1).padStart(2, '0');
+        const year = useUTC ? d.getUTCFullYear() : d.getFullYear();
         const hours = String(d.getHours()).padStart(2, '0');
         const minutes = String(d.getMinutes()).padStart(2, '0');
 

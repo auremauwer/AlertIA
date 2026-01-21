@@ -64,10 +64,14 @@
         .status-pill {
             @apply px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border;
         }
-        .status-pendiente { @apply bg-yellow-50 text-yellow-700 border-yellow-200; }
+        .status-pendiente { @apply bg-amber-50 text-amber-700 border-amber-200; }
         .status-ventana { @apply bg-red-50 text-red-700 border-red-200; }
         .status-pausada { @apply bg-gray-50 text-gray-600 border-gray-200; }
         .status-atendida { @apply bg-green-50 text-green-700 border-green-200; }
+        .status-recordatorio { @apply bg-blue-50 text-blue-700 border-blue-200; }
+        .status-solicitud { @apply bg-purple-50 text-purple-700 border-purple-200; }
+        .status-cerrado { @apply bg-green-50 text-green-700 border-green-200; }
+        .status-apagado { @apply bg-gray-100 text-gray-500 border-gray-300; }
         .modal-overlay {
             background-color: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(2px);
@@ -80,17 +84,17 @@
         <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b border-border-subtle flex items-center justify-between bg-white shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="bg-red-50 p-2 rounded-lg">
-                        <span class="material-symbols-outlined text-primary">description</span>
+                    <div class="bg-pink-50 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-primary" style="font-size: 36px; font-weight: 400;">description</span>
                     </div>
                     <div>
-                        <div class="flex items-center gap-2">
-                            <h3 class="text-lg font-extrabold text-text-main">Detalle de Obligación</h3>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="text-xl font-extrabold text-text-main">Detalle de Obligación</h3>
                             <span id="header-id"
-                                class="text-xs font-bold text-primary bg-red-50 px-2 py-0.5 rounded"></span>
+                                class="text-sm font-bold text-primary bg-red-50 px-3 py-1 rounded-md min-w-[80px] inline-block text-center"></span>
                         </div>
                         <p id="header-subtitle"
-                            class="text-[11px] text-text-muted font-semibold uppercase tracking-wider"></p>
+                            class="text-xs text-text-muted font-medium mt-0.5"></p>
                     </div>
                 </div>
                 <button onclick="history.back()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -101,7 +105,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="md:col-span-2 space-y-6">
                         <div>
-                            <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Información
+                            <h4 class="text-sm font-bold text-text-muted uppercase tracking-widest mb-3">Información
                                 General</h4>
                             <div class="grid grid-cols-2 gap-y-4 gap-x-6">
                                 <div>
@@ -121,10 +125,11 @@
                                         25/10/2023</p>
                                 </div>
                                 <div>
-                                    <p class="text-[10px] text-text-muted uppercase font-bold">Estado Actual</p>
-                                    <div class="mt-1" data-field="estado"><span class="status-pill status-ventana">En
-                                            ventana de
-                                            alerta</span></div>
+                                    <p class="text-[10px] text-text-muted uppercase font-bold">Estatus</p>
+                                    <div class="mt-1 space-y-2">
+                                        <div data-field="estatus"></div>
+                                        <div data-field="sub_estatus"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -135,25 +140,36 @@
                                 class="bg-gray-50 border border-border-subtle rounded-lg p-4 flex items-center justify-between">
                                 <div class="flex gap-4">
                                     <div class="text-center">
-                                        <p class="text-[10px] font-bold text-text-muted uppercase">Alerta 1</p>
-                                        <p class="text-lg font-extrabold text-text-main">30 <span
-                                                class="text-[10px] font-normal">días</span></p>
+                                        <p class="text-[10px] font-bold text-text-muted uppercase">1 Vez</p>
+                                        <p class="text-sm font-normal text-text-main" data-field="regla_1_vez">
+                                            <span class="text-[10px]">-</span></p>
                                     </div>
                                     <div class="w-px h-8 bg-gray-200 self-center"></div>
                                     <div class="text-center">
-                                        <p class="text-[10px] font-bold text-text-muted uppercase">Alerta 2</p>
-                                        <p class="text-lg font-extrabold text-text-main">10 <span
-                                                class="text-[10px] font-normal">días</span></p>
+                                        <p class="text-[10px] font-bold text-text-muted uppercase">Semanal</p>
+                                        <p class="text-sm font-normal text-text-main" data-field="regla_semanal">
+                                            <span class="text-[10px]">-</span></p>
                                     </div>
                                     <div class="w-px h-8 bg-gray-200 self-center"></div>
                                     <div class="text-center">
-                                        <p class="text-[10px] font-bold text-text-muted uppercase">Crítica</p>
-                                        <p class="text-lg font-extrabold text-primary">5 <span
-                                                class="text-[10px] font-normal">días</span></p>
+                                        <p class="text-[10px] font-bold text-text-muted uppercase">Saltado</p>
+                                        <p class="text-sm font-normal text-text-main" data-field="regla_saltado">
+                                            <span class="text-[10px]">-</span></p>
+                                    </div>
+                                    <div class="w-px h-8 bg-gray-200 self-center"></div>
+                                    <div class="text-center">
+                                        <p class="text-[10px] font-bold text-text-muted uppercase">Diaria</p>
+                                        <p class="text-sm font-normal text-text-main" data-field="regla_diaria">
+                                            <span class="text-[10px]">-</span></p>
                                     </div>
                                 </div>
-                                <span class="text-[11px] font-semibold text-text-muted italic">Canal: Email +
-                                    Dashboard</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[11px] font-semibold text-text-muted">Notificaciones</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="regla-toggle" class="sr-only peer" disabled>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -163,8 +179,8 @@
                         <button
                             class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-border-subtle hover:border-primary-black hover:text-primary-black-black rounded-md text-sm font-bold transition-all group">
                             <span
-                                class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">pause_circle</span>
-                            Pausar Seguimiento
+                                class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">calendar_month</span>
+                            Calendario de notificaciones
                         </button>
                         <button
                             class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-border-subtle hover:border-primary-black hover:text-primary-black-black rounded-md text-sm font-bold transition-all group">

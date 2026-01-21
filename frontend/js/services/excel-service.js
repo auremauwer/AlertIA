@@ -67,9 +67,12 @@ class ExcelService {
                     console.log('[ExcelService] Total filas en Excel (incluyendo encabezados):', totalFilasEnExcel, 'Rango:', worksheet['!ref'], 'Hoja:', sheetName);
 
                     // Convertir a JSON
+                    // raw: true para obtener valores raw (números seriales para fechas)
+                    // Esto nos permite controlar la conversión de fechas nosotros mismos
                     const jsonData = XLSX.utils.sheet_to_json(worksheet, {
                         header: 1,
-                        defval: null
+                        defval: null,
+                        raw: true // Obtener valores raw para controlar la conversión de fechas
                     });
 
                     // Procesar datos con fila 4 como cabecera (índice 3)
@@ -311,30 +314,75 @@ class ExcelService {
         };
 
         const parseDate = (val) => {
-            if (!val) return null;
+            if (val === null || val === undefined) return null;
             let date = null;
+            
             if (val instanceof Date) {
+                // Si ya es un Date, usarlo directamente
                 date = val;
             } else if (typeof val === 'number') {
-                if (val > 1000) {
-                    const excelEpoch = new Date(1899, 11, 30);
-                    date = new Date(excelEpoch.getTime() + (val - 1) * 86400 * 1000);
-                }
-            } else {
-                try {
-                    date = new Date(val);
-                    if (isNaN(date.getTime())) {
-                        // Try DD/MM/YYYY
-                        const dateParts = String(val).match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-                        if (dateParts) {
-                            const [, day, month, year] = dateParts;
-                            date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                        }
+                // Números seriales de Excel
+                // Excel día 1 = 1900-01-01
+                // Excel tiene un bug: cuenta el 29 de febrero de 1900 (día 60) aunque 1900 no fue bisiesto
+                // La fórmula correcta usando el epoch de 1899-12-30:
+                // fecha = 1899-12-30 + número días
+                // Esto automáticamente compensa el bug
+                
+                if (val > 0 && val < 1000000) {
+                    // Usar el epoch estándar de Excel: 1899-12-30
+                    // Crear la fecha en UTC a medianoche para evitar problemas de zona horaria
+                    const excelEpoch = new Date(Date.UTC(1899, 11, 30)); // 30 de diciembre de 1899 en UTC
+                    const fechaCalculadaUTC = new Date(excelEpoch.getTime() + val * 86400 * 1000);
+                    
+                    // Crear una nueva fecha usando los componentes de fecha (sin hora) para evitar problemas de zona horaria
+                    date = new Date(Date.UTC(
+                        fechaCalculadaUTC.getUTCFullYear(),
+                        fechaCalculadaUTC.getUTCMonth(),
+                        fechaCalculadaUTC.getUTCDate()
+                    ));
+                    
+                    // Verificar que la fecha sea válida
+                    if (isNaN(date.getTime()) || date.getUTCFullYear() < 1900 || date.getUTCFullYear() > 2100) {
+                        date = null;
                     }
-                } catch (e) { }
+                }
+            } else if (typeof val === 'string') {
+                const trimmed = val.trim();
+                if (trimmed === '') return null;
+                
+                // Intentar parsear como número serial primero (si es un string numérico)
+                const numVal = Number(trimmed);
+                if (!isNaN(numVal) && numVal > 0 && numVal < 1000000) {
+                    // Misma lógica que para números: usar epoch 1899-12-30 en UTC
+                    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                    const fechaCalculadaUTC = new Date(excelEpoch.getTime() + numVal * 86400 * 1000);
+                    date = new Date(Date.UTC(
+                        fechaCalculadaUTC.getUTCFullYear(),
+                        fechaCalculadaUTC.getUTCMonth(),
+                        fechaCalculadaUTC.getUTCDate()
+                    ));
+                    if (isNaN(date.getTime()) || date.getUTCFullYear() < 1900 || date.getUTCFullYear() > 2100) {
+                        date = null;
+                    }
+                }
+                
+                // Si no funcionó como número serial, intentar como fecha normal
+                if (!date) {
+                    try {
+                        date = new Date(trimmed);
+                        if (isNaN(date.getTime())) {
+                            // Try DD/MM/YYYY
+                            const dateParts = trimmed.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                            if (dateParts) {
+                                const [, day, month, year] = dateParts;
+                                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                            }
+                        }
+                    } catch (e) { }
+                }
             }
 
-            if (date && !isNaN(date.getTime()) && date.getFullYear() > 1900 && date.getFullYear() < 2100) {
+            if (date && !isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() < 2100) {
                 return date;
             }
             return null;
@@ -344,6 +392,7 @@ class ExcelService {
         if (rowIndex < headerRowIndex + 5) { // Loguear solo las primeras 5 filas de datos
             console.log(`[ExcelService] DEBUG Row ${rowIndex + 1} (Data):`, {
                 'Col H (7) Area': row[7],
+                'Col P (15) Fecha Limite': row[15],
                 'Col T (19) Estatus': row[19],
                 'Col U (20) SubEstatus': row[20],
                 'Col V (21) ID': row[21]
@@ -386,15 +435,18 @@ class ExcelService {
         }
 
         // Obtener Área Responsable directamente de la columna H (índice 7)
-        const area = row[7] ? String(row[7]).trim() : 'Sin asignar';
+        const valArea = row[7];
+        const area = (valArea && String(valArea).trim()) ? String(valArea).trim() : 'Sin asignar';
 
         // Obtener Periodicidad directamente de la columna N (índice 13)
-        const periodicidad = row[13] ? String(row[13]).trim() : 'No definida';
+        const valPeriodicidad = row[13];
+        const periodicidad = (valPeriodicidad && String(valPeriodicidad).trim()) ? String(valPeriodicidad).trim() : 'No definida';
 
         // Obtener valores básicos
         const nombre = getValue('nombre') || idOriginal;
         // Obtener Regulador directamente de la columna C (índice 2)
-        const regulador = row[2] ? String(row[2]).trim() : 'General';
+        const valRegulador = row[2];
+        const regulador = (valRegulador && String(valRegulador).trim()) ? String(valRegulador).trim() : 'General';
 
         // Nuevos campos
         // Mapeo estricto solicitado por el usuario:
@@ -405,6 +457,23 @@ class ExcelService {
 
         const subEstatusVal = row[20];
         const subEstatus = subEstatusVal ? String(subEstatusVal).trim() : null;
+
+        // Leer reglas de alertamiento de las columnas W, X, Y, Z
+        // Columna W (22) -> 1 Vez
+        // Columna X (23) -> Semanal
+        // Columna Y (24) -> Saltado
+        // Columna Z (25) -> Diaria
+        // Estas columnas pueden contener números seriales de Excel (fechas) o strings
+        const regla1VezRaw = row[22];
+        const reglaSemanalRaw = row[23];
+        const reglaSaltadoRaw = row[24];
+        const reglaDiariaRaw = row[25];
+
+        // Convertir a fechas si son números seriales, o mantener como string si es texto
+        const regla1Vez = this.parseReglaFecha(regla1VezRaw);
+        const reglaSemanal = this.parseReglaFecha(reglaSemanalRaw);
+        const reglaSaltado = this.parseReglaFecha(reglaSaltadoRaw);
+        const reglaDiaria = this.parseReglaFecha(reglaDiariaRaw);
         const alerta1 = parseDate(getValue('alerta_1'));
         const alerta2 = parseDate(getValue('alerta_2'));
         const alerta3 = parseDate(getValue('alerta_3'));
@@ -424,16 +493,90 @@ class ExcelService {
         }
 
         // Determinar Fecha Límite
-        // Si existe columna fecha_limite, usarla. Si no, usar alerta_4 como fecha limite aproximada
-        let fechaLimiteVal = getValue('fecha_limite');
-        let fechaLimiteDate = parseDate(fechaLimiteVal);
-
-        if (!fechaLimiteDate && alerta4) {
-            fechaLimiteDate = alerta4;
+        // Leer específicamente de la columna P (índice 15) - "Fecha limite de entrega"
+        const fechaLimiteValRaw = row[15];
+        
+        // DEBUG: Logging de fecha límite
+        if (rowIndex < headerRowIndex + 5) { // Loguear solo las primeras 5 filas
+            console.log(`[ExcelService] DEBUG Fecha Límite - Fila ${rowIndex + 1}:`, {
+                'Col P (15) Raw': fechaLimiteValRaw,
+                'Tipo': typeof fechaLimiteValRaw,
+                'Valor': fechaLimiteValRaw,
+                'ID Obligacion': idOriginal
+            });
         }
-        if (!fechaLimiteDate) {
-            const year = new Date().getFullYear();
-            fechaLimiteDate = new Date(year, 11, 31);
+        
+        // Intentar parsear como fecha
+        // Primero verificar si SheetJS ya lo parseó como Date
+        let fechaLimiteDate = null;
+        let fechaLimiteOriginal = null;
+        
+        if (fechaLimiteValRaw !== null && fechaLimiteValRaw !== undefined) {
+            if (fechaLimiteValRaw instanceof Date) {
+                // Si SheetJS ya lo parseó como Date, usarlo directamente
+                fechaLimiteDate = fechaLimiteValRaw;
+            } else if (typeof fechaLimiteValRaw === 'number') {
+                // Es un número serial de Excel
+                // Excel día 1 = 1900-01-01
+                // Excel tiene un bug: cuenta el 29 de febrero de 1900 (día 60) aunque 1900 no fue bisiesto
+                // La fórmula correcta usando el epoch de 1899-12-30:
+                // fecha = 1899-12-30 + número días
+                // Esto automáticamente compensa el bug porque:
+                // - Día 1: 1899-12-30 + 1 = 1899-12-31
+                // - Día 2: 1899-12-30 + 2 = 1900-01-01 ✓
+                // - Día 60: 1899-12-30 + 60 = 1900-02-28 (el bug del 29 de febrero se compensa)
+                if (fechaLimiteValRaw > 0 && fechaLimiteValRaw < 1000000) {
+                    // Usar el epoch estándar de Excel: 1899-12-30
+                    // Crear la fecha en UTC a medianoche para evitar problemas de zona horaria
+                    const excelEpoch = new Date(Date.UTC(1899, 11, 30)); // 30 de diciembre de 1899 en UTC
+                    const fechaCalculadaUTC = new Date(excelEpoch.getTime() + fechaLimiteValRaw * 86400 * 1000);
+                    
+                    // Crear una nueva fecha usando los componentes de fecha (sin hora) para evitar problemas de zona horaria
+                    fechaLimiteDate = new Date(Date.UTC(
+                        fechaCalculadaUTC.getUTCFullYear(),
+                        fechaCalculadaUTC.getUTCMonth(),
+                        fechaCalculadaUTC.getUTCDate()
+                    ));
+                    
+                    // DEBUG: Logging detallado para el primer caso
+                    if (rowIndex < headerRowIndex + 5) {
+                        console.log(`[ExcelService] DEBUG Conversión Fecha - Fila ${rowIndex + 1}:`, {
+                            'Numero Serial': fechaLimiteValRaw,
+                            'Epoch': excelEpoch.toISOString(),
+                            'Fecha Calculada UTC': fechaCalculadaUTC.toISOString(),
+                            'Fecha Final (sin hora)': fechaLimiteDate.toISOString(),
+                            'Fecha Formateada': `${fechaLimiteDate.getUTCDate()}/${fechaLimiteDate.getUTCMonth() + 1}/${fechaLimiteDate.getUTCFullYear()}`
+                        });
+                    }
+                    
+                    // Verificar que sea válida
+                    if (isNaN(fechaLimiteDate.getTime()) || fechaLimiteDate.getUTCFullYear() < 1900 || fechaLimiteDate.getUTCFullYear() > 2100) {
+                        fechaLimiteDate = null;
+                        fechaLimiteOriginal = String(fechaLimiteValRaw);
+                    }
+                } else {
+                    fechaLimiteOriginal = String(fechaLimiteValRaw);
+                }
+            } else if (typeof fechaLimiteValRaw === 'string') {
+                const trimmed = fechaLimiteValRaw.trim();
+                if (trimmed !== '') {
+                    fechaLimiteOriginal = trimmed;
+                    // Intentar parsear como fecha
+                    fechaLimiteDate = parseDate(fechaLimiteValRaw);
+                }
+            } else {
+                fechaLimiteOriginal = String(fechaLimiteValRaw);
+            }
+        }
+        
+        // DEBUG: Logging del resultado del parseo
+        if (rowIndex < headerRowIndex + 5) {
+            console.log(`[ExcelService] DEBUG Fecha Límite Parseada - Fila ${rowIndex + 1}:`, {
+                'fechaLimiteDate': fechaLimiteDate ? fechaLimiteDate.toISOString().split('T')[0] : null,
+                'fechaLimiteDateFormatted': fechaLimiteDate ? `${fechaLimiteDate.getUTCDate()}/${fechaLimiteDate.getUTCMonth() + 1}/${fechaLimiteDate.getUTCFullYear()}` : null,
+                'fechaLimiteOriginal': fechaLimiteOriginal,
+                'Tipo original': typeof fechaLimiteValRaw
+            });
         }
 
         // Usar el ID oficial como ID principal (no generar IDs automáticos)
@@ -449,12 +592,20 @@ class ExcelService {
             nombre: String(nombre).trim(),
             area: String(area).trim(),
             periodicidad: periodicidad,
-            fecha_limite: fechaLimiteDate.toISOString().split('T')[0],
+            fecha_limite: fechaLimiteDate ? 
+                `${fechaLimiteDate.getUTCFullYear()}-${String(fechaLimiteDate.getUTCMonth() + 1).padStart(2, '0')}-${String(fechaLimiteDate.getUTCDate()).padStart(2, '0')}` : null,
+            fecha_limite_original: fechaLimiteOriginal, // Guardar el valor original del Excel
             estatus: estatus ? String(estatus).toLowerCase().trim() : null,
             sub_estatus: subEstatus ? String(subEstatus).trim().charAt(0).toUpperCase() + String(subEstatus).trim().slice(1).replace(/\(cn\)/i, '(CN)') : null,
             responsable_cn: respCN,
             responsable_juridico: respJur,
             dias_para_vencer_excel: diasParaVencer, // Guardar el valor del Excel
+            reglas_alertamiento: {
+                regla_1_vez: regla1Vez && regla1Vez !== '' ? regla1Vez : null,
+                regla_semanal: reglaSemanal && reglaSemanal !== '' ? reglaSemanal : null,
+                regla_saltado: reglaSaltado && reglaSaltado !== '' ? reglaSaltado : null,
+                regla_diaria: reglaDiaria && reglaDiaria !== '' ? reglaDiaria : null
+            },
             alertas: {
                 alerta_1: alerta1 ? alerta1.toISOString().split('T')[0] : null,
                 alerta_2: alerta2 ? alerta2.toISOString().split('T')[0] : null,
@@ -469,6 +620,57 @@ class ExcelService {
             obligacion: obligacion,
             problemas: []
         };
+    }
+
+    /**
+     * Parsear regla de fecha (puede ser número serial de Excel o string)
+     */
+    parseReglaFecha(val) {
+        if (val === null || val === undefined) return null;
+        
+        // Si es un número, intentar convertirlo a fecha
+        if (typeof val === 'number' && val > 0 && val < 1000000) {
+            // Es un número serial de Excel, convertirlo a fecha
+            const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+            const fechaCalculadaUTC = new Date(excelEpoch.getTime() + val * 86400 * 1000);
+            const fechaFinal = new Date(Date.UTC(
+                fechaCalculadaUTC.getUTCFullYear(),
+                fechaCalculadaUTC.getUTCMonth(),
+                fechaCalculadaUTC.getUTCDate()
+            ));
+            
+            // Formatear como DD/MM/YYYY
+            const day = String(fechaFinal.getUTCDate()).padStart(2, '0');
+            const month = String(fechaFinal.getUTCMonth() + 1).padStart(2, '0');
+            const year = fechaFinal.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        } else if (typeof val === 'string') {
+            const trimmed = val.trim();
+            if (trimmed === '') return null;
+            
+            // Intentar parsear como número serial (string numérico)
+            const numVal = Number(trimmed);
+            if (!isNaN(numVal) && numVal > 0 && numVal < 1000000) {
+                // Es un string numérico, convertir a fecha
+                const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                const fechaCalculadaUTC = new Date(excelEpoch.getTime() + numVal * 86400 * 1000);
+                const fechaFinal = new Date(Date.UTC(
+                    fechaCalculadaUTC.getUTCFullYear(),
+                    fechaCalculadaUTC.getUTCMonth(),
+                    fechaCalculadaUTC.getUTCDate()
+                ));
+                
+                const day = String(fechaFinal.getUTCDate()).padStart(2, '0');
+                const month = String(fechaFinal.getUTCMonth() + 1).padStart(2, '0');
+                const year = fechaFinal.getUTCFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            
+            // Si no es numérico, devolver el string tal cual
+            return trimmed;
+        }
+        
+        return null;
     }
 }
 

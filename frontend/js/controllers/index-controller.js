@@ -112,7 +112,9 @@ class IndexController {
         }
 
         if (uploadButton) {
-            // Agregar múltiples listeners para debug
+            console.log('[DEBUG] IndexController: uploadButton encontrado, agregando event listeners');
+            
+            // Agregar listener de click
             uploadButton.addEventListener('click', (e) => {
                 console.log('[DEBUG] IndexController: Botón de upload clickeado - evento capturado');
                 e.stopPropagation(); // Evitar que el evento se propague al upload-area
@@ -122,14 +124,14 @@ class IndexController {
                     console.log('[DEBUG] IndexController: fileInput encontrado, llamando click()');
                     try {
                         fileInput.click();
-                        console.log('[DEBUG] IndexController: fileInput.click() ejecutado');
+                        console.log('[DEBUG] IndexController: fileInput.click() ejecutado exitosamente');
                     } catch (error) {
                         console.error('[DEBUG] IndexController: ERROR al llamar fileInput.click()', error);
                     }
                 } else {
                     console.error('[DEBUG] IndexController: ERROR - fileInput no disponible al hacer click en el botón');
                 }
-            }, true); // Usar capture phase para asegurar que se ejecute
+            });
 
             // También agregar listener con mousedown para debug
             uploadButton.addEventListener('mousedown', (e) => {
@@ -620,29 +622,37 @@ class IndexController {
 
 // Inicializar cuando el DOM esté listo
 function initializeIndexController() {
+    console.log('[DEBUG] initializeIndexController called', {
+        XLSX: typeof XLSX !== 'undefined',
+        dataAdapter: !!window.dataAdapter,
+        alreadyInitialized: !!window.indexController,
+        documentReadyState: document.readyState
+    });
+
     if (typeof XLSX === 'undefined') {
-        console.warn('IndexController: Esperando SheetJS (XLSX)...');
+        console.warn('[DEBUG] IndexController: Esperando SheetJS (XLSX)...');
         setTimeout(initializeIndexController, 100);
         return;
     }
 
     if (!window.dataAdapter) {
-        console.warn('IndexController: Esperando dataAdapter...');
+        console.warn('[DEBUG] IndexController: Esperando dataAdapter...');
         setTimeout(initializeIndexController, 100);
         return;
     }
 
     // Si ya está inicializado, no hacer nada
     if (window.indexController) {
+        console.log('[DEBUG] IndexController: Ya está inicializado, no hacer nada');
         return;
     }
 
-    console.log('IndexController: Inicializando...');
+    console.log('[DEBUG] IndexController: Inicializando...');
     const controller = new IndexController();
     controller.init().then(() => {
-        console.log('IndexController: Inicializado correctamente');
+        console.log('[DEBUG] IndexController: Inicializado correctamente');
     }).catch(error => {
-        console.error('IndexController: Error en inicialización:', error);
+        console.error('[DEBUG] IndexController: Error en inicialización:', error);
     });
     window.indexController = controller;
 }

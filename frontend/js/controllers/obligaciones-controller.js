@@ -256,16 +256,9 @@ class ObligacionesController {
 
                 Array.from(values).sort().forEach(val => {
                     const option = document.createElement('option');
-                    // El valor en el option debe ser el original o lowercase?
-                    // Estandarizamos a el valor real, el filtrado lo maneja el servicio
-                    option.value = val.toLowerCase();
-
-                    // Capitalizar para mostrar
-                    const label = val.split(' ').map(word =>
-                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                    ).join(' ');
-
-                    option.textContent = label;
+                    // Usar valor original para value y label
+                    option.value = val;
+                    option.textContent = val;
                     select.appendChild(option);
                 });
             };

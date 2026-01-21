@@ -6,7 +6,7 @@
     'use strict';
 
     // Versión de la aplicación para verificación
-    window.APP_VERSION = '3.0.0';
+    window.APP_VERSION = '3.0.1';
     console.log(`%c AlertIA v${window.APP_VERSION} Iniciando... `, 'background: #ec0000; color: white; font-weight: bold; padding: 4px; border-radius: 2px;');
 
     // Orden de carga de scripts

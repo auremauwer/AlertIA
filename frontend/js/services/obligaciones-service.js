@@ -88,7 +88,7 @@ class ObligacionesService {
         }
 
         if (filters.sub_estatus) {
-            filtered = filtered.filter(obl => obl.sub_estatus === filters.sub_estatus);
+            filtered = filtered.filter(obl => String(obl.sub_estatus).toLowerCase() === String(filters.sub_estatus).toLowerCase());
         }
 
         if (filters.criticidad) {

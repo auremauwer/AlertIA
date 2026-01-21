@@ -35,11 +35,17 @@ const Utils = {
         const hours = String(d.getHours()).padStart(2, '0');
         const minutes = String(d.getMinutes()).padStart(2, '0');
 
+        // Mapeo de meses para formato con nombre
+        const meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+        const monthName = meses[useUTC ? d.getUTCMonth() : d.getMonth()];
+        
         switch (format) {
             case 'DD/MM/YYYY':
                 return `${day}/${month}/${year}`;
             case 'DD/MM/YYYY HH:mm':
                 return `${day}/${month}/${year} ${hours}:${minutes}`;
+            case 'DD MMM YYYY - HH:mm':
+                return `${day} ${monthName} ${year} - ${hours}:${minutes}`;
             case 'YYYY-MM-DD':
                 return `${year}-${month}-${day}`;
             case 'relative':

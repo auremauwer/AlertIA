@@ -130,5 +130,41 @@
     <script src="js/controllers/index-controller.js"></script>
     <!-- Script de pruebas (solo para desarrollo) -->
     <script src="../scripts/test-functionality.js"></script>
+    
+    <!-- Verificar si hay datos cargados y redirigir al Dashboard -->
+    <script>
+        // Verificar si hay datos cargados al iniciar
+        async function checkIfDataExists() {
+            // Esperar a que dataAdapter esté disponible
+            if (!window.dataAdapter) {
+                // Esperar un poco más
+                setTimeout(checkIfDataExists, 200);
+                return;
+            }
+            
+            try {
+                const obligaciones = await window.dataAdapter.getObligaciones();
+                if (obligaciones && obligaciones.length > 0) {
+                    // Hay datos cargados, redirigir al Dashboard
+                    console.log(`[Index] Se encontraron ${obligaciones.length} obligaciones. Redirigiendo al Dashboard...`);
+                    window.location.href = 'Dashboard.html';
+                    return;
+                }
+            } catch (error) {
+                console.error('[Index] Error al verificar datos:', error);
+            }
+        }
+
+        // Ejecutar después de que todo esté cargado
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                // Esperar a que app-init.js cargue dataAdapter
+                setTimeout(checkIfDataExists, 1000);
+            });
+        } else {
+            // Si el DOM ya está listo, esperar un poco para que los scripts carguen
+            setTimeout(checkIfDataExists, 1000);
+        }
+    </script>
 </body>
 </html>

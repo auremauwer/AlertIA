@@ -120,7 +120,29 @@ class ObligacionesService {
      */
     async pausar(id, motivo = '') {
         try {
+            // Obtener obligación actual para guardar estado anterior
+            const obligacionActual = await this.dataAdapter.getObligacion(id);
+            const estatusAnterior = obligacionActual?.estatus || 'activa';
+            
             const obligacion = await this.dataAdapter.updateObligacionEstado(id, 'pausada');
+
+            // Registrar en bitácora
+            if (window.BitacoraService) {
+                try {
+                    const bitacoraService = new BitacoraService(this.dataAdapter);
+                    await bitacoraService.registrarEvento(
+                        id,
+                        'pausar',
+                        'Pausar seguimiento',
+                        motivo ? `Seguimiento pausado. Motivo: ${motivo}` : 'Seguimiento pausado',
+                        { estatus: estatusAnterior },
+                        { estatus: 'pausada', motivo: motivo },
+                        null
+                    );
+                } catch (bitacoraError) {
+                    console.warn('Error al registrar en bitácora:', bitacoraError);
+                }
+            }
 
             // Registrar en auditoría
             const user = await this.dataAdapter.getCurrentUser();
@@ -146,7 +168,29 @@ class ObligacionesService {
      */
     async reanudar(id) {
         try {
+            // Obtener obligación actual para guardar estado anterior
+            const obligacionActual = await this.dataAdapter.getObligacion(id);
+            const estatusAnterior = obligacionActual?.estatus || 'pausada';
+            
             const obligacion = await this.dataAdapter.updateObligacionEstado(id, 'activa');
+
+            // Registrar en bitácora
+            if (window.BitacoraService) {
+                try {
+                    const bitacoraService = new BitacoraService(this.dataAdapter);
+                    await bitacoraService.registrarEvento(
+                        id,
+                        'reanudar',
+                        'Reanudar seguimiento',
+                        'El seguimiento ha sido reanudado',
+                        { estatus: estatusAnterior },
+                        { estatus: 'activa' },
+                        null
+                    );
+                } catch (bitacoraError) {
+                    console.warn('Error al registrar en bitácora:', bitacoraError);
+                }
+            }
 
             // Registrar en auditoría
             const user = await this.dataAdapter.getCurrentUser();
@@ -171,7 +215,29 @@ class ObligacionesService {
      */
     async marcarAtendida(id) {
         try {
+            // Obtener obligación actual para guardar estado anterior
+            const obligacionActual = await this.dataAdapter.getObligacion(id);
+            const estatusAnterior = obligacionActual?.estatus || 'activa';
+            
             const obligacion = await this.dataAdapter.updateObligacionEstado(id, 'atendida');
+
+            // Registrar en bitácora
+            if (window.BitacoraService) {
+                try {
+                    const bitacoraService = new BitacoraService(this.dataAdapter);
+                    await bitacoraService.registrarEvento(
+                        id,
+                        'marcar_atendida',
+                        'Marcar como atendida',
+                        'La obligación ha sido marcada como atendida. El seguimiento se ha detenido.',
+                        { estatus: estatusAnterior },
+                        { estatus: 'atendida' },
+                        null
+                    );
+                } catch (bitacoraError) {
+                    console.warn('Error al registrar en bitácora:', bitacoraError);
+                }
+            }
 
             // Registrar en auditoría
             const user = await this.dataAdapter.getCurrentUser();

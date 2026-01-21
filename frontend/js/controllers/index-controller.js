@@ -274,6 +274,37 @@ class IndexController {
 
                     await window.dataAdapter.saveObligacion(obligacion);
 
+                    // Registrar evento de carga inicial en bitácora
+                    if (window.BitacoraService && obligacion.id) {
+                        try {
+                            const bitacoraService = new BitacoraService(window.dataAdapter);
+                            await bitacoraService.registrarEvento(
+                                obligacion.id,
+                                'carga_inicial',
+                                'Carga inicial desde Excel',
+                                `Obligación cargada desde archivo: ${file.name}`,
+                                null,
+                                null,
+                                null
+                            );
+                        } catch (bitacoraError) {
+                            console.warn(`No se pudo registrar evento de bitácora para ${obligacion.id}:`, bitacoraError);
+                        }
+                    }
+
+                    // Calcular y guardar calendario de notificaciones
+                    if (window.CalendarioService && obligacion.id) {
+                        try {
+                            const fileStorageService = new FileStorageService();
+                            await fileStorageService.init();
+                            const calendarioService = new CalendarioService(fileStorageService);
+                            await calendarioService.calcularYGuardarCalendario(obligacion.id, obligacion);
+                            console.log(`[Calendario] Calendario calculado y guardado para ${obligacion.id}`);
+                        } catch (calendarioError) {
+                            console.warn(`No se pudo calcular calendario para ${obligacion.id}:`, calendarioError);
+                        }
+                    }
+
                     if (clave) {
                         obligacionesExistentes.add(clave); // Agregar a la lista para evitar duplicados en futuras cargas
                         obligacionesEnCarga.add(clave); // Agregar al set de esta carga

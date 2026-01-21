@@ -239,7 +239,8 @@ class ExcelService {
             descripcion: ['tema', 'disposición aplicable', 'disposicion aplicable', 'descripción', 'descripcion'],
             fecha_limite: ['fecha límite de entrega', 'fecha limite de entrega', 'fecha límite', 'fecha limite', 'fecha de vencimiento', 'vencimiento', 'fecha'],
             periodicidad: ['periodicidad', 'frecuencia'],
-            dias_para_vencer: ['días para vencer', 'dias para vencer', 'días restantes', 'dias restantes', 'días hasta vencimiento', 'dias hasta vencimiento']
+            dias_para_vencer: ['días para vencer', 'dias para vencer', 'días restantes', 'dias restantes', 'días hasta vencimiento', 'dias hasta vencimiento'],
+            seguimiento: ['seguimiento'] // Columna agregada en exportación, se ignora al recargar
         };
         
         for (const [field, possibleNames] of Object.entries(mappings)) {
@@ -632,6 +633,10 @@ class ExcelService {
                 if (cell === null || cell === undefined) return '';
                 return cell;
             }),
+            // Inicializar campos para bitácora y gestión de archivos
+            historial: [],
+            archivos: [],
+            recordatorios_programados: [],
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };

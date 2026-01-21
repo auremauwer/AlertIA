@@ -6,7 +6,7 @@
     'use strict';
 
     // Versión de la aplicación para verificación
-    window.APP_VERSION = '3.0.3';
+    window.APP_VERSION = '3.0.4';
     console.log(`%c AlertIA v${window.APP_VERSION} Iniciando... `, 'background: #ec0000; color: white; font-weight: bold; padding: 4px; border-radius: 2px;');
 
     // Orden de carga de scripts
@@ -30,6 +30,12 @@
         'js/services/config-service.js',
         'js/services/excel-service.js',
         'js/services/file-storage-service.js',
+        'js/services/bitacora-service.js',
+        'js/services/archivos-service.js',
+        'js/services/notificaciones-service.js',
+        'js/services/recordatorios-service.js',
+        'js/services/auth-service.js',
+        'js/services/calendario-service.js',
 
         // Plantillas
         'js/email-template.js'
@@ -77,29 +83,75 @@
      * Configurar botón de logout global e información de archivo
      */
     async function setupGlobalLogout() {
-        // Lógica de logout
-        window.logoutApp = function () {
-            if (confirm('¿Está seguro de que desea salir? Esto borrará la caché local y recargará la aplicación.')) {
-                try {
-                    // Borrar LocalStorage y SessionStorage
-                    localStorage.clear();
-                    sessionStorage.clear();
-
-                    // Borrar cookies (opcional, aunque no estamos usándolas explícitamente)
-                    document.cookie.split(";").forEach(function (c) {
-                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-                    });
-
-                    console.log('🧹 Memorias borradas. Saliendo...');
-
-                    // Redirigir a inicio o recargar
-                    window.location.href = 'index.html';
-                } catch (e) {
-                    console.error('Error al salir:', e);
-                    window.location.reload();
+        // Lógica de logout mejorada
+        window.logoutApp = async function () {
+            // Usar Utils.confirm si está disponible, sino usar confirm nativo
+            let confirmed = false;
+            if (window.Utils && window.Utils.confirm) {
+                confirmed = await window.Utils.confirm('¿Está seguro de salir? Se limpiarán todos los datos cargados y se cerrará la sesión.');
+            } else {
+                confirmed = confirm('¿Está seguro de salir? Se limpiarán todos los datos cargados y se cerrará la sesión.');
+            }
+            
+            if (!confirmed) {
+                return;
+            }
+            
+            try {
+                // Limpiar datos a través del dataAdapter si está disponible
+                if (window.dataAdapter && window.dataAdapter.storage) {
+                    if (window.dataAdapter.storage.clear) {
+                        window.dataAdapter.storage.clear();
+                    } else if (window.dataAdapter.storage.remove) {
+                        // Si no tiene clear, limpiar manualmente
+                        const keys = ['obligaciones', 'configuracion', 'envios', 'auditoria', 'alertas'];
+                        keys.forEach(key => {
+                            try {
+                                window.dataAdapter.storage.remove(key);
+                            } catch (e) {
+                                console.warn(`No se pudo limpiar ${key}:`, e);
+                            }
+                        });
+                    }
                 }
+                
+                // Borrar LocalStorage y SessionStorage
+                localStorage.clear();
+                sessionStorage.clear();
+
+                // Borrar cookies (opcional, aunque no estamos usándolas explícitamente)
+                document.cookie.split(";").forEach(function (c) {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+
+                console.log('✅ Datos limpiados. Redirigiendo a página de inicio...');
+
+                // Redirigir a inicio
+                window.location.href = 'index.html';
+            } catch (e) {
+                console.error('Error al salir:', e);
+                if (window.Utils && window.Utils.showNotification) {
+                    window.Utils.showNotification('Error al limpiar datos', 'error');
+                }
+                // Intentar redirigir de todas formas
+                window.location.href = 'index.html';
             }
         };
+        
+        // Configurar botones de salir en el sidebar (btn-salir)
+        const setupSidebarSalirButtons = () => {
+            const btnSalir = document.getElementById('btn-salir');
+            if (btnSalir) {
+                btnSalir.addEventListener('click', window.logoutApp);
+            }
+        };
+        
+        // Ejecutar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupSidebarSalirButtons);
+        } else {
+            setupSidebarSalirButtons();
+        }
 
         // Inyectar botón en el header si existe
         const headerContainer = document.querySelector('header .flex.items-center.gap-6');
@@ -207,6 +259,106 @@
     /**
      * Cuando todo está listo
      */
+    /**
+     * Sincronizar bitácoras de todas las obligaciones al iniciar
+     */
+    async function sincronizarBitacoras() {
+        try {
+            // Esperar a que los servicios estén disponibles
+            if (!window.dataAdapter || !window.BitacoraService || !window.FileStorageService) {
+                console.log('[Bitacora] Servicios no disponibles aún, reintentando en 1 segundo...');
+                setTimeout(sincronizarBitacoras, 1000);
+                return;
+            }
+
+            // Inicializar FileStorageService si no está inicializado
+            let fileStorageService = null;
+            if (window.FileStorageService) {
+                fileStorageService = new FileStorageService();
+                await fileStorageService.init();
+            }
+
+            // Obtener todas las obligaciones
+            const obligacionesService = new ObligacionesService(window.dataAdapter);
+            const todasObligaciones = await obligacionesService.getAll();
+
+            if (todasObligaciones.length === 0) {
+                console.log('[Bitacora] No hay obligaciones para sincronizar');
+                return;
+            }
+
+            console.log(`[Bitacora] Sincronizando bitácoras de ${todasObligaciones.length} obligaciones...`);
+
+            // Sincronizar bitácora de cada obligación
+            const bitacoraService = new BitacoraService(window.dataAdapter, fileStorageService);
+            let sincronizadas = 0;
+
+            for (const obligacion of todasObligaciones) {
+                try {
+                    await bitacoraService.sincronizarBitacora(obligacion.id);
+                    sincronizadas++;
+                } catch (error) {
+                    console.warn(`[Bitacora] Error al sincronizar bitácora de ${obligacion.id}:`, error);
+                }
+            }
+
+            console.log(`[Bitacora] ✅ Sincronizadas ${sincronizadas} de ${todasObligaciones.length} bitácoras`);
+        } catch (error) {
+            console.error('[Bitacora] Error al sincronizar bitácoras:', error);
+            // No bloquear la inicialización si falla la sincronización
+        }
+    }
+
+    /**
+     * Sincronizar bitácoras de todas las obligaciones al iniciar
+     */
+    async function sincronizarBitacoras() {
+        try {
+            // Esperar a que los servicios estén disponibles
+            if (!window.dataAdapter || !window.BitacoraService || !window.FileStorageService) {
+                console.log('[Bitacora] Servicios no disponibles aún, reintentando en 1 segundo...');
+                setTimeout(sincronizarBitacoras, 1000);
+                return;
+            }
+
+            // Inicializar FileStorageService si no está inicializado
+            let fileStorageService = null;
+            if (window.FileStorageService) {
+                fileStorageService = new FileStorageService();
+                await fileStorageService.init();
+            }
+
+            // Obtener todas las obligaciones
+            const obligacionesService = new ObligacionesService(window.dataAdapter);
+            const todasObligaciones = await obligacionesService.getAll();
+
+            if (todasObligaciones.length === 0) {
+                console.log('[Bitacora] No hay obligaciones para sincronizar');
+                return;
+            }
+
+            console.log(`[Bitacora] Sincronizando bitácoras de ${todasObligaciones.length} obligaciones...`);
+
+            // Sincronizar bitácora de cada obligación
+            const bitacoraService = new BitacoraService(window.dataAdapter, fileStorageService);
+            let sincronizadas = 0;
+
+            for (const obligacion of todasObligaciones) {
+                try {
+                    await bitacoraService.sincronizarBitacora(obligacion.id);
+                    sincronizadas++;
+                } catch (error) {
+                    console.warn(`[Bitacora] Error al sincronizar bitácora de ${obligacion.id}:`, error);
+                }
+            }
+
+            console.log(`[Bitacora] ✅ Sincronizadas ${sincronizadas} de ${todasObligaciones.length} bitácoras`);
+        } catch (error) {
+            console.error('[Bitacora] Error al sincronizar bitácoras:', error);
+            // No bloquear la inicialización si falla la sincronización
+        }
+    }
+
     function onReady() {
         // Verificar que dataAdapter esté disponible
         if (window.dataAdapter) {
@@ -225,6 +377,12 @@
             if (ENV.USE_LOCAL_STORAGE) {
                 // ...
             }
+
+            // Sincronizar bitácoras después de que todo esté listo
+            // Esperar un poco para asegurar que todos los servicios estén inicializados
+            setTimeout(() => {
+                sincronizarBitacoras();
+            }, 2000);
         } else {
             console.warn('⚠️ dataAdapter no está disponible');
         }

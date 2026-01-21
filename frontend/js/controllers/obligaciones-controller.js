@@ -184,20 +184,6 @@ class ObligacionesController {
                                 data-action="ver-detalle" data-id="${obl.id}" title="Ver detalles">
                             <span class="material-symbols-outlined">visibility</span>
                         </button>
-                        ${obl.estatus === 'pausada' ?
-                    `<button class="p-1.5 hover:bg-gray-100 rounded-full text-primary hover:text-red-700 transition-colors" 
-                                     data-action="reanudar" data-id="${obl.id}" title="Reanudar">
-                                <span class="material-symbols-outlined">play_circle</span>
-                            </button>` :
-                    `<button class="p-1.5 hover:bg-gray-100 rounded-full text-text-muted hover:text-gray-900 transition-colors" 
-                                     data-action="pausar" data-id="${obl.id}" title="Pausar">
-                                <span class="material-symbols-outlined">pause_circle</span>
-                            </button>`
-                }
-                        <button class="p-1.5 hover:bg-green-50 rounded-full text-text-muted hover:text-green-600 transition-colors" 
-                                data-action="marcar-atendida" data-id="${obl.id}" title="Marcar como atendida">
-                            <span class="material-symbols-outlined">check_circle</span>
-                        </button>
                     </div>
                 </td>
             `;
@@ -320,6 +306,9 @@ class ObligacionesController {
             populateSelect('filter-estatus', estatuses);
             populateSelect('filter-sub-estatus', subEstatus);
 
+            // Obtener referencia al select de área
+            const filterAreaEl = document.getElementById('filter-area');
+
             // Restaurar filtros desde localStorage (herencia del Dashboard)
             const savedFilters = localStorage.getItem('alertia_filters');
             if (savedFilters) {
@@ -328,8 +317,13 @@ class ObligacionesController {
 
                     if (parsed.area) {
                         this.currentFilters.area = parsed.area;
-                        const el = document.getElementById('filter-area');
-                        if (el) el.value = parsed.area;
+                        if (filterAreaEl) filterAreaEl.value = parsed.area;
+                    } else {
+                        // Si no hay área guardada, establecer "Todas las áreas" por defecto
+                        if (filterAreaEl) {
+                            filterAreaEl.value = '';
+                            this.currentFilters.area = null;
+                        }
                     }
                     if (parsed.estatus) {
                         this.currentFilters.estatus = parsed.estatus;
@@ -352,6 +346,17 @@ class ObligacionesController {
 
                 } catch (e) {
                     console.error('Error al restaurar filtros', e);
+                    // En caso de error, establecer "Todas las áreas" por defecto
+                    if (filterAreaEl) {
+                        filterAreaEl.value = '';
+                        this.currentFilters.area = null;
+                    }
+                }
+            } else {
+                // Si no hay filtros guardados, establecer "Todas las áreas" por defecto
+                if (filterAreaEl) {
+                    filterAreaEl.value = '';
+                    this.currentFilters.area = null;
                 }
             }
 

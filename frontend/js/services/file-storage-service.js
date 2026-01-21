@@ -347,6 +347,130 @@ class FileStorageService {
             byCategory: byCategory
         };
     }
+
+    /**
+     * Agregar contenido al final de un archivo (append)
+     * @param {string} path - Ruta del archivo
+     * @param {string} content - Contenido a agregar
+     * @param {string} mimeType - Tipo MIME del archivo (default: text/plain)
+     * @returns {Promise<string>} - Ruta del archivo actualizado
+     */
+    async appendToFile(path, content, mimeType = 'text/plain') {
+        if (!this.db) {
+            await this.init();
+        }
+
+        try {
+            // Intentar leer el archivo existente
+            let contenidoExistente = '';
+            try {
+                contenidoExistente = await this.readTextFile(path);
+            } catch (error) {
+                // Si el archivo no existe, empezar con contenido vacío
+                contenidoExistente = '';
+            }
+
+            // Agregar el nuevo contenido
+            const nuevoContenido = contenidoExistente + content;
+
+            // Guardar el archivo completo
+            const blob = new Blob([nuevoContenido], { type: mimeType });
+            const arrayBuffer = await blob.arrayBuffer();
+
+            // Extraer nombre de archivo y categoría de la ruta
+            const pathParts = path.split('/');
+            const fileName = pathParts.pop();
+            const category = pathParts.join('/') || 'logs';
+
+            const fileData = {
+                path: path,
+                name: fileName,
+                category: category,
+                type: mimeType,
+                content: arrayBuffer,
+                size: blob.size,
+                createdAt: contenidoExistente ? (await this.getFileMetadata(path))?.createdAt || new Date().toISOString() : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            return new Promise((resolve, reject) => {
+                const transaction = this.db.transaction(['files'], 'readwrite');
+                const store = transaction.objectStore('files');
+
+                const request = store.put(fileData);
+
+                request.onsuccess = () => {
+                    console.log(`✅ Contenido agregado a: ${path}`);
+                    resolve(path);
+                };
+
+                request.onerror = () => {
+                    console.error('Error al agregar contenido al archivo:', request.error);
+                    reject(request.error);
+                };
+            });
+        } catch (error) {
+            console.error('Error en appendToFile:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Leer un archivo como texto
+     * @param {string} path - Ruta del archivo
+     * @returns {Promise<string>} - Contenido del archivo como texto
+     */
+    async readTextFile(path) {
+        try {
+            return await this.readFileAsText(path);
+        } catch (error) {
+            // Si el archivo no existe, retornar string vacío
+            if (error.message && error.message.includes('no encontrado')) {
+                return '';
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener metadatos de un archivo
+     * @param {string} path - Ruta del archivo
+     * @returns {Promise<Object|null>} - Metadatos del archivo o null si no existe
+     */
+    async getFileMetadata(path) {
+        if (!this.db) {
+            await this.init();
+        }
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['files'], 'readonly');
+            const store = transaction.objectStore('files');
+
+            const request = store.get(path);
+
+            request.onsuccess = () => {
+                const fileData = request.result;
+                if (!fileData) {
+                    resolve(null);
+                    return;
+                }
+
+                resolve({
+                    path: fileData.path,
+                    name: fileData.name,
+                    category: fileData.category,
+                    type: fileData.type,
+                    size: fileData.size,
+                    createdAt: fileData.createdAt,
+                    updatedAt: fileData.updatedAt
+                });
+            };
+
+            request.onerror = () => {
+                reject(request.error);
+            };
+        });
+    }
 }
 
 // Exportar servicio

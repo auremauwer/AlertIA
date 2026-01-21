@@ -81,7 +81,7 @@
 
 <body class="bg-white text-text-main font-display flex flex-col h-screen overflow-hidden relative">
     <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
-        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="bg-white w-full max-w-6xl max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b border-border-subtle flex items-center justify-between bg-white shrink-0">
                 <div class="flex items-center gap-3">
                     <div class="bg-pink-50 p-3 rounded-lg">
@@ -137,33 +137,51 @@
                             <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Regla de
                                 Alertamiento Aplicada</h4>
                             <div
-                                class="bg-gray-50 border border-border-subtle rounded-lg p-4 flex items-center justify-between">
-                                <div class="flex gap-4">
-                                    <div class="text-center">
-                                        <p class="text-[10px] font-bold text-text-muted uppercase">1 Vez</p>
-                                        <p class="text-sm font-normal text-text-main" data-field="regla_1_vez">
-                                            <span class="text-[10px]">-</span></p>
+                                class="bg-gray-50 border border-border-subtle rounded-lg p-4 flex items-start justify-between gap-6">
+                                <div class="flex-1 grid grid-cols-2 gap-4">
+                                    <!-- Fila superior: 1 Vez y Semanal -->
+                                    <div class="flex gap-4">
+                                        <div class="text-center flex-1">
+                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1">1 Vez</p>
+                                            <input type="date" 
+                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-1 py-0.5" 
+                                                   data-field="regla_1_vez"
+                                                   data-regla-tipo="regla_1_vez"
+                                                   title="Editar fecha 1 Vez">
+                                        </div>
+                                        <div class="w-px h-8 bg-gray-200 self-center"></div>
+                                        <div class="text-center flex-1">
+                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1">Semanal</p>
+                                            <input type="date" 
+                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-1 py-0.5" 
+                                                   data-field="regla_semanal"
+                                                   data-regla-tipo="regla_semanal"
+                                                   title="Editar fecha Semanal">
+                                        </div>
                                     </div>
-                                    <div class="w-px h-8 bg-gray-200 self-center"></div>
-                                    <div class="text-center">
-                                        <p class="text-[10px] font-bold text-text-muted uppercase">Semanal</p>
-                                        <p class="text-sm font-normal text-text-main" data-field="regla_semanal">
-                                            <span class="text-[10px]">-</span></p>
-                                    </div>
-                                    <div class="w-px h-8 bg-gray-200 self-center"></div>
-                                    <div class="text-center">
-                                        <p class="text-[10px] font-bold text-text-muted uppercase">Saltado</p>
-                                        <p class="text-sm font-normal text-text-main" data-field="regla_saltado">
-                                            <span class="text-[10px]">-</span></p>
-                                    </div>
-                                    <div class="w-px h-8 bg-gray-200 self-center"></div>
-                                    <div class="text-center">
-                                        <p class="text-[10px] font-bold text-text-muted uppercase">Diaria</p>
-                                        <p class="text-sm font-normal text-text-main" data-field="regla_diaria">
-                                            <span class="text-[10px]">-</span></p>
+                                    
+                                    <!-- Fila inferior: Saltado y Diaria -->
+                                    <div class="flex gap-4">
+                                        <div class="text-center flex-1">
+                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1">Saltado</p>
+                                            <input type="date" 
+                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-1 py-0.5" 
+                                                   data-field="regla_saltado"
+                                                   data-regla-tipo="regla_saltado"
+                                                   title="Editar fecha Saltado">
+                                        </div>
+                                        <div class="w-px h-8 bg-gray-200 self-center"></div>
+                                        <div class="text-center flex-1">
+                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1">Diaria</p>
+                                            <input type="date" 
+                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-1 py-0.5" 
+                                                   data-field="regla_diaria"
+                                                   data-regla-tipo="regla_diaria"
+                                                   title="Editar fecha Diaria">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-3">
+                                <div class="flex flex-col items-center gap-2">
                                     <span class="text-[11px] font-semibold text-text-muted">Notificaciones</span>
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" id="regla-toggle" class="sr-only peer" disabled>
@@ -188,90 +206,21 @@
                                 class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">add_comment</span>
                             Agregar Comentario
                         </button>
-                        <div class="space-y-2">
-                            <button
-                                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white hover:bg-red-700 rounded-md text-sm font-bold shadow-sm transition-all">
-                                <span class="material-symbols-outlined text-lg">check_circle</span>
-                                Marcar Atendida
-                            </button>
-                            <p class="text-[12px] text-gray-500 text-center leading-tight">Detiene el seguimiento y las
-                                alertas futuras</p>
-                        </div>
+                        <button id="btn-guardar-atendida"
+                            class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white hover:bg-red-700 rounded-md text-sm font-bold shadow-sm transition-all">
+                            <span class="material-symbols-outlined text-lg">check_circle</span>
+                            Guardar
+                        </button>
                     </div>
                 </div>
                 <div class="space-y-4">
                     <div class="flex items-center justify-between border-b border-border-subtle pb-2">
                         <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Historial y
                             Trazabilidad</h4>
-                        <span class="text-[10px] font-bold text-text-muted bg-gray-100 px-2 py-0.5 rounded">8
-                            Eventos</span>
+                        <span id="historial-contador" class="text-[10px] font-bold text-text-muted bg-gray-100 px-2 py-0.5 rounded">0 Eventos</span>
                     </div>
-                    <div class="space-y-4">
-                        <div class="flex gap-4">
-                            <div class="shrink-0 flex flex-col items-center">
-                                <div
-                                    class="size-7 rounded-full bg-slate-600 text-white flex items-center justify-center ring-4 ring-white z-10">
-                                    <span class="material-symbols-outlined text-[14px]">calculate</span>
-                                </div>
-                                <div class="w-px flex-1 bg-gray-200 my-1"></div>
-                            </div>
-                            <div class="pb-4 pt-1">
-                                <p class="text-xs font-bold text-text-main">Alerta Crítica Calculada</p>
-                                <p class="text-[11px] text-text-muted">Sistema detectó que faltan 5 días para el
-                                    vencimiento.</p>
-                                <p class="text-[10px] font-medium text-text-muted mt-1 uppercase">20 Oct 2023 - 09:00 AM
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="shrink-0 flex flex-col items-center">
-                                <div
-                                    class="size-7 rounded-full bg-slate-600 text-white flex items-center justify-center ring-4 ring-white z-10">
-                                    <span class="material-symbols-outlined text-[14px]">mail</span>
-                                </div>
-                                <div class="w-px flex-1 bg-gray-200 my-1"></div>
-                            </div>
-                            <div class="pb-4 pt-1">
-                                <p class="text-xs font-bold text-text-main">Correo enviado a responsable</p>
-                                <p class="text-[11px] text-text-muted">Destinatario: cumplimiento@banco.com. Subject:
-                                    [URGENTE] Vencimiento OBL-00124.</p>
-                                <p class="text-[10px] font-medium text-text-muted mt-1 uppercase">20 Oct 2023 - 09:01 AM
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="shrink-0 flex flex-col items-center">
-                                <div
-                                    class="size-7 rounded-full bg-yellow-50 border border-amber-300 text-amber-600 flex items-center justify-center ring-4 ring-white z-10">
-                                    <span class="material-symbols-outlined text-[14px]">comment</span>
-                                </div>
-                                <div class="w-px flex-1 bg-gray-200 my-1"></div>
-                            </div>
-                            <div class="pb-4 pt-1">
-                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                    <p class="text-xs font-bold text-text-main mb-1 italic">"Se solicitó prórroga al
-                                        regulador, en espera de respuesta."</p>
-                                    <p class="text-[10px] font-bold text-primary uppercase">Comentario Interno -
-                                        Administrador</p>
-                                </div>
-                                <p class="text-[10px] font-medium text-text-muted mt-1 uppercase">18 Oct 2023 - 03:45 PM
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="shrink-0 flex flex-col items-center">
-                                <div
-                                    class="size-7 rounded-full bg-red-50 border border-red-300 text-red-500 flex items-center justify-center ring-4 ring-white z-10">
-                                    <span class="material-symbols-outlined text-[14px]">play_arrow</span>
-                                </div>
-                            </div>
-                            <div class="pt-1">
-                                <p class="text-xs font-bold text-text-main">Reanudación de alertas</p>
-                                <p class="text-[11px] text-text-muted">El seguimiento fue reanudado manualmente.</p>
-                                <p class="text-[10px] font-medium text-text-muted mt-1 uppercase">15 Oct 2023 - 10:20 AM
-                                </p>
-                            </div>
-                        </div>
+                    <div class="space-y-4" data-section="historial">
+                        <!-- El historial se renderizará dinámicamente aquí -->
                     </div>
                 </div>
             </div>
@@ -279,6 +228,32 @@
         </div>
 
         <!-- Background content removed -->
+        
+        <!-- Modal Calendario de Notificaciones -->
+        <div id="modal-calendario-notificaciones" class="fixed inset-0 z-[300] flex items-center justify-center p-4 modal-overlay hidden">
+            <div class="bg-white w-full max-w-3xl max-h-[80vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                <!-- Header del Modal -->
+                <div class="px-6 py-4 border-b border-border-subtle flex items-center justify-between bg-white shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <span class="material-symbols-outlined text-primary" style="font-size: 28px; font-weight: 400;">calendar_month</span>
+                        </div>
+                        <h3 id="modal-calendario-titulo" class="text-lg font-extrabold text-text-main">Calendario de Notificaciones</h3>
+                    </div>
+                    <button id="btn-cerrar-calendario" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                        <span class="material-symbols-outlined text-text-muted">close</span>
+                    </button>
+                </div>
+
+                <!-- Contenido del Modal -->
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div id="modal-calendario-fechas" class="space-y-0">
+                        <!-- Las fechas se renderizarán dinámicamente aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Cargar scripts de la aplicación -->
         <script src="js/app-init.js"></script>
         <script src="js/controllers/detalle-obligacion-controller.js"></script>

@@ -180,8 +180,20 @@ class DataAdapter {
         return {
             nombre: 'Admin Usuario',
             email: 'admin@alertia.com',
-            rol: 'Administrador'
+            rol: 'Administrador',
+            area: 'Administración'
         };
+    }
+
+    async setCurrentUser(user) {
+        if (this.storage.setCurrentUser) {
+            return this.storage.setCurrentUser(user);
+        }
+        // Para API, guardar en sessionStorage como fallback
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('currentUser', JSON.stringify(user));
+        }
+        return user;
     }
 }
 

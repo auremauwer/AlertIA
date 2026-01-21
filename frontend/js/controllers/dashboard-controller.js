@@ -37,6 +37,7 @@ class DashboardController {
 
         await this.loadDashboard();
         this.setupFilters();
+        this.setupSalirButton();
 
         // Configurar descarga después de que todo esté cargado
         if (document.readyState === 'complete') {
@@ -45,6 +46,57 @@ class DashboardController {
             window.addEventListener('load', () => {
                 this.setupCardDownload();
             });
+        }
+    }
+
+    /**
+     * Configurar botón de salir
+     */
+    setupSalirButton() {
+        const btnSalir = document.getElementById('btn-salir');
+        if (btnSalir) {
+            btnSalir.addEventListener('click', async () => {
+                await this.salir();
+            });
+        }
+    }
+
+    /**
+     * Salir y limpiar datos
+     */
+    async salir() {
+        if (!await Utils.confirm('¿Está seguro de salir? Se limpiarán todos los datos cargados y se cerrará la sesión.')) {
+            return;
+        }
+
+        try {
+            // Limpiar todos los datos
+            if (window.dataAdapter && window.dataAdapter.storage) {
+                if (window.dataAdapter.storage.clear) {
+                    window.dataAdapter.storage.clear();
+                } else if (window.dataAdapter.storage.remove) {
+                    // Si no tiene clear, limpiar manualmente
+                    const keys = ['obligaciones', 'configuracion', 'envios', 'auditoria', 'alertas'];
+                    keys.forEach(key => {
+                        try {
+                            window.dataAdapter.storage.remove(key);
+                        } catch (e) {
+                            console.warn(`No se pudo limpiar ${key}:`, e);
+                        }
+                    });
+                }
+            }
+            
+            // Limpiar también localStorage directamente por si acaso
+            localStorage.clear();
+            
+            console.log('✅ Datos limpiados. Redirigiendo a página de inicio...');
+            
+            // Redirigir a index.html
+            window.location.href = 'index.html';
+        } catch (error) {
+            console.error('Error al salir:', error);
+            Utils.showNotification('Error al limpiar datos', 'error');
         }
     }
 
@@ -706,7 +758,7 @@ class DashboardController {
                 const li = document.createElement('li');
                 li.className = 'flex items-center justify-between py-3';
                 li.innerHTML = `
-                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3">
                         <div class="bg-gray-100 p-2 rounded-full">
                             <span class="material-symbols-outlined text-gray-500 text-sm">subdirectory_arrow_right</span>
                         </div>
@@ -714,7 +766,7 @@ class DashboardController {
                             <p class="text-sm font-medium text-gray-900 capitalize">${subestatus.toLowerCase()}</p>
                             <p class="text-xs text-gray-500">${percentage}% del total</p>
                         </div>
-                    </div>
+                        </div>
                     <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
                         ${count}
                     </span>

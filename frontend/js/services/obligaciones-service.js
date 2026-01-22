@@ -308,6 +308,87 @@ class ObligacionesService {
             en_ventana: obligaciones.filter(obl => obl.criticidad.nivel === 'ventana').length
         };
     }
+
+    /**
+     * Crear nueva obligación
+     */
+    async crear(obligacionData) {
+        try {
+            // Validar que el ID no exista
+            const existente = await this.getById(obligacionData.id).catch(() => null);
+            if (existente) {
+                throw new Error(`La obligación con ID ${obligacionData.id} ya existe`);
+            }
+
+            // Asegurar campos requeridos
+            if (!obligacionData.id || !obligacionData.id_oficial) {
+                throw new Error('El ID es obligatorio');
+            }
+
+            // Inicializar campos si no existen
+            const obligacion = {
+                ...obligacionData,
+                historial: obligacionData.historial || [],
+                archivos: obligacionData.archivos || [],
+                recordatorios_programados: obligacionData.recordatorios_programados || [],
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            // Guardar en localStorage
+            await this.dataAdapter.saveObligacion(obligacion);
+
+            return this.enrichObligacion(obligacion);
+        } catch (error) {
+            console.error('Error al crear obligación:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualizar obligación existente
+     */
+    async actualizar(id, obligacionData) {
+        try {
+            // Obtener obligación actual
+            const obligacionActual = await this.getById(id);
+
+            // Actualizar campos
+            const obligacionActualizada = {
+                ...obligacionActual,
+                ...obligacionData,
+                id: id, // Asegurar que el ID no cambie
+                id_oficial: obligacionData.id_oficial || obligacionActual.id_oficial,
+                updated_at: new Date().toISOString()
+            };
+
+            // Guardar en localStorage
+            await this.dataAdapter.saveObligacion(obligacionActualizada);
+
+            return this.enrichObligacion(obligacionActualizada);
+        } catch (error) {
+            console.error(`Error al actualizar obligación ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Eliminar obligación
+     */
+    async eliminar(id) {
+        try {
+            // Verificar que existe
+            await this.getById(id);
+
+            // Eliminar de localStorage
+            await this.dataAdapter.deleteObligacion(id);
+
+            return true;
+        } catch (error) {
+            console.error(`Error al eliminar obligación ${id}:`, error);
+            throw error;
+        }
+    }
 }
 
 // Exportar para uso global

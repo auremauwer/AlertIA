@@ -7,6 +7,7 @@ class ObligacionesController {
         this.obligacionesService = null;
         this.fileStorageService = null;
         this.excelService = null;
+        this.obligacionEditando = null;
         this.currentFilters = {
             area: null,
             periodicidad: null,
@@ -16,6 +17,8 @@ class ObligacionesController {
         };
         this.currentPage = 1;
         this.itemsPerPage = 10;
+        this.ultimaFechaVerificada = null; // Para detectar cambio de día
+        this.intervalVerificacionDia = null; // Referencia al intervalo
     }
 
     /**
@@ -52,6 +55,9 @@ class ObligacionesController {
         this.setupEventListeners();
         await this.loadObligaciones();
         await this.loadFilters();
+        
+        // Inicializar detección de cambio de día
+        this.inicializarDeteccionCambioDia();
     }
 
     /**
@@ -100,6 +106,46 @@ class ObligacionesController {
         if (exportarBtn) {
             exportarBtn.addEventListener('click', () => {
                 this.exportarCalendarioNotificaciones();
+            });
+        }
+
+        // Botón Agregar Obligación
+        const agregarBtn = document.getElementById('agregar-obligacion-btn');
+        if (agregarBtn) {
+            agregarBtn.addEventListener('click', () => {
+                this.mostrarFormularioObligacion();
+            });
+        }
+
+        // Event listeners del modal
+        const cerrarModalBtn = document.getElementById('btn-cerrar-modal-obligacion');
+        if (cerrarModalBtn) {
+            cerrarModalBtn.addEventListener('click', () => {
+                this.cerrarModalObligacion();
+            });
+        }
+
+        const cancelarBtn = document.getElementById('btn-cancelar-obligacion');
+        if (cancelarBtn) {
+            cancelarBtn.addEventListener('click', () => {
+                this.cerrarModalObligacion();
+            });
+        }
+
+        const guardarBtn = document.getElementById('btn-guardar-obligacion');
+        if (guardarBtn) {
+            guardarBtn.addEventListener('click', () => {
+                this.guardarObligacion();
+            });
+        }
+
+        // Cerrar modal al hacer clic fuera
+        const modal = document.getElementById('modal-obligacion');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.cerrarModalObligacion();
+                }
             });
         }
 
@@ -184,6 +230,14 @@ class ObligacionesController {
                                 data-action="ver-detalle" data-id="${obl.id}" title="Ver detalles">
                             <span class="material-symbols-outlined">visibility</span>
                         </button>
+                        <button class="p-1.5 hover:bg-blue-50 rounded-full text-text-muted hover:text-blue-600 transition-colors" 
+                                data-action="modificar" data-id="${obl.id}" title="Modificar obligación">
+                            <span class="material-symbols-outlined">edit</span>
+                        </button>
+                        <button class="p-1.5 hover:bg-red-50 rounded-full text-text-muted hover:text-red-600 transition-colors" 
+                                data-action="eliminar" data-id="${obl.id}" title="Eliminar obligación">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
                     </div>
                 </td>
             `;
@@ -223,6 +277,22 @@ class ObligacionesController {
             btn.addEventListener('click', (e) => {
                 const id = e.currentTarget.dataset.id;
                 this.marcarAtendida(id);
+            });
+        });
+
+        document.querySelectorAll('[data-action="modificar"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = e.currentTarget.dataset.id;
+                this.mostrarFormularioObligacion(id);
+            });
+        });
+
+        document.querySelectorAll('[data-action="eliminar"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = e.currentTarget.dataset.id;
+                this.eliminarObligacion(id);
             });
         });
     }
@@ -564,7 +634,7 @@ class ObligacionesController {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
                 }
-            } else {
+} else {
                 // Método tradicional si no hay servicio de almacenamiento
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(blob);
@@ -895,6 +965,436 @@ class ObligacionesController {
         );
         
         return [headers.join(','), ...rows].join('\n');
+    }
+
+    /**
+     * Mostrar formulario de obligación (agregar o modificar)
+     */
+    async mostrarFormularioObligacion(obligacionId = null) {
+        const modal = document.getElementById('modal-obligacion');
+        const titulo = document.getElementById('modal-obligacion-titulo');
+        const form = document.getElementById('form-obligacion');
+
+        if (!modal || !titulo || !form) {
+            console.error('Elementos del modal no encontrados');
+            return;
+        }
+
+        // Limpiar formulario
+        form.reset();
+        this.obligacionEditando = obligacionId;
+
+        if (obligacionId) {
+            // Modificar: cargar datos
+            titulo.textContent = 'Modificar Obligación';
+            try {
+                const obligacion = await this.obligacionesService.getById(obligacionId);
+                this.cargarDatosEnFormulario(obligacion);
+            } catch (error) {
+                console.error('Error al cargar obligación:', error);
+                Utils.showNotification('Error al cargar obligación', 'error');
+                return;
+            }
+        } else {
+            // Agregar: formulario vacío
+            titulo.textContent = 'Agregar Obligación';
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    /**
+     * Cargar datos de obligación en el formulario
+     */
+    cargarDatosEnFormulario(obligacion) {
+        // Información básica
+        const idInput = document.getElementById('form-id');
+        if (idInput) idInput.value = obligacion.id_oficial || obligacion.id || '';
+        
+        const reguladorInput = document.getElementById('form-regulador');
+        if (reguladorInput) reguladorInput.value = obligacion.regulador || '';
+        
+        const areaInput = document.getElementById('form-area');
+        if (areaInput) areaInput.value = obligacion.area || '';
+        
+        const periodicidadInput = document.getElementById('form-periodicidad');
+        if (periodicidadInput) periodicidadInput.value = obligacion.periodicidad || '';
+        
+        const nombreInput = document.getElementById('form-nombre');
+        if (nombreInput) nombreInput.value = obligacion.nombre || obligacion.descripcion || '';
+
+        // Fechas y estatus
+        const fechaLimiteInput = document.getElementById('form-fecha-limite');
+        if (fechaLimiteInput && obligacion.fecha_limite) {
+            // Convertir YYYY-MM-DD a formato de input date
+            fechaLimiteInput.value = obligacion.fecha_limite;
+        }
+
+        const estatusSelect = document.getElementById('form-estatus');
+        if (estatusSelect) estatusSelect.value = obligacion.estatus || '';
+
+        const subEstatusInput = document.getElementById('form-sub-estatus');
+        if (subEstatusInput) subEstatusInput.value = obligacion.sub_estatus || '';
+
+        const responsableCNInput = document.getElementById('form-responsable-cn');
+        if (responsableCNInput) responsableCNInput.value = obligacion.responsable_cn || '';
+
+        const responsableJuridicoInput = document.getElementById('form-responsable-juridico');
+        if (responsableJuridicoInput) responsableJuridicoInput.value = obligacion.responsable_juridico || '';
+
+        // Reglas de alertamiento
+        const reglas = obligacion.reglas_alertamiento || {};
+        
+        const regla1VezInput = document.getElementById('form-regla-1-vez');
+        if (regla1VezInput && reglas.regla_1_vez) {
+            const fecha1Vez = this.convertirFechaParaInput(reglas.regla_1_vez);
+            if (fecha1Vez) regla1VezInput.value = fecha1Vez;
+        }
+
+        const reglaSemanalInput = document.getElementById('form-regla-semanal');
+        if (reglaSemanalInput && reglas.regla_semanal) {
+            const fechaSemanal = this.convertirFechaParaInput(reglas.regla_semanal);
+            if (fechaSemanal) reglaSemanalInput.value = fechaSemanal;
+        }
+
+        const reglaSaltadoInput = document.getElementById('form-regla-saltado');
+        if (reglaSaltadoInput && reglas.regla_saltado) {
+            const fechaSaltado = this.convertirFechaParaInput(reglas.regla_saltado);
+            if (fechaSaltado) reglaSaltadoInput.value = fechaSaltado;
+        }
+
+        const reglaDiariaInput = document.getElementById('form-regla-diaria');
+        if (reglaDiariaInput && reglas.regla_diaria) {
+            const fechaDiaria = this.convertirFechaParaInput(reglas.regla_diaria);
+            if (fechaDiaria) reglaDiariaInput.value = fechaDiaria;
+        }
+    }
+
+    /**
+     * Convertir fecha DD/MM/YYYY o YYYY-MM-DD a formato YYYY-MM-DD para input date
+     */
+    convertirFechaParaInput(fechaStr) {
+        if (!fechaStr) return null;
+        
+        // Si ya es YYYY-MM-DD
+        if (typeof fechaStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
+            return fechaStr;
+        }
+        
+        // Si es DD/MM/YYYY
+        if (typeof fechaStr === 'string' && fechaStr.includes('/')) {
+            const parts = fechaStr.split('/');
+            if (parts.length === 3) {
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                return `${year}-${month}-${day}`;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Cerrar modal de obligación
+     */
+    cerrarModalObligacion() {
+        const modal = document.getElementById('modal-obligacion');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        this.obligacionEditando = null;
+    }
+
+    /**
+     * Guardar obligación (crear o actualizar)
+     */
+    async guardarObligacion() {
+        const form = document.getElementById('form-obligacion');
+        if (!form) return;
+
+        // Validar formulario
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        try {
+            // Obtener valores del formulario
+            const formData = new FormData(form);
+            const id = formData.get('id').trim();
+            
+            // Verificar que el ID no esté vacío
+            if (!id) {
+                Utils.showNotification('El ID es obligatorio', 'error');
+                return;
+            }
+
+            // Obtener estructura del Excel para crear row_original
+            let excelStructure = null;
+            if (window.configService) {
+                try {
+                    const config = await window.configService.getConfiguracion();
+                    excelStructure = config.excelStructure || null;
+                } catch (error) {
+                    console.warn('No se pudo obtener estructura del Excel:', error);
+                }
+            }
+
+            // Crear row_original basado en headers del Excel
+            let rowOriginal = [];
+            if (excelStructure && excelStructure.headers) {
+                rowOriginal = new Array(excelStructure.headers.length).fill(null);
+                
+                // Mapear campos a columnas según columnMap
+                const columnMap = excelStructure.columnMap || {};
+                
+                // Columna V (21): ID
+                rowOriginal[21] = id;
+                
+                // Columna C (2): Regulador
+                if (columnMap.regulador !== undefined) {
+                    rowOriginal[columnMap.regulador] = formData.get('regulador') || '';
+                } else {
+                    rowOriginal[2] = formData.get('regulador') || '';
+                }
+                
+                // Columna H (7): Área
+                if (columnMap.area !== undefined) {
+                    rowOriginal[columnMap.area] = formData.get('area') || '';
+                } else {
+                    rowOriginal[7] = formData.get('area') || '';
+                }
+                
+                // Columna N (13): Periodicidad
+                if (columnMap.periodicidad !== undefined) {
+                    rowOriginal[columnMap.periodicidad] = formData.get('periodicidad') || '';
+                } else {
+                    rowOriginal[13] = formData.get('periodicidad') || '';
+                }
+                
+                // Columna P (15): Fecha límite
+                const fechaLimite = formData.get('fecha_limite');
+                if (fechaLimite) {
+                    if (columnMap.fecha_limite !== undefined) {
+                        rowOriginal[columnMap.fecha_limite] = fechaLimite;
+                    } else {
+                        rowOriginal[15] = fechaLimite;
+                    }
+                }
+                
+                // Columna T (19): Estatus
+                if (columnMap.estatus !== undefined) {
+                    rowOriginal[columnMap.estatus] = formData.get('estatus') || '';
+                } else {
+                    rowOriginal[19] = formData.get('estatus') || '';
+                }
+                
+                // Columna U (20): Subestatus
+                if (columnMap.sub_estatus !== undefined) {
+                    rowOriginal[columnMap.sub_estatus] = formData.get('sub_estatus') || '';
+                } else {
+                    rowOriginal[20] = formData.get('sub_estatus') || '';
+                }
+                
+                // Reglas de alertamiento (W, X, Y, Z)
+                const regla1Vez = formData.get('regla_1_vez');
+                if (regla1Vez) rowOriginal[22] = regla1Vez;
+                
+                const reglaSemanal = formData.get('regla_semanal');
+                if (reglaSemanal) rowOriginal[23] = reglaSemanal;
+                
+                const reglaSaltado = formData.get('regla_saltado');
+                if (reglaSaltado) rowOriginal[24] = reglaSaltado;
+                
+                const reglaDiaria = formData.get('regla_diaria');
+                if (reglaDiaria) rowOriginal[25] = reglaDiaria;
+            } else {
+                // Si no hay estructura, crear fila básica
+                rowOriginal = new Array(26).fill(null);
+                rowOriginal[2] = formData.get('regulador') || '';
+                rowOriginal[7] = formData.get('area') || '';
+                rowOriginal[13] = formData.get('periodicidad') || '';
+                rowOriginal[15] = formData.get('fecha_limite') || '';
+                rowOriginal[19] = formData.get('estatus') || '';
+                rowOriginal[20] = formData.get('sub_estatus') || '';
+                rowOriginal[21] = id;
+                rowOriginal[22] = formData.get('regla_1_vez') || '';
+                rowOriginal[23] = formData.get('regla_semanal') || '';
+                rowOriginal[24] = formData.get('regla_saltado') || '';
+                rowOriginal[25] = formData.get('regla_diaria') || '';
+            }
+
+            // Convertir fechas de reglas a formato DD/MM/YYYY si es necesario
+            const convertirReglaFecha = (fechaStr) => {
+                if (!fechaStr) return null;
+                // Si ya es YYYY-MM-DD, convertir a DD/MM/YYYY
+                if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
+                    const [year, month, day] = fechaStr.split('-');
+                    return `${day}/${month}/${year}`;
+                }
+                return fechaStr;
+            };
+
+            // Construir objeto de obligación
+            const obligacionData = {
+                id: id,
+                id_oficial: id,
+                regulador: formData.get('regulador') || '',
+                area: formData.get('area') || '',
+                periodicidad: formData.get('periodicidad') || 'No definida',
+                nombre: formData.get('nombre') || id,
+                descripcion: formData.get('nombre') || id,
+                fecha_limite: formData.get('fecha_limite') || null,
+                fecha_limite_original: formData.get('fecha_limite') || null,
+                estatus: formData.get('estatus') || null,
+                sub_estatus: formData.get('sub_estatus') || null,
+                responsable_cn: formData.get('responsable_cn') || null,
+                responsable_juridico: formData.get('responsable_juridico') || null,
+                reglas_alertamiento: {
+                    regla_1_vez: convertirReglaFecha(formData.get('regla_1_vez')),
+                    regla_semanal: convertirReglaFecha(formData.get('regla_semanal')),
+                    regla_saltado: convertirReglaFecha(formData.get('regla_saltado')),
+                    regla_diaria: convertirReglaFecha(formData.get('regla_diaria'))
+                },
+                row_original: rowOriginal,
+                historial: [],
+                archivos: [],
+                recordatorios_programados: []
+            };
+
+            let obligacionGuardada;
+            if (this.obligacionEditando) {
+                // Actualizar
+                obligacionGuardada = await this.obligacionesService.actualizar(this.obligacionEditando, obligacionData);
+                
+                // Registrar en bitácora
+                if (window.BitacoraService) {
+                    try {
+                        const bitacoraService = new BitacoraService(window.dataAdapter);
+                        await bitacoraService.registrarEvento(
+                            this.obligacionEditando,
+                            'cambio_regla',
+                            'Obligación modificada',
+                            'La obligación fue modificada desde el formulario',
+                            null,
+                            obligacionData,
+                            null
+                        );
+                    } catch (bitacoraError) {
+                        console.warn('Error al registrar en bitácora:', bitacoraError);
+                    }
+                }
+            } else {
+                // Crear nueva
+                obligacionGuardada = await this.obligacionesService.crear(obligacionData);
+                
+                // Registrar en bitácora
+                if (window.BitacoraService) {
+                    try {
+                        const bitacoraService = new BitacoraService(window.dataAdapter);
+                        await bitacoraService.registrarEvento(
+                            id,
+                            'carga_inicial',
+                            'Carga inicial',
+                            'Obligación creada desde el formulario',
+                            null,
+                            null,
+                            null
+                        );
+                    } catch (bitacoraError) {
+                        console.warn('Error al registrar en bitácora:', bitacoraError);
+                    }
+                }
+            }
+
+            // Calcular y guardar calendario de notificaciones
+            if (window.CalendarioService && window.FileStorageService) {
+                try {
+                    const fileStorageService = new FileStorageService();
+                    await fileStorageService.init();
+                    const calendarioService = new CalendarioService(fileStorageService);
+                    await calendarioService.calcularYGuardarCalendario(obligacionGuardada.id, obligacionGuardada);
+                    console.log(`✅ Calendario calculado y guardado para ${obligacionGuardada.id}`);
+                } catch (calendarioError) {
+                    console.warn(`No se pudo calcular calendario para ${obligacionGuardada.id}:`, calendarioError);
+                }
+            }
+
+            // Cerrar modal y recargar tabla
+            this.cerrarModalObligacion();
+            await this.loadObligaciones();
+            
+            Utils.showNotification(
+                this.obligacionEditando ? 'Obligación actualizada correctamente' : 'Obligación creada correctamente',
+                'success'
+            );
+        } catch (error) {
+            console.error('Error al guardar obligación:', error);
+            Utils.showNotification('Error al guardar obligación: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Eliminar obligación
+     */
+    async eliminarObligacion(obligacionId) {
+        try {
+            // Obtener obligación para mostrar ID en confirmación
+            const obligacion = await this.obligacionesService.getById(obligacionId);
+            const idMostrar = obligacion.id_oficial || obligacion.id;
+
+            // Confirmar eliminación
+            if (!await Utils.confirm(`¿Está seguro de eliminar la obligación ${idMostrar}?`)) {
+                return;
+            }
+
+            // Eliminar
+            await this.obligacionesService.eliminar(obligacionId);
+
+            // Recargar tabla
+            await this.loadObligaciones();
+
+            Utils.showNotification('Obligación eliminada correctamente', 'success');
+        } catch (error) {
+            console.error('Error al eliminar obligación:', error);
+            Utils.showNotification('Error al eliminar obligación: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Inicializar detección de cambio de día para actualizar días restantes automáticamente
+     */
+    inicializarDeteccionCambioDia() {
+        // Guardar fecha actual (solo día, sin hora)
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        this.ultimaFechaVerificada = hoy.getTime();
+
+        // Verificar cada minuto si cambió el día
+        this.intervalVerificacionDia = setInterval(() => {
+            const ahora = new Date();
+            ahora.setHours(0, 0, 0, 0);
+            const ahoraTimestamp = ahora.getTime();
+
+            // Si cambió el día, recargar obligaciones
+            if (ahoraTimestamp !== this.ultimaFechaVerificada) {
+                console.log('📅 Cambio de día detectado. Actualizando días restantes...');
+                this.ultimaFechaVerificada = ahoraTimestamp;
+                
+                // Recargar obligaciones para actualizar días restantes
+                this.loadObligaciones().catch(error => {
+                    console.error('Error al recargar obligaciones después del cambio de día:', error);
+                });
+            }
+        }, 60000); // Verificar cada minuto (60000 ms)
+
+        // Limpiar intervalo cuando la página se descarga
+        window.addEventListener('beforeunload', () => {
+            if (this.intervalVerificacionDia) {
+                clearInterval(this.intervalVerificacionDia);
+            }
+        });
     }
 }
 

@@ -46,6 +46,13 @@ class DataAdapter {
         return this.storage.updateObligacionEstado(id, estado);
     }
 
+    async deleteObligacion(id) {
+        if (this.storage.deleteObligacion) {
+            return this.storage.deleteObligacion(id);
+        }
+        throw new Error('deleteObligacion no está implementado en este storage backend');
+    }
+
     // ========== Métodos para Alertas ==========
 
     async getAlertas(filters = {}) {

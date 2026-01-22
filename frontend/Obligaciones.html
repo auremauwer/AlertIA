@@ -88,10 +88,10 @@
 <body class="bg-background text-text-main font-display flex flex-col h-screen overflow-hidden">
     <div class="flex flex-1 overflow-hidden">
         <aside id="main-sidebar"
-            class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display transition-all duration-300 relative">
+            class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display transition-all duration-300 relative overflow-visible">
             <div class="flex h-full flex-col justify-between overflow-hidden">
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-3 px-6 py-8 relative">
+                <div class="flex flex-col overflow-visible">
+                    <div class="flex items-center gap-3 px-6 py-8 relative overflow-visible">
                         <div class="flex items-center justify-center size-9 flex-shrink-0">
                             <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
                         </div>
@@ -103,7 +103,7 @@
                         </div>
                         <button id="sidebar-toggle"
                             class="absolute right-[-12px] top-1/2 -translate-y-1/2 bg-gray-200 border border-gray-300 rounded-full p-1 text-gray-600 hover:text-primary hover:bg-gray-300 shadow-sm z-30 transition-all hover:scale-110 hidden md:flex">
-                            <span class="material-symbols-outlined !text-[16px]">chevron_left</span>
+                            <span class="material-symbols-outlined text-[16px]">chevron_left</span>
                         </button>
                     </div>
                     <nav class="flex flex-col px-3">
@@ -120,31 +120,24 @@
                                 class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Obligaciones</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Correos.html" title="Envío de correos">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">mail</span>
+                            href="Evidencias.html" title="Gestión de evidencias">
+                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">description</span>
                             <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Envío
-                                de correos</span>
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Gestión
+                                de evidencias</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Historial.html" title="Historial de envíos">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">history</span>
+                            href="Historial.html" title="Gestión de escritos">
+                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">article</span>
                             <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Historial
-                                de envíos</span>
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Gestión
+                                de escritos</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
                             href="Configuración.html" title="Configuración">
                             <span class="material-symbols-outlined text-[20px] flex-shrink-0">settings</span>
                             <span
                                 class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Configuración</span>
-                        </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Auditoria.html" title="Auditoría / Logs">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">list_alt</span>
-                            <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Auditoría
-                                / Logs</span>
                         </a>
                     </nav>
                 </div>
@@ -166,7 +159,7 @@
                     </button>
                     <div
                         class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium sidebar-text whitespace-nowrap transition-opacity duration-300">
-                        AlertIA v3.0.4
+                        AlertIA v3.0.5
                         <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
                             title="Archivo cargado">
                             <!-- El nombre del archivo se inyectará aquí -->
@@ -185,13 +178,6 @@
                         </div>
                         <h2 class="text-primary-black text-4xl font-extrabold tracking-tight">Gestión de Obligaciones
                         </h2>
-                    </div>
-                    <div class="flex items-center gap-6">
-                        <button onclick="Utils.logoutApp()"
-                            class="flex items-center gap-2 px-6 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-red-600 text-sm font-bold uppercase rounded-sm transition-colors tracking-wide">
-                            <span class="material-symbols-outlined text-lg">logout</span>
-                            <span>Salir</span>
-                        </button>
                     </div>
                 </div>
             </header>
@@ -268,13 +254,18 @@
                     
                     <!-- Botones de Exportación -->
                     <div class="flex justify-end gap-3 mb-4">
-                        <button id="exportar-excel-btn" 
+                        <button id="agregar-obligacion-btn" 
                             class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm">
+                            <span class="material-symbols-outlined">add</span>
+                            Agregar obligación
+                        </button>
+                        <button id="exportar-excel-btn" 
+                            class="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold text-sm">
                             <span class="material-symbols-outlined">upload_file</span>
                             Exportar excel
                         </button>
                         <button id="exportar-calendario-btn" 
-                            class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm">
+                            class="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold text-sm">
                             <span class="material-symbols-outlined">calendar_month</span>
                             Exportar calendario de notificaciones
                         </button>
@@ -449,6 +440,176 @@
             </div>
         </main>
     </div>
+
+    <!-- Modal Agregar/Modificar Obligación -->
+    <div id="modal-obligacion" class="fixed inset-0 z-[200] flex items-center justify-center p-4 modal-overlay hidden">
+        <div class="bg-white w-full max-w-5xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-border-subtle flex items-center justify-between bg-white shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="bg-green-50 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-green-600" style="font-size: 28px; font-weight: 400;">assignment</span>
+                    </div>
+                    <h3 id="modal-obligacion-titulo" class="text-lg font-extrabold text-text-main">Agregar Obligación</h3>
+                </div>
+                <button id="btn-cerrar-modal-obligacion" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <span class="material-symbols-outlined text-text-muted">close</span>
+                </button>
+            </div>
+
+            <!-- Formulario -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <form id="form-obligacion" class="space-y-6">
+                    <!-- Sección: Información Básica -->
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-bold uppercase tracking-wider text-gray-700 border-b pb-2">Información Básica</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- ID (Obligatorio) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-id" class="text-xs font-bold text-gray-700">ID <span class="text-red-600">*</span></label>
+                                <input type="text" id="form-id" name="id" required
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="Ej: OB-CNBV-01">
+                            </div>
+
+                            <!-- Regulador (Obligatorio) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-regulador" class="text-xs font-bold text-gray-700">Regulador <span class="text-red-600">*</span></label>
+                                <input type="text" id="form-regulador" name="regulador" required
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="Ej: CNBV">
+                            </div>
+
+                            <!-- Área Responsable (Obligatorio) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-area" class="text-xs font-bold text-gray-700">Área Responsable <span class="text-red-600">*</span></label>
+                                <input type="text" id="form-area" name="area" required
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="Ej: Cumplimiento">
+                            </div>
+
+                            <!-- Periodicidad (Opcional) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-periodicidad" class="text-xs font-bold text-gray-700">Periodicidad</label>
+                                <input type="text" id="form-periodicidad" name="periodicidad"
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="Ej: Mensual">
+                            </div>
+
+                            <!-- Nombre/Disposición (Opcional) -->
+                            <div class="flex flex-col gap-1 md:col-span-2">
+                                <label for="form-nombre" class="text-xs font-bold text-gray-700">Nombre/Disposición Resumida</label>
+                                <input type="text" id="form-nombre" name="nombre"
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="Descripción de la obligación">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Fechas y Estatus -->
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-bold uppercase tracking-wider text-gray-700 border-b pb-2">Fechas y Estatus</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Fecha Límite (Obligatorio) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-fecha-limite" class="text-xs font-bold text-gray-700">Fecha límite de entrega <span class="text-red-600">*</span></label>
+                                <input type="date" id="form-fecha-limite" name="fecha_limite" required
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <!-- Estatus (Obligatorio) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-estatus" class="text-xs font-bold text-gray-700">Estatus <span class="text-red-600">*</span></label>
+                                <select id="form-estatus" name="estatus" required
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="pendiente">Pendiente</option>
+                                    <option value="recordatorio">Recordatorio</option>
+                                    <option value="atendida">Atendida</option>
+                                    <option value="pausada">Pausada</option>
+                                    <option value="cerrado">Cerrado</option>
+                                </select>
+                            </div>
+
+                            <!-- Subestatus (Obligatorio) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-sub-estatus" class="text-xs font-bold text-gray-700">Subestatus <span class="text-red-600">*</span></label>
+                                <input type="text" id="form-sub-estatus" name="sub_estatus" required
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="Ej: Sin respuesta">
+                            </div>
+
+                            <!-- Responsable CN (Opcional) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-responsable-cn" class="text-xs font-bold text-gray-700">Responsable CN</label>
+                                <input type="text" id="form-responsable-cn" name="responsable_cn"
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="Nombre del responsable">
+                            </div>
+
+                            <!-- Responsable Jurídico (Opcional) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-responsable-juridico" class="text-xs font-bold text-gray-700">Responsable Jurídico</label>
+                                <input type="text" id="form-responsable-juridico" name="responsable_juridico"
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="Nombre del responsable">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Reglas de Alertamiento -->
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-bold uppercase tracking-wider text-gray-700 border-b pb-2">Reglas de Alertamiento</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 1 Vez -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-regla-1-vez" class="text-xs font-bold text-gray-700">1 Vez</label>
+                                <input type="date" id="form-regla-1-vez" name="regla_1_vez"
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <!-- Semanal -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-regla-semanal" class="text-xs font-bold text-gray-700">Semanal</label>
+                                <input type="date" id="form-regla-semanal" name="regla_semanal"
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <!-- Saltado -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-regla-saltado" class="text-xs font-bold text-gray-700">Saltado</label>
+                                <input type="date" id="form-regla-saltado" name="regla_saltado"
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <!-- Diaria -->
+                            <div class="flex flex-col gap-1">
+                                <label for="form-regla-diaria" class="text-xs font-bold text-gray-700">Diaria</label>
+                                <input type="date" id="form-regla-diaria" name="regla_diaria"
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer con botones -->
+            <div class="px-6 py-4 border-t border-border-subtle flex justify-end gap-3 bg-white shrink-0">
+                <button id="btn-cancelar-obligacion" 
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-semibold text-sm">
+                    Cancelar
+                </button>
+                <button id="btn-guardar-obligacion" 
+                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Cargar scripts de la aplicación -->
     <script src="js/app-init.js"></script>
     <script src="js/controllers/obligaciones-controller.js"></script>

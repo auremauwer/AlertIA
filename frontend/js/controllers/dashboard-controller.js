@@ -11,6 +11,8 @@ class DashboardController {
         this.configService = null;
         this.config = null;
         this.currentFilteredData = []; // Guardar datos filtrados actuales
+        this.ultimaFechaVerificada = null; // Para detectar cambio de día
+        this.intervalVerificacionDia = null; // Referencia al intervalo
     }
 
     /**
@@ -47,6 +49,9 @@ class DashboardController {
                 this.setupCardDownload();
             });
         }
+
+        // Inicializar detección de cambio de día
+        this.inicializarDeteccionCambioDia();
     }
 
     /**
@@ -787,6 +792,41 @@ class DashboardController {
             // Animar el cambio de número si se desea, por ahora directo
             element.textContent = value;
         }
+    }
+
+    /**
+     * Inicializar detección de cambio de día para actualizar días restantes automáticamente
+     */
+    inicializarDeteccionCambioDia() {
+        // Guardar fecha actual (solo día, sin hora)
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        this.ultimaFechaVerificada = hoy.getTime();
+
+        // Verificar cada minuto si cambió el día
+        this.intervalVerificacionDia = setInterval(() => {
+            const ahora = new Date();
+            ahora.setHours(0, 0, 0, 0);
+            const ahoraTimestamp = ahora.getTime();
+
+            // Si cambió el día, recargar dashboard
+            if (ahoraTimestamp !== this.ultimaFechaVerificada) {
+                console.log('📅 Cambio de día detectado. Actualizando dashboard...');
+                this.ultimaFechaVerificada = ahoraTimestamp;
+                
+                // Recargar dashboard para actualizar días restantes y KPIs
+                this.loadDashboard().catch(error => {
+                    console.error('Error al recargar dashboard después del cambio de día:', error);
+                });
+            }
+        }, 60000); // Verificar cada minuto (60000 ms)
+
+        // Limpiar intervalo cuando la página se descarga
+        window.addEventListener('beforeunload', () => {
+            if (this.intervalVerificacionDia) {
+                clearInterval(this.intervalVerificacionDia);
+            }
+        });
     }
 }
 

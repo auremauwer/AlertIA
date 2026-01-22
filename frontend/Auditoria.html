@@ -68,7 +68,7 @@
         <aside class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display">
             <div class="flex h-full flex-col justify-between">
                 <div class="flex flex-col">
-                    <div class="flex items-center gap-3 px-6 py-8">
+                    <div class="relative flex items-center gap-3 px-6 py-8">
                         <div class="flex items-center justify-center size-9">
                             <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
                         </div>
@@ -77,6 +77,10 @@
                                 <span class="text-black">Alert</span><span class="text-primary">IA</span>
                             </h1>
                         </div>
+                        <button id="sidebar-toggle"
+                            class="absolute right-[-12px] top-1/2 -translate-y-1/2 bg-gray-200 border border-gray-300 rounded-full p-1 text-gray-600 hover:text-primary hover:bg-gray-300 shadow-sm z-30 transition-all hover:scale-110 hidden md:flex">
+                            <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                        </button>
                     </div>
                     <nav class="flex flex-col px-3">
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
@@ -90,36 +94,44 @@
                             <span class="text-sm font-semibold">Obligaciones</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
-                            href="Correos.html">
-                            <span class="material-symbols-outlined text-[20px]">mail</span>
-                            <span class="text-sm font-semibold">Envío de correos</span>
+                            href="Evidencias.html">
+                            <span class="material-symbols-outlined text-[20px]">description</span>
+                            <span class="text-sm font-semibold">Gestión de evidencias</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
                             href="Historial.html">
-                            <span class="material-symbols-outlined text-[20px]">history</span>
-                            <span class="text-sm font-semibold">Historial de envíos</span>
+                            <span class="material-symbols-outlined text-[20px]">article</span>
+                            <span class="text-sm font-semibold">Gestión de escritos</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
                             href="Configuración.html">
                             <span class="material-symbols-outlined text-[20px]">settings</span>
                             <span class="text-sm font-semibold">Configuración</span>
                         </a>
-                        <a class="flex items-center gap-3 px-4 py-3 bg-gray-100 text-primary border-r-[6px] border-primary transition-all mb-1"
-                            href="Auditoria.html">
-                            <span class="material-symbols-outlined text-[20px] filled">list_alt</span>
-                            <span class="text-sm font-semibold">Auditoría / Logs</span>
-                        </a>
                     </nav>
                 </div>
-                <div class="flex flex-col gap-2 border-t border-gray-200 p-6">
+                <div class="flex flex-col gap-2 border-t border-gray-200 p-6 overflow-hidden">
                     <div class="flex items-center gap-3">
                         <div
-                            class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
+                            class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200 flex-shrink-0">
                             <span class="material-symbols-outlined text-gray-500 text-lg">person</span>
                         </div>
-                        <div class="flex flex-col">
+                        <div class="flex flex-col sidebar-text whitespace-nowrap transition-opacity duration-300">
                             <span class="text-xs font-bold text-black">Analista Riesgos</span>
                             <span class="text-[10px] text-gray-500">Lectura Exclusiva</span>
+                        </div>
+                    </div>
+                    <button id="btn-salir" 
+                        class="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-semibold text-sm sidebar-text whitespace-nowrap">
+                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                        <span>Salir</span>
+                    </button>
+                    <div
+                        class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium sidebar-text whitespace-nowrap transition-opacity duration-300">
+                        AlertIA v3.0.5
+                        <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
+                            title="Archivo cargado">
+                            <!-- El nombre del archivo se inyectará aquí -->
                         </div>
                     </div>
                 </div>
@@ -141,13 +153,6 @@
                             class="pl-9 pr-4 py-1.5 bg-white dark:bg-[#1a0c0c] border border-transparent focus:border-primary/20 focus:bg-white rounded-lg text-sm w-full transition-all placeholder:text-gray-400"
                             placeholder="Buscar por usuario, IP o acción..." type="text" />
                     </div>
-                </div>
-                <div class="flex items-center gap-6 pl-6">
-                    <button onclick="Utils.logoutApp()"
-                        class="flex items-center gap-2 px-6 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-red-600 text-sm font-bold uppercase rounded-sm transition-colors tracking-wide">
-                        <span class="material-symbols-outlined text-lg">logout</span>
-                        <span>Salir</span>
-                    </button>
                 </div>
             </header>
             <div class="flex-1 overflow-auto p-8">

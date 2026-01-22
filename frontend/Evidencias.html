@@ -1,15 +1,13 @@
 <!DOCTYPE html>
-<html lang="es">
+<html class="light" lang="es">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>AlertIA - Evidencias</title>
+    <title>AlertIA</title>
     <link rel="icon" type="image/x-icon" href="Alertia.ico" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;family=Noto+Sans:wght@100..900&amp;display=swap"
-        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
@@ -20,248 +18,283 @@
                 extend: {
                     colors: {
                         "primary": "#ec0000",
-                        "primary-black": "#000000",
-                        "bg-main": "#fcfcfc",
-                        "sidebar-bg": "#ffffff",
-                        "border-soft": "#e5e7eb",
-                        "text-muted": "#6b7280",
+                        "background": "#ffffff",
+                        "surface": "#ffffff",
+                        "border-light": "#e5e7eb",
+                        "text-main": "#222222",
+                        "text-secondary": "#6b7280",
                     },
                     fontFamily: {
-                        "display": ["Manrope", "sans-serif"],
-                        "body": ["Noto Sans", "sans-serif"],
+                        "display": ["Manrope", "sans-serif"]
                     },
-                    borderRadius: { "DEFAULT": "0rem", "lg": "0.125rem", "xl": "0.25rem", "full": "9999px" },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                    },
                 },
             },
         }
     </script>
     <style type="text/tailwindcss">
-        @layer base {
-            body {
-                @apply bg-bg-main text-primary-black antialiased;
-            }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
+.material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f3f4f6; 
+        .material-symbols-outlined.filled {
+             font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #d1d5db; 
-            border-radius: 2px;
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #000000; 
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        .sidebar-item-active {
+            @apply bg-red-50 text-primary border-r-4 border-primary font-semibold;
+        }.table-checkbox {
+            @apply border-gray-400 rounded focus:ring-primary text-primary w-4 h-4 transition duration-150 ease-in-out cursor-pointer;
+        }.table-checkbox:checked {
+            background-color: #ec0000;
+            border-color: #ec0000;
+        }        .alert-badge {
+            @apply inline-flex items-center justify-center w-24 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+        }
+        .step-indicator {
+            @apply flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold text-sm transition-all;
+        }
+        .step-indicator.active {
+            @apply bg-primary text-white border-primary;
+        }
+        .step-indicator.completed {
+            @apply bg-green-500 text-white border-green-500;
+        }
+        .step-indicator.pending {
+            @apply bg-white text-gray-400 border-gray-300;
+        }
+        .step-content {
+            display: none;
+        }
+        .step-content.active {
+            display: block;
+        }
+        .status-pill {
+            @apply inline-flex items-center justify-center text-[10px] font-bold uppercase tracking-wider border rounded-md;
+        }
+        .status-pendiente { @apply bg-amber-50 text-amber-700 border-amber-200; }
+        .status-ventana { @apply bg-red-50 text-red-700 border-red-200; }
+        .status-pausada { @apply bg-gray-50 text-gray-600 border-gray-200; }
+        .status-atendida { @apply bg-green-50 text-green-700 border-green-200; }
+        .status-recordatorio { @apply bg-blue-50 text-blue-700 border-blue-200; }
+        .status-solicitud { @apply bg-purple-50 text-purple-700 border-purple-200; }
+        .status-cerrado { @apply bg-green-50 text-green-700 border-green-200; }
+        .status-apagado { @apply bg-gray-50 text-gray-600 border-gray-200; }
     </style>
 </head>
 
-<body class="font-display selection:bg-primary selection:text-primary-black">
-    <div class="relative flex h-screen w-full overflow-hidden bg-bg-main">
-        <aside id="main-sidebar"
-            class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display transition-all duration-300 relative">
-            <div class="flex h-full flex-col justify-between overflow-hidden">
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-3 px-6 py-8 relative">
-                        <div class="flex items-center justify-center size-9 flex-shrink-0">
-                            <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
-                        </div>
-                        <div
-                            class="flex flex-col sidebar-text overflow-hidden whitespace-nowrap transition-opacity duration-300">
-                            <h1 class="text-xl font-extrabold tracking-tighter leading-none">
-                                <span class="text-black">Alert</span><span class="text-primary">IA</span>
-                            </h1>
-                        </div>
-                        <button id="sidebar-toggle"
-                            class="absolute right-[-12px] top-1/2 -translate-y-1/2 bg-gray-200 border border-gray-300 rounded-full p-1 text-gray-600 hover:text-primary hover:bg-gray-300 shadow-sm z-30 transition-all hover:scale-110 hidden md:flex">
-                            <span class="material-symbols-outlined text-[16px]">chevron_left</span>
-                        </button>
+<body class="font-display bg-white text-text-main overflow-hidden h-screen flex">
+    <aside class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display overflow-visible">
+        <div class="flex h-full flex-col justify-between">
+            <div class="flex flex-col overflow-visible">
+                <div class="relative flex items-center gap-3 px-6 py-8 overflow-visible">
+                    <div class="flex items-center justify-center size-9">
+                        <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
                     </div>
-                    <nav class="flex flex-col px-3">
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Dashboard.html" title="Dashboard">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">dashboard</span>
-                            <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Dashboard</span>
-                        </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Obligaciones.html" title="Obligaciones">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">description</span>
-                            <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Obligaciones</span>
-                        </a>
-                        <a class="flex items-center gap-3 px-4 py-3 bg-gray-100 text-primary border-r-[6px] border-primary transition-all mb-1 overflow-hidden"
-                            href="Evidencias.html" title="Evidencias">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0 filled">attach_file</span>
-                            <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Evidencias</span>
-                        </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Correos.html" title="Envío de Correos">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">mail</span>
-                            <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Envío
-                                de Correos</span>
-                        </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Historial.html" title="Historial">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">history</span>
-                            <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Historial
-                                de envíos</span>
-                        </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Configuración.html" title="Configuración">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">settings</span>
-                            <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Configuración</span>
-                        </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Auditoria.html" title="Auditoría / Logs">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">list_alt</span>
-                            <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Auditoría
-                                / Logs</span>
-                        </a>
-                    </nav>
-                </div>
-                <div class="flex flex-col gap-2 border-t border-gray-200 p-6 overflow-hidden">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200 flex-shrink-0">
-                            <span class="material-symbols-outlined text-gray-500 text-lg">person</span>
-                        </div>
-                        <div class="flex flex-col sidebar-text whitespace-nowrap transition-opacity duration-300">
-                            <span class="text-xs font-bold text-black">Analista Riesgos</span>
-                            <span class="text-[10px] text-gray-500">Lectura Exclusiva</span>
-                        </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-xl font-extrabold tracking-tighter leading-none">
+                            <span class="text-black">Alert</span><span class="text-primary">IA</span>
+                        </h1>
                     </div>
-                    <button id="btn-salir" 
-                        class="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-semibold text-sm sidebar-text whitespace-nowrap">
-                        <span class="material-symbols-outlined text-[18px]">logout</span>
-                        <span>Salir</span>
+                    <button id="sidebar-toggle"
+                        class="absolute right-[-12px] top-1/2 -translate-y-1/2 bg-gray-200 border border-gray-300 rounded-full p-1 text-gray-600 hover:text-primary hover:bg-gray-300 shadow-sm z-30 transition-all hover:scale-110 hidden md:flex">
+                        <span class="material-symbols-outlined text-[16px]">chevron_left</span>
                     </button>
+                </div>
+                <nav class="flex flex-col px-3">
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Dashboard.html">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-semibold">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Obligaciones.html">
+                        <span class="material-symbols-outlined text-[20px]">assignment</span>
+                        <span class="text-sm font-semibold">Obligaciones</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 bg-gray-100 text-primary border-r-[6px] border-primary transition-all mb-1"
+                        href="Evidencias.html">
+                        <span class="material-symbols-outlined text-[20px] filled">description</span>
+                        <span class="text-sm font-semibold">Gestión de evidencias</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Historial.html">
+                        <span class="material-symbols-outlined text-[20px]">article</span>
+                        <span class="text-sm font-semibold">Gestión de escritos</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1"
+                        href="Configuración.html">
+                        <span class="material-symbols-outlined text-[20px]">settings</span>
+                        <span class="text-sm font-semibold">Configuración</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="flex flex-col gap-2 border-t border-gray-200 p-6 overflow-hidden">
+                <div class="flex items-center gap-3">
                     <div
-                        class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium sidebar-text whitespace-nowrap transition-opacity duration-300">
-                        AlertIA v3.0.4
-                        <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
-                            title="Archivo cargado">
-                            <!-- El nombre del archivo se inyectará aquí -->
-                        </div>
+                        class="size-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200 flex-shrink-0">
+                        <span class="material-symbols-outlined text-gray-500 text-lg">person</span>
+                    </div>
+                    <div class="flex flex-col sidebar-text whitespace-nowrap transition-opacity duration-300">
+                        <span class="text-xs font-bold text-black">Analista Riesgos</span>
+                        <span class="text-[10px] text-gray-500">Lectura Exclusiva</span>
+                    </div>
+                </div>
+                <button id="btn-salir" 
+                    class="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-semibold text-sm sidebar-text whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                    <span>Salir</span>
+                </button>
+                <div
+                    class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium sidebar-text whitespace-nowrap transition-opacity duration-300">
+                    AlertIA v3.0.5
+                    <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
+                        title="Archivo cargado">
+                        <!-- El nombre del archivo se inyectará aquí -->
                     </div>
                 </div>
             </div>
-        </aside>
-
-        <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white border-b border-gray-200 px-8 py-6 shrink-0">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-2xl font-extrabold text-primary-black">Evidencias</h1>
-                        <p class="text-sm text-text-muted mt-1">Sube y gestiona evidencias de cumplimiento por obligación</p>
+        </div>
+    </aside>
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+        <header class="flex-none px-10 py-8 border-b border-border-soft bg-white">
+            <div class="flex flex-wrap justify-between items-end gap-4">
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-[0.2em]">
+                        <span class="w-8 h-[1px] bg-primary"></span>
+                        Obligaciones Normativas
+                    </div>
+                    <h2 class="text-primary-black text-4xl font-extrabold tracking-tight">Gestión de evidencias</h2>
+                </div>
+            </div>
+        </header>
+        <main class="flex-1 overflow-y-auto">
+            <div class="p-8 max-w-7xl mx-auto space-y-6">
+                <!-- Selector de Folio -->
+                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div class="flex flex-col md:flex-row md:items-end gap-6">
+                        <div class="flex-1">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2" for="folio">Seleccionar Folio de Obligación</label>
+                            <div class="relative">
+                                <select class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 appearance-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" id="folio">
+                                    <option value="">Seleccione una obligación</option>
+                                </select>
+                                <span class="material-symbols-outlined absolute right-3 top-2.5 text-gray-400 pointer-events-none">expand_more</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="btn-consultar-folio" class="px-6 py-2.5 bg-primary hover:bg-red-700 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm">
+                                <span class="material-symbols-outlined text-lg">search</span>
+                                Consultar Folio
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Información de Estatus y Subestatus -->
+                    <div id="info-estatus-subestatus" class="mt-4 pt-4 border-t border-gray-200 hidden">
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-gray-500 uppercase">Estatus:</span>
+                                <span id="estatus-display" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-gray-500 uppercase">Subestatus:</span>
+                                <span id="subestatus-display" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </header>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar bg-bg-main p-8">
-                <div class="max-w-[1400px] mx-auto">
-                    <!-- Filtros -->
-                    <div class="bg-white p-6 border border-border-soft shadow-sm rounded-sm mb-6">
-                        <div class="flex items-center gap-4 flex-wrap">
-                            <div class="flex-1 min-w-[200px]">
-                                <label class="block text-xs font-bold text-text-muted uppercase mb-1">Buscar por ID</label>
-                                <input type="text" id="filtro-id" placeholder="Buscar ID..."
-                                    class="w-full px-3 py-2 border border-border-soft rounded text-sm focus:outline-none focus:border-primary">
+                <!-- Layout de 2 columnas -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Columna izquierda: Cargar Evidencia -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm h-full">
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-6">Cargar Evidencia</h2>
+                            <div id="drop-zone" class="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center group hover:border-primary/50 transition-colors cursor-pointer bg-gray-50/50">
+                                <div class="w-16 h-16 bg-red-50 text-primary rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">upload_file</span>
+                                </div>
+                                <p class="text-sm font-semibold text-gray-800">Arrastra y suelta tus archivos aquí</p>
+                                <p class="text-xs text-gray-500 mt-1">Soporta PDF, JPG, PNG (Max 10MB)</p>
+                                <div class="mt-6">
+                                    <button id="btn-cargar-archivo" class="px-5 py-2 bg-primary hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-xs font-bold rounded uppercase tracking-wide transition-colors" disabled>
+                                        + Cargar nuevo archivo
+                                    </button>
+                                    <input type="file" id="input-archivo" class="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                                </div>
                             </div>
-                            <div class="flex-1 min-w-[200px]">
-                                <label class="block text-xs font-bold text-text-muted uppercase mb-1">Área</label>
-                                <select id="filtro-area"
-                                    class="w-full px-3 py-2 border border-border-soft rounded text-sm focus:outline-none focus:border-primary">
-                                    <option value="">Todas las áreas</option>
-                                </select>
+                            <div class="mt-8">
+                                <button id="btn-enviar-evidencia" class="w-full px-4 py-2.5 bg-primary hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm" disabled>
+                                    <span class="material-symbols-outlined text-lg">send</span>
+                                    Enviar Evidencia
+                                </button>
+                            </div>
+                            <div class="mt-8 pt-6 border-t border-gray-200">
+                                <div class="flex flex-col gap-3">
+                                    <button id="btn-aceptar-evidencia" class="w-full px-4 py-2.5 bg-black hover:bg-gray-800 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm">
+                                        <span class="material-symbols-outlined text-lg">check_circle</span>
+                                        Aceptar Evidencia
+                                    </button>
+                                    <button id="btn-rechazar-evidencia" class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm">
+                                        <span class="material-symbols-outlined text-lg">cancel</span>
+                                        Rechazar Evidencia
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Lista de obligaciones -->
-                    <div id="obligaciones-container" class="space-y-4">
-                        <!-- Las obligaciones se renderizarán aquí -->
-                        <div class="text-center py-12 text-text-muted">
-                            <span class="material-symbols-outlined text-6xl mb-4 block">attach_file</span>
-                            <p class="text-lg font-semibold">Cargando obligaciones...</p>
+                    <!-- Columna derecha: Archivos Cargados -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                                <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500">Archivos Cargados</h2>
+                                <span id="contador-archivos" class="text-xs font-medium px-2 py-1 bg-gray-100 rounded text-gray-600">0 Archivos</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-[11px] font-bold text-gray-500 uppercase">Nombre del archivo</th>
+                                            <th class="px-6 py-3 text-[11px] font-bold text-gray-500 uppercase">Fecha de carga</th>
+                                            <th class="px-6 py-3 text-[11px] font-bold text-gray-500 uppercase">Usuario</th>
+                                            <th class="px-6 py-3 text-[11px] font-bold text-gray-500 uppercase text-center">Estado</th>
+                                            <th class="px-6 py-3 text-[11px] font-bold text-gray-500 uppercase text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabla-archivos" class="divide-y divide-gray-100">
+                                        <tr>
+                                            <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">
+                                                Seleccione un folio para ver los archivos cargados
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- Modal de subida de archivo -->
-    <div id="modal-subida" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 modal-overlay">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xl font-bold">Subir Evidencia</h3>
-                    <button id="cerrar-modal" class="text-gray-400 hover:text-gray-600">
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
-                </div>
-            </div>
-            <div class="p-6">
-                <form id="form-subida">
-                    <input type="hidden" id="obligacion-id-subida">
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold text-text-muted mb-2">Archivo</label>
-                        <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                            <span class="material-symbols-outlined text-4xl text-gray-400 mb-2 block">cloud_upload</span>
-                            <p class="text-sm text-text-muted mb-1">Arrastra y suelta un archivo aquí</p>
-                            <p class="text-xs text-text-muted">o</p>
-                            <input type="file" id="input-archivo" class="hidden" accept="*/*">
-                            <button type="button" id="btn-seleccionar-archivo" class="mt-2 px-4 py-2 bg-primary text-white rounded text-sm font-semibold hover:bg-red-700 transition-colors">
-                                Seleccionar archivo
-                            </button>
-                            <p class="text-xs text-text-muted mt-2">Tamaño máximo: 25MB</p>
-                        </div>
-                        <div id="archivo-seleccionado" class="hidden mt-2 p-3 bg-gray-50 rounded border border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-gray-500">description</span>
-                                    <span id="nombre-archivo" class="text-sm font-medium"></span>
-                                    <span id="tamaño-archivo" class="text-xs text-text-muted"></span>
-                                </div>
-                                <button type="button" id="btn-remover-archivo" class="text-red-500 hover:text-red-700">
-                                    <span class="material-symbols-outlined text-sm">close</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-6">
-                        <label for="descripcion-archivo" class="block text-sm font-semibold text-text-muted mb-2">Descripción (opcional)</label>
-                        <textarea id="descripcion-archivo" rows="3"
-                            class="w-full px-3 py-2 border border-border-soft rounded text-sm focus:outline-none focus:border-primary"
-                            placeholder="Describe el contenido del archivo..."></textarea>
-                    </div>
-
-                    <div class="flex justify-end gap-3">
-                        <button type="button" id="btn-cancelar-subida" class="px-4 py-2 border border-border-soft rounded text-sm font-semibold hover:bg-gray-50 transition-colors">
-                            Cancelar
-                        </button>
-                        <button type="submit" id="btn-subir-archivo" class="px-4 py-2 bg-primary text-white rounded text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            Subir Archivo
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cargar scripts -->
-    <script src="js/app-init.js"></script>
-    <script src="js/controllers/evidencias-controller.js"></script>
+        <!-- Cargar scripts de la aplicación -->
+        <script src="js/app-init.js"></script>
+        <script src="js/controllers/gestion-evidencia-controller.js"></script>
 </body>
 
 </html>

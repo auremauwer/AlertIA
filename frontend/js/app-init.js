@@ -6,7 +6,7 @@
     'use strict';
 
     // Versión de la aplicación para verificación
-    window.APP_VERSION = '3.0.4';
+    window.APP_VERSION = '3.0.5';
     console.log(`%c AlertIA v${window.APP_VERSION} Iniciando... `, 'background: #ec0000; color: white; font-weight: bold; padding: 4px; border-radius: 2px;');
 
     // Orden de carga de scripts
@@ -153,30 +153,7 @@
             setupSidebarSalirButtons();
         }
 
-        // Inyectar botón en el header si existe
-        const headerContainer = document.querySelector('header .flex.items-center.gap-6');
-        if (headerContainer) {
-            // Limpiar contenido previo si venía del HTML estático
-            if (!document.getElementById('logout-container')) {
-                headerContainer.innerHTML = '';
-
-                const container = document.createElement('div');
-                container.id = 'logout-container';
-                container.className = 'flex flex-col items-end gap-1';
-
-                const logoutBtn = document.createElement('button');
-                logoutBtn.id = 'btn-global-logout';
-                logoutBtn.className = 'flex items-center gap-2 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 rounded text-xs font-bold transition-colors cursor-pointer';
-                logoutBtn.innerHTML = `
-                    <span class="material-symbols-outlined text-sm">logout</span>
-                    SALIR
-                `;
-                logoutBtn.onclick = window.logoutApp;
-
-                container.appendChild(logoutBtn);
-                headerContainer.appendChild(container);
-            }
-        }
+        // Botón de logout en header deshabilitado - solo se usa el botón del sidebar
 
         // NUEVO: Mostrar nombre del archivo en el sidebar (debajo de la versión)
         const sidebarFileInfo = document.getElementById('sidebar-file-info');

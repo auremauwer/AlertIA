@@ -77,10 +77,10 @@
 <body class="font-display selection:bg-primary selection:text-primary-black">
     <div class="relative flex h-screen w-full overflow-hidden bg-bg-main">
         <aside id="main-sidebar"
-            class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display transition-all duration-300 relative">
+            class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display transition-all duration-300 relative overflow-visible">
             <div class="flex h-full flex-col justify-between overflow-hidden">
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-3 px-6 py-8 relative">
+                <div class="flex flex-col overflow-visible">
+                    <div class="flex items-center gap-3 px-6 py-8 relative overflow-visible">
                         <div class="flex items-center justify-center size-9 flex-shrink-0">
                             <img src="Alertia.ico" alt="AlertIA Logo" class="w-9 h-9 object-contain" />
                         </div>
@@ -109,31 +109,24 @@
                                 class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Obligaciones</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Correos.html" title="Envío de correos">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">mail</span>
+                            href="Evidencias.html" title="Gestión de evidencias">
+                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">description</span>
                             <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Envío
-                                de correos</span>
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Gestión
+                                de evidencias</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Historial.html" title="Historial de envíos">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">history</span>
+                            href="Historial.html" title="Gestión de escritos">
+                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">article</span>
                             <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Historial
-                                de envíos</span>
+                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Gestión
+                                de escritos</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
                             href="Configuración.html" title="Configuración">
                             <span class="material-symbols-outlined text-[20px] flex-shrink-0">settings</span>
                             <span
                                 class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Configuración</span>
-                        </a>
-                        <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Auditoria.html" title="Auditoría / Logs">
-                            <span class="material-symbols-outlined text-[20px] flex-shrink-0">list_alt</span>
-                            <span
-                                class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Auditoría
-                                / Logs</span>
                         </a>
                     </nav>
                 </div>
@@ -155,7 +148,7 @@
                     </button>
                     <div
                         class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium sidebar-text whitespace-nowrap transition-opacity duration-300">
-                        AlertIA v3.0.4
+                        AlertIA v3.0.5
                         <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
                             title="Archivo cargado">
                             <!-- El nombre del archivo se inyectará aquí -->
@@ -173,13 +166,6 @@
                             Obligaciones Normativas
                         </div>
                         <h2 class="text-primary-black text-4xl font-extrabold tracking-tight">Dashboard Informativo</h2>
-                    </div>
-                    <div class="flex items-center gap-6">
-                        <button onclick="Utils.logoutApp()"
-                            class="flex items-center gap-2 px-6 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-red-600 text-sm font-bold uppercase rounded-sm transition-colors tracking-wide">
-                            <span class="material-symbols-outlined text-lg">logout</span>
-                            <span>Salir</span>
-                        </button>
                     </div>
                 </div>
             </header>

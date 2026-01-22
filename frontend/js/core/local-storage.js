@@ -161,6 +161,19 @@ class LocalStorageManager {
         return this.saveObligacion(obligacion);
     }
 
+    async deleteObligacion(id) {
+        const obligaciones = await this.getObligaciones();
+        const index = obligaciones.findIndex(obl => obl.id === id);
+        
+        if (index < 0) {
+            throw new Error(`Obligación ${id} no encontrada`);
+        }
+
+        obligaciones.splice(index, 1);
+        this.set('obligaciones', obligaciones);
+        return true;
+    }
+
     // ========== Métodos específicos para Alertas ==========
 
     async getAlertas(filters = {}) {

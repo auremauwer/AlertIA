@@ -124,12 +124,26 @@
                                     <p class="text-sm font-mono font-bold text-primary" data-field="fecha_limite">
                                         25/10/2023</p>
                                 </div>
-                                <div>
-                                    <p class="text-[10px] text-text-muted uppercase font-bold">Estatus</p>
-                                    <div class="mt-1 space-y-2">
-                                        <div data-field="estatus"></div>
-                                        <div data-field="sub_estatus"></div>
-                                    </div>
+                                <div class="col-span-2">
+                                    <p class="text-[10px] text-text-muted uppercase font-bold mb-1">Estatus</p>
+                                    <select id="select-estatus" 
+                                            class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-sm px-3 py-2 pr-8 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary mb-2"
+                                            data-field="estatus">
+                                        <option value="">Seleccionar estatus...</option>
+                                        <option value="recordatorio">Recordatorio</option>
+                                        <option value="solicitud">Solicitud</option>
+                                        <option value="cerrado">Cerrado</option>
+                                        <option value="apagado">Apagado</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2">
+                                    <p class="text-[10px] text-text-muted uppercase font-bold mb-1">Subestatus</p>
+                                    <select id="select-sub-estatus" 
+                                            class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-sm px-3 py-2 pr-8 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                            data-field="sub_estatus"
+                                            disabled>
+                                        <option value="">Seleccione primero un estatus</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -137,56 +151,59 @@
                             <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Regla de
                                 Alertamiento Aplicada</h4>
                             <div
-                                class="bg-gray-50 border border-border-subtle rounded-lg p-4 flex items-start justify-between gap-6">
-                                <div class="flex-1 grid grid-cols-2 gap-4">
-                                    <!-- Fila superior: 1 Vez y Semanal -->
-                                    <div class="flex gap-4">
-                                        <div class="text-center flex-1">
-                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1">1 Vez</p>
+                                class="bg-gray-50 border border-border-subtle rounded-lg p-4">
+                                <div class="flex flex-col md:flex-row gap-6 items-start">
+                                    <div class="flex-1 grid grid-cols-2 gap-x-6 gap-y-4">
+                                        <!-- Fila superior: 1 Vez y Semanal -->
+                                        <div class="flex flex-col gap-1">
+                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1 text-center">1 Vez</p>
                                             <input type="date" 
-                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-1 py-0.5" 
+                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-2 py-1" 
                                                    data-field="regla_1_vez"
                                                    data-regla-tipo="regla_1_vez"
                                                    title="Editar fecha 1 Vez">
                                         </div>
-                                        <div class="w-px h-8 bg-gray-200 self-center"></div>
-                                        <div class="text-center flex-1">
-                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1">Semanal</p>
+                                        <div class="flex flex-col gap-1">
+                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1 text-center">Semanal</p>
                                             <input type="date" 
-                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-1 py-0.5" 
+                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-2 py-1" 
                                                    data-field="regla_semanal"
                                                    data-regla-tipo="regla_semanal"
                                                    title="Editar fecha Semanal">
                                         </div>
-                                    </div>
-                                    
-                                    <!-- Fila inferior: Saltado y Diaria -->
-                                    <div class="flex gap-4">
-                                        <div class="text-center flex-1">
-                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1">Saltado</p>
+                                        
+                                        <!-- Fila inferior: Saltado y Diaria -->
+                                        <div class="flex flex-col gap-1">
+                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1 text-center">Saltado</p>
                                             <input type="date" 
-                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-1 py-0.5" 
+                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-2 py-1" 
                                                    data-field="regla_saltado"
                                                    data-regla-tipo="regla_saltado"
                                                    title="Editar fecha Saltado">
                                         </div>
-                                        <div class="w-px h-8 bg-gray-200 self-center"></div>
-                                        <div class="text-center flex-1">
-                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1">Diaria</p>
+                                        <div class="flex flex-col gap-1">
+                                            <p class="text-[10px] font-bold text-text-muted uppercase mb-1 text-center">Diaria</p>
                                             <input type="date" 
-                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-1 py-0.5" 
+                                                   class="text-sm font-normal text-text-main bg-transparent border-b border-gray-300 focus:border-primary focus:outline-none text-center w-full px-2 py-1" 
                                                    data-field="regla_diaria"
                                                    data-regla-tipo="regla_diaria"
                                                    title="Editar fecha Diaria">
                                         </div>
                                     </div>
-                                </div>
-                                <div class="flex flex-col items-center gap-2">
-                                    <span class="text-[11px] font-semibold text-text-muted">Notificaciones</span>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="regla-toggle" class="sr-only peer" disabled>
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                    </label>
+                                    <div class="flex flex-col items-center gap-3 shrink-0">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <span class="text-[11px] font-semibold text-text-muted">Notificaciones</span>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" id="regla-toggle" class="sr-only peer" disabled>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                            </label>
+                                        </div>
+                                        <button id="btn-limpiar-seguimiento"
+                                                class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 hover:border-red-500 hover:text-red-600 rounded-md text-xs font-semibold transition-all group whitespace-nowrap">
+                                            <span class="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">delete_sweep</span>
+                                            Limpiar seguimiento
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -194,17 +211,22 @@
                     <div class="bg-gray-50/50 border border-dashed border-gray-200 rounded-lg p-4 space-y-4 h-fit">
                         <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Acciones Rápidas
                         </h4>
-                        <button
+                        <button id="btn-calendario-notificaciones"
                             class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-border-subtle hover:border-primary-black hover:text-primary-black-black rounded-md text-sm font-bold transition-all group">
                             <span
                                 class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">calendar_month</span>
                             Calendario de notificaciones
                         </button>
-                        <button
+                        <button id="btn-agregar-comentario"
                             class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-border-subtle hover:border-primary-black hover:text-primary-black-black rounded-md text-sm font-bold transition-all group">
                             <span
                                 class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">add_comment</span>
                             Agregar Comentario
+                        </button>
+                        <button id="btn-enviar-recordatorio"
+                            class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-border-subtle hover:border-primary-black hover:text-primary-black-black rounded-md text-sm font-bold transition-all group disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">mail</span>
+                            Enviar recordatorio
                         </button>
                         <button id="btn-guardar-atendida"
                             class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white hover:bg-red-700 rounded-md text-sm font-bold shadow-sm transition-all">

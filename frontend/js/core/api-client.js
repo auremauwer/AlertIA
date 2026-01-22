@@ -95,6 +95,29 @@ class APIClient {
         return this.get(`/obligaciones/${id}`);
     }
 
+    async saveObligacion(obligacion) {
+        // Si tiene ID, actualizar (PUT), sino crear (POST)
+        if (obligacion.id) {
+            return this.put(`/obligaciones/${obligacion.id}`, obligacion);
+        } else {
+            return this.post('/obligaciones', obligacion);
+        }
+    }
+
+    async saveAllObligaciones(obligaciones) {
+        // Guardar todas las obligaciones una por una
+        let saved = 0;
+        for (const obligacion of obligaciones) {
+            try {
+                await this.saveObligacion(obligacion);
+                saved++;
+            } catch (error) {
+                console.error(`Error al guardar obligación ${obligacion.id}:`, error);
+            }
+        }
+        return saved;
+    }
+
     async updateObligacionEstado(id, estado) {
         return this.patch(`/obligaciones/${id}/estado`, { estado });
     }
@@ -145,6 +168,12 @@ class APIClient {
 
     async saveConfiguracion(config) {
         return this.put('/configuracion', config);
+    }
+
+    // ========== Métodos específicos para Email ==========
+
+    async sendEmail(emailData) {
+        return this.post('/email/send', emailData);
     }
 }
 

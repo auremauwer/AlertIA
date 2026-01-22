@@ -8,6 +8,8 @@ class DetalleObligacionController {
         this.auditoriaService = null;
         this.obligacionId = null;
         this.reglaListeners = []; // Para manejar event listeners de reglas
+        this.estatusListener = null; // Listener para cambios en estatus
+        this.subEstatusListener = null; // Listener para cambios en subestatus
     }
 
     /**
@@ -18,6 +20,17 @@ class DetalleObligacionController {
         
         if (!window.dataAdapter) {
             console.error('[DEBUG] dataAdapter no está disponible');
+            return;
+        }
+
+        // Verificar que los servicios estén disponibles
+        if (typeof ObligacionesService === 'undefined') {
+            console.error('[DEBUG] ObligacionesService no está disponible');
+            return;
+        }
+
+        if (typeof AuditoriaService === 'undefined') {
+            console.error('[DEBUG] AuditoriaService no está disponible');
             return;
         }
 
@@ -64,33 +77,57 @@ class DetalleObligacionController {
         }
 
         // Botón agregar comentario
-        const btnComentario = Array.from(document.querySelectorAll('button')).find(btn =>
-            btn.textContent.includes('Comentario')
-        );
+        const btnComentario = document.getElementById('btn-agregar-comentario');
         if (btnComentario) {
             btnComentario.addEventListener('click', () => this.agregarComentario());
+        } else {
+            // Fallback: buscar por texto
+            const btnComentarioFallback = Array.from(document.querySelectorAll('button')).find(btn =>
+                btn.textContent.includes('Comentario')
+            );
+            if (btnComentarioFallback) {
+                btnComentarioFallback.addEventListener('click', () => this.agregarComentario());
+            }
         }
 
         // Botón guardar (marcar atendida)
         const btnGuardar = document.getElementById('btn-guardar-atendida');
-        if (!btnGuardar) {
-            // Fallback: buscar por texto
-        const btnAtendida = Array.from(document.querySelectorAll('button')).find(btn =>
-                btn.textContent.includes('Guardar') || btn.textContent.includes('Marcar Atendida')
-        );
-        if (btnAtendida) {
-            btnAtendida.addEventListener('click', () => this.marcarAtendida());
-            }
-        } else {
+        if (btnGuardar) {
             btnGuardar.addEventListener('click', () => this.marcarAtendida());
+        } else {
+            // Fallback: buscar por texto
+            const btnAtendida = Array.from(document.querySelectorAll('button')).find(btn =>
+                btn.textContent.includes('Guardar') || btn.textContent.includes('Marcar Atendida')
+            );
+            if (btnAtendida) {
+                btnAtendida.addEventListener('click', () => this.marcarAtendida());
+            }
         }
 
         // Botón calendario de notificaciones
-        const btnCalendario = Array.from(document.querySelectorAll('button')).find(btn =>
-            btn.textContent.includes('Calendario de notificaciones')
-        );
+        const btnCalendario = document.getElementById('btn-calendario-notificaciones');
         if (btnCalendario) {
             btnCalendario.addEventListener('click', () => this.mostrarCalendarioNotificaciones());
+        } else {
+            // Fallback: buscar por texto
+            const btnCalendarioFallback = Array.from(document.querySelectorAll('button')).find(btn =>
+                btn.textContent.includes('Calendario de notificaciones')
+            );
+            if (btnCalendarioFallback) {
+                btnCalendarioFallback.addEventListener('click', () => this.mostrarCalendarioNotificaciones());
+            }
+        }
+
+        // Botón enviar recordatorio
+        const btnEnviarRecordatorio = document.getElementById('btn-enviar-recordatorio');
+        if (btnEnviarRecordatorio) {
+            btnEnviarRecordatorio.addEventListener('click', () => this.enviarRecordatorio());
+        }
+
+        // Botón limpiar seguimiento
+        const btnLimpiarSeguimiento = document.getElementById('btn-limpiar-seguimiento');
+        if (btnLimpiarSeguimiento) {
+            btnLimpiarSeguimiento.addEventListener('click', () => this.limpiarSeguimiento());
         }
 
         // Botón cerrar modal calendario
@@ -189,8 +226,6 @@ class DetalleObligacionController {
         const descripcionEl = document.querySelector('[data-field="descripcion"]');
         const reguladorEl = document.querySelector('[data-field="regulador"]');
         const fechaLimiteEl = document.querySelector('[data-field="fecha_limite"]');
-        const estatusEl = document.querySelector('[data-field="estatus"]');
-        const subEstatusEl = document.querySelector('[data-field="sub_estatus"]');
 
         if (descripcionEl) descripcionEl.textContent = obligacion.descripcion || obligacion.nombre;
         if (reguladorEl) reguladorEl.textContent = obligacion.regulador;
@@ -212,23 +247,66 @@ class DetalleObligacionController {
                 console.log('[DEBUG] No hay fecha, mostrando "No definida"');
             }
         }
-        if (estatusEl) {
-            // Mostrar estatus con el estilo de pill si existe
-            if (obligacion.estatus) {
-                const estatusClass = this.getEstatusClass(obligacion.estatus);
-                estatusEl.innerHTML = `<span class="status-pill ${estatusClass}">${this.getEstatusLabel(obligacion.estatus)}</span>`;
-            } else {
-                estatusEl.innerHTML = '<span class="status-pill status-pendiente">No definido</span>';
+        // Configurar selects de estatus y subestatus
+        const selectEstatus = document.getElementById('select-estatus');
+        const selectSubEstatus = document.getElementById('select-sub-estatus');
+        
+        if (selectEstatus) {
+            // Remover listeners anteriores si existen
+            if (this.estatusListener) {
+                selectEstatus.removeEventListener('change', this.estatusListener);
             }
+            
+            // Establecer valor del estatus
+            const estatusValue = obligacion.estatus ? String(obligacion.estatus).toLowerCase().trim() : '';
+            selectEstatus.value = estatusValue;
+            
+            // Configurar opciones de subestatus según el estatus seleccionado
+            this.actualizarOpcionesSubEstatus(estatusValue);
+            
+            // Establecer valor del subestatus después de actualizar las opciones
+            if (selectSubEstatus && obligacion.sub_estatus) {
+                const subEstatusValue = String(obligacion.sub_estatus).toLowerCase().trim();
+                const subEstatusNormalizado = this.normalizarSubEstatus(subEstatusValue);
+                const opcionesValidas = this.getSubEstatusOpciones(estatusValue);
+                
+                // Solo establecer el valor si es válido para el estatus actual
+                if (opcionesValidas.includes(subEstatusNormalizado)) {
+                    selectSubEstatus.value = subEstatusNormalizado;
+                } else {
+                    selectSubEstatus.value = '';
+                }
+            }
+            
+            // Agregar listener para cambios en estatus
+            this.estatusListener = (e) => {
+                const nuevoEstatus = e.target.value;
+                this.actualizarOpcionesSubEstatus(nuevoEstatus);
+                // Si el subestatus actual no es válido para el nuevo estatus, limpiarlo
+                if (selectSubEstatus) {
+                    const subEstatusActual = selectSubEstatus.value;
+                    const opcionesValidas = this.getSubEstatusOpciones(nuevoEstatus);
+                    if (!opcionesValidas.includes(subEstatusActual)) {
+                        selectSubEstatus.value = '';
+                    }
+                }
+                // Guardar cambios
+                this.guardarEstatusYSubEstatus();
+            };
+            selectEstatus.addEventListener('change', this.estatusListener);
         }
-        if (subEstatusEl) {
-            // Mostrar subestatus con el mismo formato de pill
-            if (obligacion.sub_estatus) {
-                const subEstatusClass = this.getSubEstatusClass(obligacion.sub_estatus);
-                subEstatusEl.innerHTML = `<span class="status-pill ${subEstatusClass}">${obligacion.sub_estatus}</span>`;
-            } else {
-                subEstatusEl.innerHTML = '';
+        
+        if (selectSubEstatus) {
+            // Remover listeners anteriores si existen
+            if (this.subEstatusListener) {
+                selectSubEstatus.removeEventListener('change', this.subEstatusListener);
             }
+            
+            // Agregar listener para cambios en subestatus
+            this.subEstatusListener = () => {
+                this.guardarEstatusYSubEstatus();
+            };
+            selectSubEstatus.addEventListener('change', this.subEstatusListener);
         }
 
         // Actualizar reglas de alertamiento (inputs editables)
@@ -324,6 +402,26 @@ class DetalleObligacionController {
                 isSinRespuesta,
                 shouldBeOn
             });
+        }
+
+        // Controlar visibilidad del botón de enviar recordatorio
+        const btnEnviarRecordatorio = document.getElementById('btn-enviar-recordatorio');
+        if (btnEnviarRecordatorio) {
+            const estatus = obligacion.estatus ? String(obligacion.estatus).toLowerCase().trim() : '';
+            const subEstatus = obligacion.sub_estatus ? String(obligacion.sub_estatus).toLowerCase().trim() : '';
+            
+            const isRecordatorio = estatus === 'recordatorio';
+            const isSinRespuesta = subEstatus === 'sin respuesta' || subEstatus.includes('sin respuesta');
+            
+            const debeEstarActivo = isRecordatorio && isSinRespuesta;
+            
+            btnEnviarRecordatorio.disabled = !debeEstarActivo;
+            
+            if (debeEstarActivo) {
+                btnEnviarRecordatorio.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btnEnviarRecordatorio.classList.add('opacity-50', 'cursor-not-allowed');
+            }
         }
     }
 
@@ -653,7 +751,9 @@ class DetalleObligacionController {
         }
 
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'detalle-obligacion-controller.js:625',message:'agregarComentario ENTRADA',data:{obligacionId:this.obligacionId,comentario:comentario.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        if (window.ENV && window.ENV.MODE === 'local') {
+            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'detalle-obligacion-controller.js:625',message:'agregarComentario ENTRADA',data:{obligacionId:this.obligacionId,comentario:comentario.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        }
         // #endregion
 
         try {
@@ -661,7 +761,9 @@ class DetalleObligacionController {
             if (window.BitacoraService) {
                 const bitacoraService = new BitacoraService(window.dataAdapter);
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'detalle-obligacion-controller.js:635',message:'LLAMANDO registrarEvento',data:{obligacionId:this.obligacionId,tipo:'comentario'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                if (window.ENV && window.ENV.MODE === 'local') {
+                    fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'detalle-obligacion-controller.js:635',message:'LLAMANDO registrarEvento',data:{obligacionId:this.obligacionId,tipo:'comentario'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                }
                 // #endregion
                 await bitacoraService.registrarEvento(
                     this.obligacionId,
@@ -929,6 +1031,61 @@ class DetalleObligacionController {
     }
 
     /**
+     * Enviar recordatorio al área responsable
+     */
+    async enviarRecordatorio() {
+        try {
+            if (!this.obligacionId) {
+                Utils.showNotification('No se pudo identificar la obligación', 'error');
+                return;
+            }
+
+            // Verificar que el estatus y subestatus sean correctos
+            const obligacion = await this.obligacionesService.getById(this.obligacionId);
+            const estatus = obligacion.estatus ? String(obligacion.estatus).toLowerCase().trim() : '';
+            const subEstatus = obligacion.sub_estatus ? String(obligacion.sub_estatus).toLowerCase().trim() : '';
+            
+            const isRecordatorio = estatus === 'recordatorio';
+            const isSinRespuesta = subEstatus === 'sin respuesta' || subEstatus.includes('sin respuesta');
+            
+            if (!isRecordatorio || !isSinRespuesta) {
+                Utils.showNotification('El recordatorio solo se puede enviar cuando el estatus es "Recordatorio" y el subestatus es "Sin respuesta"', 'error');
+                return;
+            }
+
+            // Confirmar envío
+            const confirmado = await Utils.confirm('¿Desea enviar un recordatorio al responsable del área?');
+            if (!confirmado) {
+                return;
+            }
+
+            // Enviar recordatorio
+            const notificacionesService = new NotificacionesService(window.dataAdapter);
+            await notificacionesService.enviarRecordatorioSimple(this.obligacionId);
+
+            // Registrar en bitácora
+            if (window.BitacoraService) {
+                const bitacoraService = new BitacoraService(window.dataAdapter);
+                await bitacoraService.registrarEvento(
+                    this.obligacionId,
+                    'recordatorio_manual',
+                    'Recordatorio enviado manualmente',
+                    'Recordatorio enviado al responsable del área',
+                    null,
+                    null,
+                    null
+                );
+            }
+
+            Utils.showNotification('Recordatorio enviado exitosamente', 'success');
+            
+        } catch (error) {
+            console.error('Error al enviar recordatorio:', error);
+            Utils.showNotification('Error al enviar recordatorio: ' + error.message, 'error');
+        }
+    }
+
+    /**
      * Renderizar modal con calendario de notificaciones
      */
     renderCalendarioModal(fechas, obligacion) {
@@ -1013,11 +1170,356 @@ class DetalleObligacionController {
             modal.classList.add('hidden');
         }
     }
+
+    /**
+     * Limpiar seguimiento - Borra todas las fechas de las reglas de alertamiento
+     */
+    async limpiarSeguimiento() {
+        try {
+            // Confirmar acción
+            const confirmado = await Utils.confirm('¿Está seguro de que desea limpiar todas las fechas de seguimiento? Esta acción no se puede deshacer.');
+            if (!confirmado) {
+                return;
+            }
+
+            // Obtener obligación actual
+            const obligacion = await this.obligacionesService.getById(this.obligacionId);
+            if (!obligacion) {
+                Utils.showNotification('Obligación no encontrada', 'error');
+                return;
+            }
+
+            // Guardar valores anteriores para bitácora
+            const reglasAnteriores = { ...(obligacion.reglas_alertamiento || {}) };
+
+            // Limpiar los inputs en la interfaz INMEDIATAMENTE (antes de guardar)
+            const regla1VezEl = document.querySelector('[data-field="regla_1_vez"]');
+            const reglaSemanalEl = document.querySelector('[data-field="regla_semanal"]');
+            const reglaSaltadoEl = document.querySelector('[data-field="regla_saltado"]');
+            const reglaDiariaEl = document.querySelector('[data-field="regla_diaria"]');
+
+            // Limpiar visualmente los campos en la pantalla
+            if (regla1VezEl) {
+                regla1VezEl.value = '';
+                regla1VezEl.setAttribute('value', '');
+            }
+            if (reglaSemanalEl) {
+                reglaSemanalEl.value = '';
+                reglaSemanalEl.setAttribute('value', '');
+            }
+            if (reglaSaltadoEl) {
+                reglaSaltadoEl.value = '';
+                reglaSaltadoEl.setAttribute('value', '');
+            }
+            if (reglaDiariaEl) {
+                reglaDiariaEl.value = '';
+                reglaDiariaEl.setAttribute('value', '');
+            }
+
+            // Limpiar todas las reglas de alertamiento en el objeto
+            obligacion.reglas_alertamiento = {
+                regla_1_vez: null,
+                regla_semanal: null,
+                regla_saltado: null,
+                regla_diaria: null
+            };
+            obligacion.updated_at = new Date().toISOString();
+
+            // Guardar obligación actualizada
+            await this.obligacionesService.dataAdapter.saveObligacion(obligacion);
+
+            // Recalcular y guardar calendario de notificaciones (vacío ahora)
+            if (window.CalendarioService) {
+                try {
+                    const fileStorageService = new FileStorageService();
+                    await fileStorageService.init();
+                    const calendarioService = new CalendarioService(fileStorageService);
+                    await calendarioService.calcularYGuardarCalendario(this.obligacionId, obligacion);
+                    console.log(`[Calendario] Calendario limpiado para ${this.obligacionId}`);
+                } catch (calendarioError) {
+                    console.warn(`No se pudo limpiar calendario para ${this.obligacionId}:`, calendarioError);
+                }
+            }
+
+            // Reprogramar recordatorios si el servicio está disponible
+            if (window.RecordatoriosService) {
+                try {
+                    const recordatoriosService = new RecordatoriosService(window.dataAdapter, this.obligacionesService);
+                    await recordatoriosService.reprogramarRecordatorios(this.obligacionId);
+                } catch (error) {
+                    console.warn('No se pudieron reprogramar recordatorios:', error);
+                }
+            }
+
+            // Registrar evento en bitácora
+            if (window.BitacoraService) {
+                const bitacoraService = new BitacoraService(window.dataAdapter);
+                await bitacoraService.registrarEvento(
+                    this.obligacionId,
+                    'cambio_regla',
+                    'Limpieza de seguimiento',
+                    'Se limpiaron todas las fechas de las reglas de alertamiento',
+                    reglasAnteriores,
+                    {
+                        regla_1_vez: null,
+                        regla_semanal: null,
+                        regla_saltado: null,
+                        regla_diaria: null
+                    },
+                    null
+                );
+            }
+
+            // Registrar en auditoría
+            if (this.auditoriaService) {
+                await this.auditoriaService.registrarEvento('Limpió seguimiento de alertamiento', {
+                    obligacion_id: this.obligacionId,
+                    reglas_anteriores: reglasAnteriores
+                });
+            }
+
+            Utils.showNotification('Seguimiento limpiado correctamente', 'success');
+
+            // No recargar el detalle completo para mantener los campos limpios
+            // Solo actualizar el calendario si es necesario
+            // await this.loadDetalle();
+        } catch (error) {
+            console.error('Error al limpiar seguimiento:', error);
+            Utils.showNotification('Error al limpiar seguimiento', 'error');
+        }
+    }
+
+    /**
+     * Obtener opciones de subestatus según el estatus seleccionado
+     */
+    getSubEstatusOpciones(estatus) {
+        const estatusLower = estatus ? String(estatus).toLowerCase().trim() : '';
+        
+        const opciones = {
+            'recordatorio': ['sin respuesta', 'pendiente (cn)'],
+            'solicitud': ['pendiente (juridico)', 'pendiente (aut)'],
+            'cerrado': ['con acuse', 'sin acuse'],
+            'apagado': ['apagado']
+        };
+        
+        return opciones[estatusLower] || [];
+    }
+
+    /**
+     * Actualizar opciones del select de subestatus según el estatus
+     */
+    actualizarOpcionesSubEstatus(estatus) {
+        const selectSubEstatus = document.getElementById('select-sub-estatus');
+        if (!selectSubEstatus) return;
+        
+        const opciones = this.getSubEstatusOpciones(estatus);
+        const valorActual = selectSubEstatus.value;
+        
+        // Limpiar opciones actuales
+        selectSubEstatus.innerHTML = '';
+        
+        if (!estatus || opciones.length === 0) {
+            selectSubEstatus.disabled = true;
+            selectSubEstatus.innerHTML = '<option value="">Seleccione primero un estatus</option>';
+            return;
+        }
+        
+        // Habilitar el select
+        selectSubEstatus.disabled = false;
+        
+        // Agregar opción por defecto
+        const optionDefault = document.createElement('option');
+        optionDefault.value = '';
+        optionDefault.textContent = 'Seleccionar subestatus...';
+        selectSubEstatus.appendChild(optionDefault);
+        
+        // Agregar opciones válidas
+        opciones.forEach(opcion => {
+            const option = document.createElement('option');
+            option.value = opcion;
+            option.textContent = this.formatearSubEstatus(opcion);
+            selectSubEstatus.appendChild(option);
+        });
+        
+        // Restaurar valor anterior si es válido
+        if (valorActual && opciones.includes(valorActual)) {
+            selectSubEstatus.value = valorActual;
+        }
+    }
+
+    /**
+     * Formatear subestatus para mostrar (capitalizar correctamente)
+     */
+    formatearSubEstatus(subEstatus) {
+        const formateos = {
+            'sin respuesta': 'Sin Respuesta',
+            'pendiente (cn)': 'Pendiente (CN)',
+            'pendiente (juridico)': 'Pendiente (Jurídico)',
+            'pendiente (aut)': 'Pendiente (Aut)',
+            'con acuse': 'Con Acuse',
+            'sin acuse': 'Sin Acuse',
+            'apagado': 'Apagado'
+        };
+        
+        const lower = String(subEstatus).toLowerCase().trim();
+        return formateos[lower] || subEstatus;
+    }
+
+    /**
+     * Normalizar subestatus para que coincida con las opciones
+     */
+    normalizarSubEstatus(subEstatus) {
+        if (!subEstatus) return '';
+        
+        const lower = String(subEstatus).toLowerCase().trim();
+        
+        // Mapeo de variaciones comunes a valores normalizados
+        const normalizaciones = {
+            'sin respuesta': 'sin respuesta',
+            'sinrespuesta': 'sin respuesta',
+            'pendiente (cn)': 'pendiente (cn)',
+            'pendiente cn': 'pendiente (cn)',
+            'pendiente(cn)': 'pendiente (cn)',
+            'pendiente cn)': 'pendiente (cn)',
+            'pendiente (cn': 'pendiente (cn)',
+            'pendiente (juridico)': 'pendiente (juridico)',
+            'pendiente juridico': 'pendiente (juridico)',
+            'pendiente(juridico)': 'pendiente (juridico)',
+            'pendiente juridico)': 'pendiente (juridico)',
+            'pendiente (juridico': 'pendiente (juridico)',
+            'pendiente (aut)': 'pendiente (aut)',
+            'pendiente aut': 'pendiente (aut)',
+            'pendiente(aut)': 'pendiente (aut)',
+            'pendiente aut)': 'pendiente (aut)',
+            'pendiente (aut': 'pendiente (aut)',
+            'con acuse': 'con acuse',
+            'conacuse': 'con acuse',
+            'sin acuse': 'sin acuse',
+            'sinacuse': 'sin acuse',
+            'apagado': 'apagado'
+        };
+        
+        // Si hay coincidencia exacta, usarla
+        if (normalizaciones[lower]) {
+            return normalizaciones[lower];
+        }
+        
+        // Buscar coincidencias parciales
+        for (const [key, value] of Object.entries(normalizaciones)) {
+            if (lower.includes(key) || key.includes(lower)) {
+                return value;
+            }
+        }
+        
+        return lower;
+    }
+
+    /**
+     * Guardar estatus y subestatus
+     */
+    async guardarEstatusYSubEstatus() {
+        try {
+            const selectEstatus = document.getElementById('select-estatus');
+            const selectSubEstatus = document.getElementById('select-sub-estatus');
+            
+            if (!selectEstatus || !selectSubEstatus) {
+                return;
+            }
+            
+            const nuevoEstatus = selectEstatus.value;
+            const nuevoSubEstatus = selectSubEstatus.value;
+            
+            // Validar que si hay estatus, también haya subestatus
+            if (nuevoEstatus && !nuevoSubEstatus) {
+                Utils.showNotification('Debe seleccionar un subestatus', 'warning');
+                return;
+            }
+            
+            // Obtener obligación actual
+            const obligacion = await this.obligacionesService.getById(this.obligacionId);
+            if (!obligacion) {
+                Utils.showNotification('Obligación no encontrada', 'error');
+                return;
+            }
+            
+            // Guardar valores anteriores para bitácora
+            const estatusAnterior = obligacion.estatus;
+            const subEstatusAnterior = obligacion.sub_estatus;
+            
+            // Actualizar valores
+            obligacion.estatus = nuevoEstatus || null;
+            obligacion.sub_estatus = nuevoSubEstatus || null;
+            obligacion.updated_at = new Date().toISOString();
+            
+            // Guardar obligación
+            await this.obligacionesService.dataAdapter.saveObligacion(obligacion);
+            
+            // Registrar en bitácora
+            if (window.BitacoraService && (estatusAnterior !== nuevoEstatus || subEstatusAnterior !== nuevoSubEstatus)) {
+                const bitacoraService = new BitacoraService(window.dataAdapter);
+                await bitacoraService.registrarEvento(
+                    this.obligacionId,
+                    'cambio_estatus',
+                    'Cambio de estatus y subestatus',
+                    `Estatus: ${estatusAnterior || 'N/A'} → ${nuevoEstatus || 'N/A'}, Subestatus: ${subEstatusAnterior || 'N/A'} → ${nuevoSubEstatus || 'N/A'}`,
+                    {
+                        estatus: estatusAnterior,
+                        sub_estatus: subEstatusAnterior
+                    },
+                    {
+                        estatus: nuevoEstatus,
+                        sub_estatus: nuevoSubEstatus
+                    },
+                    null
+                );
+            }
+            
+            // Registrar en auditoría
+            if (this.auditoriaService && (estatusAnterior !== nuevoEstatus || subEstatusAnterior !== nuevoSubEstatus)) {
+                await this.auditoriaService.registrarEvento('Modificó estatus y subestatus', {
+                    obligacion_id: this.obligacionId,
+                    estatus_anterior: estatusAnterior,
+                    estatus_nuevo: nuevoEstatus,
+                    sub_estatus_anterior: subEstatusAnterior,
+                    sub_estatus_nuevo: nuevoSubEstatus
+                });
+            }
+            
+            // Actualizar toggle de notificaciones según nuevo estatus/subestatus
+            const toggleEl = document.getElementById('regla-toggle');
+            if (toggleEl) {
+                const isRecordatorio = nuevoEstatus === 'recordatorio';
+                const isSinRespuesta = nuevoSubEstatus === 'sin respuesta';
+                toggleEl.checked = isRecordatorio && isSinRespuesta;
+            }
+            
+            // Actualizar botón de enviar recordatorio
+            const btnEnviarRecordatorio = document.getElementById('btn-enviar-recordatorio');
+            if (btnEnviarRecordatorio) {
+                const debeEstarActivo = nuevoEstatus === 'recordatorio' && nuevoSubEstatus === 'sin respuesta';
+                btnEnviarRecordatorio.disabled = !debeEstarActivo;
+                if (debeEstarActivo) {
+                    btnEnviarRecordatorio.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    btnEnviarRecordatorio.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+            
+            console.log('[DEBUG] Estatus y subestatus guardados:', { nuevoEstatus, nuevoSubEstatus });
+        } catch (error) {
+            console.error('Error al guardar estatus y subestatus:', error);
+            Utils.showNotification('Error al guardar estatus y subestatus', 'error');
+        }
+    }
 }
 
 // Función para inicializar el controlador
 function initializeDetalleController() {
-    if (window.dataAdapter && !window.detalleObligacionController) {
+    // Verificar que todos los servicios necesarios estén disponibles
+    if (window.dataAdapter && 
+        typeof ObligacionesService !== 'undefined' && 
+        typeof AuditoriaService !== 'undefined' && 
+        !window.detalleObligacionController) {
         console.log('[DEBUG] Creating DetalleObligacionController');
         const controller = new DetalleObligacionController();
         controller.init();
@@ -1045,14 +1547,14 @@ if (document.readyState === 'loading') {
             // Controller initialized
         } else {
             console.error('[DEBUG] window.dataAdapter not available on DOMContentLoaded');
-            // Esperar a que dataAdapter esté disponible
+            // Esperar a que dataAdapter y servicios estén disponibles
             const checkDataAdapter = setInterval(() => {
                 if (initializeDetalleController()) {
                     clearInterval(checkDataAdapter);
                 }
             }, 100);
             
-            // Timeout después de 5 segundos
+            // Timeout después de 10 segundos
             setTimeout(() => {
                 clearInterval(checkDataAdapter);
                 if (!window.detalleObligacionController) {
@@ -1066,15 +1568,17 @@ if (document.readyState === 'loading') {
     if (initializeDetalleController()) {
         // Controller initialized
     } else {
-        console.error('[DEBUG] window.dataAdapter not available');
-        // Esperar a que dataAdapter esté disponible
+        console.error('[DEBUG] window.dataAdapter or services not available');
+        // Esperar a que dataAdapter y servicios estén disponibles
         const checkDataAdapter = setInterval(() => {
-    if (window.dataAdapter) {
-                console.log('[DEBUG] dataAdapter now available, creating controller');
+            if (window.dataAdapter && 
+                typeof ObligacionesService !== 'undefined' && 
+                typeof AuditoriaService !== 'undefined') {
+                console.log('[DEBUG] dataAdapter and services now available, creating controller');
                 clearInterval(checkDataAdapter);
-        const controller = new DetalleObligacionController();
-        controller.init();
-        window.detalleObligacionController = controller;
+                const controller = new DetalleObligacionController();
+                controller.init();
+                window.detalleObligacionController = controller;
             }
         }, 100);
         

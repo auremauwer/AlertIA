@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AlertIA - Sistema de Alertamiento Normativo
+
+# Parámetros que se pueden pasar al desplegar
+Parameters:
+  FromEmail:
+    Type: String
+    Default: noreply@alertia.com
+    Description: Email verificado en SES para enviar correos (debe estar verificado en SES)
+  
+  FromName:
+    Type: String
+    Default: AlertIA
+    Description: Nombre que aparecerá como remitente en los correos
+
+# Configuración global para todas las funciones Lambda
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs18.x
+    MemorySize: 256
+    Environment:
+      Variables:
+        FROM_EMAIL: !Ref FromEmail
+        FROM_NAME: !Ref FromName
+
+Resources:
+  # ============================================
+  # TABLAS DYNAMODB
+  # ============================================
+  
+  ObligacionesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: alertia-obligaciones
+      BillingMode: PAY_PER_REQUEST  # Pago por uso (más económico para empezar)
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      Tags:
+        - Key: Project
+          Value: AlertIA
+        - Key: Environment
+          Value: Production
+
+  # ============================================
+  # FUNCIONES LAMBDA
+  # ============================================
+  
+  # Función para enviar correos con SES
+  SendEmailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: alertia-send-email
+      CodeUri: backend/lambda/send-email/
+      Handler: index.handler
+      Description: Envía correos electrónicos usando Amazon SES
+      Policies:
+        # Permiso para enviar correos con SES (permiso amplio para cualquier email verificado)
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: '*'
+      Environment:
+        Variables:
+          FROM_EMAIL: !Ref FromEmail
+          FROM_NAME: !Ref FromName
+      Events:
+        # Endpoint: POST /email/send
+        SendEmailApi:
+          Type: Api
+          Properties:
+            Path: /email/send
+            Method: post
+            RestApiId: !Ref AlertIAApi
+
+  # Función para CRUD de obligaciones
+  ObligacionesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: alertia-obligaciones
+      CodeUri: backend/lambda/obligaciones/
+      Handler: index.handler
+      Description: Maneja las operaciones CRUD de obligaciones
+      Policies:
+        # Permisos para DynamoDB
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ObligacionesTable
+      Environment:
+        Variables:
+          OBLIGACIONES_TABLE: !Ref ObligacionesTable
+      Events:
+        # Endpoint: GET /obligaciones
+        GetObligacionesApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones
+            Method: get
+            RestApiId: !Ref AlertIAApi
+        # Endpoint: GET /obligaciones/{id}
+        GetObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones/{id}
+            Method: get
+            RestApiId: !Ref AlertIAApi
+        # Endpoint: POST /obligaciones
+        CreateObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones
+            Method: post
+            RestApiId: !Ref AlertIAApi
+        # Endpoint: PUT /obligaciones/{id}
+        UpdateObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones/{id}
+            Method: put
+            RestApiId: !Ref AlertIAApi
+        # Endpoint: PATCH /obligaciones/{id}
+        PatchObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones/{id}
+            Method: patch
+            RestApiId: !Ref AlertIAApi
+        # Endpoint: DELETE /obligaciones/{id}
+        DeleteObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones/{id}
+            Method: delete
+            RestApiId: !Ref AlertIAApi
+
+  # Función para envío automático programado de correos
+  ScheduledEmailSenderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: alertia-scheduled-email-sender
+      CodeUri: backend/lambda/scheduled-email-sender/
+      Handler: index.handler
+      Description: Ejecuta envíos automáticos de correos programados mediante EventBridge
+      Timeout: 300  # 5 minutos para procesar múltiples obligaciones
+      MemorySize: 512  # Más memoria para procesar múltiples correos
+      Policies:
+        # Permisos para DynamoDB
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ObligacionesTable
+        # Permisos para SES
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: '*'
+      Environment:
+        Variables:
+          OBLIGACIONES_TABLE: !Ref ObligacionesTable
+          FROM_EMAIL: !Ref FromEmail
+          FROM_NAME: !Ref FromName
+      Events:
+        # EventBridge Rule: Se ejecuta diariamente a las 9:00 AM UTC
+        # Nota: La hora puede ajustarse según la zona horaria requerida
+        ScheduledEmailRule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 9 * * ? *)  # 9:00 AM UTC diariamente
+            Description: Ejecuta envío automático de correos diariamente
+            Enabled: true
+
+  # API Gateway
+  AlertIAApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: "'GET,POST,PUT,PATCH,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+        MaxAge: "'3600'"
+
+# ============================================
+# OUTPUTS (valores que se muestran después del despliegue)
+# ============================================
+Outputs:
+  ApiGatewayApi:
+    Description: URL base de la API Gateway
+    Value: !Sub https://${AlertIAApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
+    Export:
+      Name: AlertIAApiUrl
+  
+  SendEmailFunctionArn:
+    Description: ARN de la función Lambda para enviar correos
+    Value: !GetAtt SendEmailFunction.Arn
+    Export:
+      Name: AlertIASendEmailFunctionArn
+  
+  ObligacionesFunctionArn:
+    Description: ARN de la función Lambda para obligaciones
+    Value: !GetAtt ObligacionesFunction.Arn
+    Export:
+      Name: AlertIAObligacionesFunctionArn
+  
+  ObligacionesTableName:
+    Description: Nombre de la tabla DynamoDB de obligaciones
+    Value: !Ref ObligacionesTable
+    Export:
+      Name: AlertIAObligacionesTableName
+  
+  ScheduledEmailSenderFunctionArn:
+    Description: ARN de la función Lambda para envío automático programado
+    Value: !GetAtt ScheduledEmailSenderFunction.Arn
+    Export:
+      Name: AlertIAScheduledEmailSenderFunctionArn

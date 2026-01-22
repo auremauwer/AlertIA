@@ -1,0 +1,169 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AlertIA - Sistema de Alertamiento Normativo
+Parameters:
+  FromEmail:
+    Type: String
+    Default: noreply@alertia.com
+    Description: Email verificado en SES para enviar correos (debe estar verificado
+      en SES)
+  FromName:
+    Type: String
+    Default: AlertIA
+    Description: "Nombre que aparecer\xE1 como remitente en los correos"
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs18.x
+    MemorySize: 256
+    Environment:
+      Variables:
+        FROM_EMAIL:
+          Ref: FromEmail
+        FROM_NAME:
+          Ref: FromName
+Resources:
+  ObligacionesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: alertia-obligaciones
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      Tags:
+      - Key: Project
+        Value: AlertIA
+      - Key: Environment
+        Value: Production
+  SendEmailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: alertia-send-email
+      CodeUri: SendEmailFunction
+      Handler: index.handler
+      Description: "Env\xEDa correos electr\xF3nicos usando Amazon SES"
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - ses:SendEmail
+          - ses:SendRawEmail
+          Resource: '*'
+      Environment:
+        Variables:
+          FROM_EMAIL:
+            Ref: FromEmail
+          FROM_NAME:
+            Ref: FromName
+      Events:
+        SendEmailApi:
+          Type: Api
+          Properties:
+            Path: /email/send
+            Method: post
+            RestApiId:
+              Ref: AlertIAApi
+    Metadata:
+      SamResourceId: SendEmailFunction
+  ObligacionesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: alertia-obligaciones
+      CodeUri: ObligacionesFunction
+      Handler: index.handler
+      Description: Maneja las operaciones CRUD de obligaciones
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ObligacionesTable
+      Environment:
+        Variables:
+          OBLIGACIONES_TABLE:
+            Ref: ObligacionesTable
+      Events:
+        GetObligacionesApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones
+            Method: get
+            RestApiId:
+              Ref: AlertIAApi
+        GetObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones/{id}
+            Method: get
+            RestApiId:
+              Ref: AlertIAApi
+        CreateObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones
+            Method: post
+            RestApiId:
+              Ref: AlertIAApi
+        UpdateObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones/{id}
+            Method: put
+            RestApiId:
+              Ref: AlertIAApi
+        PatchObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones/{id}
+            Method: patch
+            RestApiId:
+              Ref: AlertIAApi
+        DeleteObligacionApi:
+          Type: Api
+          Properties:
+            Path: /obligaciones/{id}
+            Method: delete
+            RestApiId:
+              Ref: AlertIAApi
+    Metadata:
+      SamResourceId: ObligacionesFunction
+  AlertIAApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: '''GET,POST,PUT,PATCH,DELETE,OPTIONS'''
+        AllowHeaders: '''Content-Type,Authorization'''
+        AllowOrigin: '''*'''
+        MaxAge: '''3600'''
+Outputs:
+  ApiGatewayApi:
+    Description: URL base de la API Gateway
+    Value:
+      Fn::Sub: https://${AlertIAApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
+    Export:
+      Name: AlertIAApiUrl
+  SendEmailFunctionArn:
+    Description: "ARN de la funci\xF3n Lambda para enviar correos"
+    Value:
+      Fn::GetAtt:
+      - SendEmailFunction
+      - Arn
+    Export:
+      Name: AlertIASendEmailFunctionArn
+  ObligacionesFunctionArn:
+    Description: "ARN de la funci\xF3n Lambda para obligaciones"
+    Value:
+      Fn::GetAtt:
+      - ObligacionesFunction
+      - Arn
+    Export:
+      Name: AlertIAObligacionesFunctionArn
+  ObligacionesTableName:
+    Description: Nombre de la tabla DynamoDB de obligaciones
+    Value:
+      Ref: ObligacionesTable
+    Export:
+      Name: AlertIAObligacionesTableName

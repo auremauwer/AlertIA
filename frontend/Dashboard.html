@@ -7,6 +7,7 @@
     <title>AlertIA</title>
     <link rel="icon" type="image/x-icon" href="Alertia.ico" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;family=Noto+Sans:wght@100..900&amp;display=swap"
         rel="stylesheet" />
@@ -75,7 +76,7 @@
 </head>
 
 <body class="font-display selection:bg-primary selection:text-primary-black">
-    <div class="relative flex h-screen w-full overflow-hidden bg-bg-main">
+    <div class="relative flex h-screen w-full overflow-x-visible overflow-y-hidden bg-bg-main">
         <aside id="main-sidebar"
             class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display transition-all duration-300 relative overflow-visible">
             <div class="flex h-full flex-col justify-between overflow-hidden">
@@ -116,7 +117,7 @@
                                 de evidencias</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Historial.html" title="Gestión de escritos">
+                            href="Escritos.html" title="Gestión de escritos">
                             <span class="material-symbols-outlined text-[20px] flex-shrink-0">article</span>
                             <span
                                 class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Gestión
@@ -148,7 +149,7 @@
                     </button>
                     <div
                         class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium sidebar-text whitespace-nowrap transition-opacity duration-300">
-                        AlertIA v3.0.5
+                        AlertIA v3.0.7
                         <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
                             title="Archivo cargado">
                             <!-- El nombre del archivo se inyectará aquí -->
@@ -471,6 +472,31 @@
                             </div>
                         </div>
                     </section>
+
+                    <!-- Section: Gráfica de Correos Enviados -->
+                    <section>
+                        <div class="flex items-center gap-3 mb-4">
+                            <h3 class="text-primary-black text-lg font-black uppercase tracking-tight">Correos de Recordatorio Enviados</h3>
+                            <div class="h-px flex-1 bg-border-soft"></div>
+                        </div>
+                        <div class="bg-white p-6 border border-border-soft shadow-sm rounded-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">bar_chart</span>
+                                    <p class="text-sm font-semibold text-text-muted">Distribución por día/mes</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <select id="chart-period" class="text-xs border border-border-soft px-3 py-1 rounded-sm focus:ring-1 focus:ring-primary outline-none">
+                                        <option value="day">Por Día</option>
+                                        <option value="month">Por Mes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="relative h-80">
+                                <canvas id="correos-chart"></canvas>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </main>
@@ -511,8 +537,8 @@
     </div>
 
     <!-- Cargar scripts de la aplicación -->
-    <script src="js/app-init.js?v=3.0.0"></script>
-    <script src="js/controllers/dashboard-controller.js?v=3.0.0"></script>
+    <script src="js/app-init.js?v=3.0.7"></script>
+    <script src="js/controllers/dashboard-controller.js?v=3.0.7"></script>
 </body>
 
 </html>

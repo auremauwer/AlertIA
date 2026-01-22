@@ -20,7 +20,24 @@ class EmailTemplate {
     /**
      * Generar asunto del correo
      */
-    generateSubject(alerta, obligacion) {
+    generateSubject(alerta, obligacion, config = {}) {
+        // Si hay un asunto personalizado en la configuración, usarlo
+        if (config.email_subject && config.email_subject.trim()) {
+            const diasRestantes = Utils.getDaysUntil(obligacion.fecha_limite);
+            const fechaFormateada = Utils.formatDate(obligacion.fecha_limite, 'DD/MM/YYYY');
+            
+            const variables = {
+                id_obligacion: obligacion.id,
+                obligacion: obligacion.descripcion || obligacion.nombre,
+                fecha_limite: fechaFormateada,
+                dias_restantes: diasRestantes !== null ? diasRestantes.toString() : 'N/A',
+                tipo_alerta: alerta.tipo
+            };
+            
+            return this.substitute(config.email_subject, variables);
+        }
+        
+        // Usar plantilla por defecto
         const tipo = alerta.tipo;
         const urgente = tipo === 'Crítica' ? '[URGENTE]' : '[ALERTA]';
         
@@ -47,6 +64,12 @@ class EmailTemplate {
             nombre_remitente: config.nombre_remitente || 'AlertIA'
         };
         
+        // Si hay un cuerpo personalizado en la configuración, usarlo
+        if (config.email_body && config.email_body.trim()) {
+            return this.substitute(config.email_body, variables);
+        }
+        
+        // Usar plantilla por defecto según el tipo de alerta
         return this.substitute(this.getTemplate(alerta.tipo), variables);
     }
 
@@ -132,7 +155,7 @@ AlertIA Systems.
      * Generar correo completo
      */
     generateEmail(alerta, obligacion, destinatario, config) {
-        const asunto = this.generateSubject(alerta, obligacion);
+        const asunto = this.generateSubject(alerta, obligacion, config);
         const cuerpo = this.generateBody(alerta, obligacion, destinatario, config);
         
         return {

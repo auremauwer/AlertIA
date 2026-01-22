@@ -19,8 +19,10 @@ class BitacoraService {
      * @param {array} archivos - IDs de archivos relacionados (opcional)
      */
     async registrarEvento(obligacionId, tipo, titulo, descripcion, datosAnteriores = null, datosNuevos = null, archivos = null) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:21',message:'registrarEvento ENTRADA',data:{obligacionId,tipo,titulo,descripcion:descripcion?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #region agent log (solo en local)
+        if (window.ENV && window.ENV.MODE === 'local') {
+            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:21',message:'registrarEvento ENTRADA',data:{obligacionId,tipo,titulo,descripcion:descripcion?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        }
         // #endregion
         try {
             // Obtener obligación actual
@@ -75,20 +77,26 @@ class BitacoraService {
                        e.titulo === evento.titulo &&
                        e.descripcion === evento.descripcion;
             });
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:59',message:'VERIFICACION DUPLICADO',data:{historialAntes,eventoId:evento.id,eventoFecha:evento.fecha,eventoTitulo:evento.titulo,esDuplicado:!!eventoDuplicado,duplicadoId:eventoDuplicado?.id,duplicadoFecha:eventoDuplicado?.fecha},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #region agent log (solo en local)
+            if (window.ENV && window.ENV.MODE === 'local') {
+                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:59',message:'VERIFICACION DUPLICADO',data:{historialAntes,eventoId:evento.id,eventoFecha:evento.fecha,eventoTitulo:evento.titulo,esDuplicado:!!eventoDuplicado,duplicadoId:eventoDuplicado?.id,duplicadoFecha:eventoDuplicado?.fecha},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            }
             // #endregion
 
             // Solo agregar si no es duplicado
             if (!eventoDuplicado) {
                 obligacion.historial.push(evento);
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:77',message:'EVENTO AGREGADO AL HISTORIAL',data:{historialDespues:obligacion.historial.length,eventoId:evento.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #region agent log (solo en local)
+                if (window.ENV && window.ENV.MODE === 'local') {
+                    fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:77',message:'EVENTO AGREGADO AL HISTORIAL',data:{historialDespues:obligacion.historial.length,eventoId:evento.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                }
                 // #endregion
             } else {
                 console.warn(`[Bitacora] Evento duplicado detectado y omitido: ${evento.titulo} - ${evento.fecha}`);
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:80',message:'EVENTO DUPLICADO OMITIDO',data:{eventoId:evento.id,duplicadoId:eventoDuplicado.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                // #region agent log (solo en local)
+                if (window.ENV && window.ENV.MODE === 'local') {
+                    fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:80',message:'EVENTO DUPLICADO OMITIDO',data:{eventoId:evento.id,duplicadoId:eventoDuplicado.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                }
                 // #endregion
                 return evento; // Retornar el evento existente en lugar de crear uno nuevo
             }
@@ -103,12 +111,16 @@ class BitacoraService {
             await this.dataAdapter.saveObligacion(obligacion);
 
             // Guardar evento en archivo de texto persistente
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:93',message:'ANTES guardarBitacoraEnArchivo',data:{obligacionId,eventoId:evento.id,eventoTitulo:evento.titulo},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #region agent log (solo en local)
+            if (window.ENV && window.ENV.MODE === 'local') {
+                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:93',message:'ANTES guardarBitacoraEnArchivo',data:{obligacionId,eventoId:evento.id,eventoTitulo:evento.titulo},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            }
             // #endregion
             await this.guardarBitacoraEnArchivo(obligacionId, evento);
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:95',message:'DESPUES guardarBitacoraEnArchivo',data:{obligacionId,eventoId:evento.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #region agent log (solo en local)
+            if (window.ENV && window.ENV.MODE === 'local') {
+                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:95',message:'DESPUES guardarBitacoraEnArchivo',data:{obligacionId,eventoId:evento.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            }
             // #endregion
 
             console.log(`[Bitacora] Evento registrado: ${tipo} para obligación ${obligacionId}`);
@@ -236,8 +248,10 @@ class BitacoraService {
      * @returns {Promise<void>}
      */
     async guardarBitacoraEnArchivo(obligacionId, evento) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:238',message:'guardarBitacoraEnArchivo ENTRADA',data:{obligacionId,eventoId:evento.id,eventoTitulo:evento.titulo,eventoFecha:evento.fecha},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #region agent log (solo en local)
+        if (window.ENV && window.ENV.MODE === 'local') {
+            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:238',message:'guardarBitacoraEnArchivo ENTRADA',data:{obligacionId,eventoId:evento.id,eventoTitulo:evento.titulo,eventoFecha:evento.fecha},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        }
         // #endregion
         try {
             // Si no hay FileStorageService, no hacer nada (modo sin persistencia)
@@ -399,8 +413,10 @@ class BitacoraService {
      * @returns {Promise<Array>} - Historial completo sincronizado
      */
     async sincronizarBitacora(obligacionId) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:357',message:'sincronizarBitacora ENTRADA',data:{obligacionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #region agent log (solo en local)
+        if (window.ENV && window.ENV.MODE === 'local') {
+            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:357',message:'sincronizarBitacora ENTRADA',data:{obligacionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        }
         // #endregion
         try {
             // Cargar eventos desde archivo
@@ -410,8 +426,10 @@ class BitacoraService {
             const obligacion = await this.dataAdapter.getObligacion(obligacionId);
             const eventosLocalStorage = obligacion?.historial || [];
             
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:364',message:'EVENTOS CARGADOS',data:{obligacionId,eventosArchivo:eventosArchivo.length,eventosLocalStorage:eventosLocalStorage.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #region agent log (solo en local)
+            if (window.ENV && window.ENV.MODE === 'local') {
+                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:364',message:'EVENTOS CARGADOS',data:{obligacionId,eventosArchivo:eventosArchivo.length,eventosLocalStorage:eventosLocalStorage.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            }
             // #endregion
             
             // Crear un mapa de eventos por ID o fecha+usuario+titulo+descripcion para evitar duplicados
@@ -470,8 +488,10 @@ class BitacoraService {
             const historialCompleto = Array.from(eventosUnicos.values())
                 .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
             
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:393',message:'SINCRONIZACION RESULTADO',data:{obligacionId,eventosUnicos:historialCompleto.length,eventosArchivo:eventosArchivo.length,eventosLocalStorage:eventosLocalStorage.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #region agent log (solo en local)
+            if (window.ENV && window.ENV.MODE === 'local') {
+                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bitacora-service.js:393',message:'SINCRONIZACION RESULTADO',data:{obligacionId,eventosUnicos:historialCompleto.length,eventosArchivo:eventosArchivo.length,eventosLocalStorage:eventosLocalStorage.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            }
             // #endregion
             
             // Actualizar obligación con historial completo

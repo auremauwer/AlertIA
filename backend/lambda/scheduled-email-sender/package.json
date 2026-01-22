@@ -1,0 +1,12 @@
+{
+  "name": "alertia-scheduled-email-sender",
+  "version": "3.0.7",
+  "description": "Lambda function para envío automático programado de correos en AlertIA",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.1691.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}

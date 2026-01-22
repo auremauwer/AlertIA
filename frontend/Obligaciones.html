@@ -82,11 +82,55 @@
         .filter-count {
             @apply bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold group-hover:bg-white;
         }
+        .sort-btn {
+            @apply w-full text-left justify-start bg-transparent border-none p-0 cursor-pointer font-bold uppercase tracking-widest text-gray-800 text-[10px] flex items-center gap-1.5;
+        }
+        .sort-btn:hover {
+            @apply text-primary;
+        }
+        .sort-btn:hover .sort-icon,
+        .sort-btn:hover .sort-text {
+            opacity: 1 !important;
+            color: #ec0000 !important;
+        }
+        .sort-btn.active .sort-icon,
+        .sort-btn.active .sort-text {
+            opacity: 1 !important;
+            color: #ec0000 !important;
+        }
+        .sort-btn.asc .sort-icon {
+            opacity: 1 !important;
+            transform: rotate(180deg);
+            color: #ec0000 !important;
+        }
+        .sort-btn.desc .sort-icon {
+            opacity: 1 !important;
+            transform: rotate(0deg);
+            color: #ec0000 !important;
+        }
+        /* Asegurar que los iconos sean siempre visibles */
+        .sort-icon {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 0.8 !important;
+        }
+        /* Fallback si Material Symbols no carga */
+        @supports not (font-variation-settings: normal) {
+            .sort-icon {
+                display: none !important;
+            }
+            .sort-text {
+                display: inline-block !important;
+            }
+        }
+        thead th {
+            position: relative;
+        }
     </style>
 </head>
 
 <body class="bg-background text-text-main font-display flex flex-col h-screen overflow-hidden">
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1 overflow-x-visible overflow-y-hidden">
         <aside id="main-sidebar"
             class="w-64 flex-shrink-0 h-full flex flex-col border-r border-gray-200 bg-white z-20 font-display transition-all duration-300 relative overflow-visible">
             <div class="flex h-full flex-col justify-between overflow-hidden">
@@ -127,7 +171,7 @@
                                 de evidencias</span>
                         </a>
                         <a class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-black transition-all mb-1 overflow-hidden"
-                            href="Historial.html" title="Gestión de escritos">
+                            href="Escritos.html" title="Gestión de escritos">
                             <span class="material-symbols-outlined text-[20px] flex-shrink-0">article</span>
                             <span
                                 class="text-sm font-semibold sidebar-text whitespace-nowrap transition-opacity duration-300">Gestión
@@ -159,7 +203,7 @@
                     </button>
                     <div
                         class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400 font-medium sidebar-text whitespace-nowrap transition-opacity duration-300">
-                        AlertIA v3.0.5
+                        AlertIA v3.0.7
                         <div id="sidebar-file-info" class="mt-1 text-gray-400 opacity-80 truncate max-w-[180px]"
                             title="Archivo cargado">
                             <!-- El nombre del archivo se inyectará aquí -->
@@ -276,20 +320,69 @@
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-gray-50 border-b-2 border-gray-200">
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">ID
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
+                                        <button class="sort-btn flex items-center gap-2 w-full text-left bg-transparent border-none p-0 cursor-pointer hover:text-primary transition-colors group" 
+                                                data-sort="id" data-sort-type="string"
+                                                style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1f2937;">
+                                            <span>ID</span>
+                                            <span class="sort-icon material-symbols-outlined" style="font-size: 20px !important; opacity: 0.8 !important; color: #6b7280 !important; transition: all 0.2s; display: inline-block !important; visibility: visible !important;">unfold_more</span>
+                                            <span class="sort-text" style="font-size: 14px; opacity: 0.8; color: #6b7280; transition: all 0.2s; display: none;">↕</span>
+                                        </button>
                                     </th>
                                     <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
-                                        Regulador</th>
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Área
-                                    </th>
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Fecha
-                                        Límite</th>
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">Días
+                                        <button class="sort-btn flex items-center gap-2 w-full text-left bg-transparent border-none p-0 cursor-pointer hover:text-primary transition-colors group" 
+                                                data-sort="regulador" data-sort-type="string"
+                                                style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1f2937;">
+                                            <span>Regulador</span>
+                                            <span class="sort-icon material-symbols-outlined" style="font-size: 20px !important; opacity: 0.8 !important; color: #6b7280 !important; transition: all 0.2s; display: inline-block !important; visibility: visible !important;">unfold_more</span>
+                                            <span class="sort-text" style="font-size: 14px; opacity: 0.8; color: #6b7280; transition: all 0.2s; display: none;">↕</span>
+                                        </button>
                                     </th>
                                     <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
-                                        Estatus</th>
+                                        <button class="sort-btn flex items-center gap-2 w-full text-left bg-transparent border-none p-0 cursor-pointer hover:text-primary transition-colors group" 
+                                                data-sort="area" data-sort-type="string"
+                                                style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1f2937;">
+                                            <span>Área</span>
+                                            <span class="sort-icon material-symbols-outlined" style="font-size: 20px !important; opacity: 0.8 !important; color: #6b7280 !important; transition: all 0.2s; display: inline-block !important; visibility: visible !important;">unfold_more</span>
+                                            <span class="sort-text" style="font-size: 14px; opacity: 0.8; color: #6b7280; transition: all 0.2s; display: none;">↕</span>
+                                        </button>
+                                    </th>
                                     <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
-                                        Subestatus</th>
+                                        <button class="sort-btn flex items-center gap-2 w-full text-left bg-transparent border-none p-0 cursor-pointer hover:text-primary transition-colors group" 
+                                                data-sort="fecha_limite" data-sort-type="date"
+                                                style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1f2937;">
+                                            <span>Fecha Límite</span>
+                                            <span class="sort-icon material-symbols-outlined" style="font-size: 20px !important; opacity: 0.8 !important; color: #6b7280 !important; transition: all 0.2s; display: inline-block !important; visibility: visible !important;">unfold_more</span>
+                                            <span class="sort-text" style="font-size: 14px; opacity: 0.8; color: #6b7280; transition: all 0.2s; display: none;">↕</span>
+                                        </button>
+                                    </th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
+                                        <button class="sort-btn flex items-center gap-2 w-full text-left bg-transparent border-none p-0 cursor-pointer hover:text-primary transition-colors group" 
+                                                data-sort="dias_restantes" data-sort-type="number"
+                                                style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1f2937;">
+                                            <span>Días</span>
+                                            <span class="sort-icon material-symbols-outlined" style="font-size: 20px !important; opacity: 0.8 !important; color: #6b7280 !important; transition: all 0.2s; display: inline-block !important; visibility: visible !important;">unfold_more</span>
+                                            <span class="sort-text" style="font-size: 14px; opacity: 0.8; color: #6b7280; transition: all 0.2s; display: none;">↕</span>
+                                        </button>
+                                    </th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
+                                        <button class="sort-btn flex items-center gap-2 w-full text-left bg-transparent border-none p-0 cursor-pointer hover:text-primary transition-colors group" 
+                                                data-sort="estatus" data-sort-type="string"
+                                                style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1f2937;">
+                                            <span>Estatus</span>
+                                            <span class="sort-icon material-symbols-outlined" style="font-size: 20px !important; opacity: 0.8 !important; color: #6b7280 !important; transition: all 0.2s; display: inline-block !important; visibility: visible !important;">unfold_more</span>
+                                            <span class="sort-text" style="font-size: 14px; opacity: 0.8; color: #6b7280; transition: all 0.2s; display: none;">↕</span>
+                                        </button>
+                                    </th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800">
+                                        <button class="sort-btn flex items-center gap-2 w-full text-left bg-transparent border-none p-0 cursor-pointer hover:text-primary transition-colors group" 
+                                                data-sort="sub_estatus" data-sort-type="string"
+                                                style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1f2937;">
+                                            <span>Subestatus</span>
+                                            <span class="sort-icon material-symbols-outlined" style="font-size: 20px !important; opacity: 0.8 !important; color: #6b7280 !important; transition: all 0.2s; display: inline-block !important; visibility: visible !important;">unfold_more</span>
+                                            <span class="sort-text" style="font-size: 14px; opacity: 0.8; color: #6b7280; transition: all 0.2s; display: none;">↕</span>
+                                        </button>
+                                    </th>
                                     <th
                                         class="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-800 text-right">
                                         Acciones</th>
@@ -613,6 +706,72 @@
     <!-- Cargar scripts de la aplicación -->
     <script src="js/app-init.js"></script>
     <script src="js/controllers/obligaciones-controller.js"></script>
+    <script>
+        // Verificación de botones de ordenamiento y fallback para iconos
+        document.addEventListener('DOMContentLoaded', () => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Obligaciones.html:DOMContentLoaded',message:'DOMContentLoaded event fired',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+            setTimeout(() => {
+                const sortButtons = document.querySelectorAll('.sort-btn');
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Obligaciones.html:setTimeout',message:'Initial sort buttons check',data:{count:sortButtons.length,tableExists:document.querySelector('table')!==null,theadExists:document.querySelector('table thead')!==null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
+                console.log('🔍 Botones de ordenamiento encontrados en DOM:', sortButtons.length);
+                
+                sortButtons.forEach((btn, index) => {
+                    const field = btn.dataset.sort;
+                    const icon = btn.querySelector('.sort-icon');
+                    const textFallback = btn.querySelector('.sort-text');
+                    const btnStyles = window.getComputedStyle(btn);
+                    const iconStyles = icon ? window.getComputedStyle(icon) : null;
+                    
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Obligaciones.html:forEach',message:'Button analysis in DOMContentLoaded',data:{index,field,btnDisplay:btnStyles.display,btnVisibility:btnStyles.visibility,btnOpacity:btnStyles.opacity,btnWidth:btnStyles.width,btnHeight:btnStyles.height,iconExists:icon!==null,iconDisplay:iconStyles?.display,iconOpacity:iconStyles?.opacity,iconFontFamily:iconStyles?.fontFamily,iconFontSize:iconStyles?.fontSize},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
+                    
+                    // Verificar si Material Symbols está disponible
+                    const testIcon = document.createElement('span');
+                    testIcon.className = 'material-symbols-outlined';
+                    testIcon.textContent = 'unfold_more';
+                    testIcon.style.position = 'absolute';
+                    testIcon.style.visibility = 'hidden';
+                    document.body.appendChild(testIcon);
+                    
+                    const iconComputed = window.getComputedStyle(testIcon);
+                    const iconLoaded = iconComputed.fontFamily && iconComputed.fontFamily.includes('Material Symbols');
+                    
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Obligaciones.html:MaterialSymbolsCheck',message:'Material Symbols font check',data:{field,iconLoaded,fontFamily:iconComputed.fontFamily},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                    // #endregion
+                    
+                    document.body.removeChild(testIcon);
+                    
+                    if (!iconLoaded && textFallback) {
+                        // Si Material Symbols no está disponible, usar fallback de texto
+                        if (icon) {
+                            icon.style.display = 'none';
+                            icon.style.visibility = 'hidden';
+                        }
+                        if (textFallback) {
+                            textFallback.style.display = 'inline-block';
+                            textFallback.style.visibility = 'visible';
+                        }
+                        console.log(`  Botón ${index + 1} (${field}): Usando fallback de texto`);
+                    } else {
+                        // Material Symbols está disponible
+                        if (icon) {
+                            icon.style.display = 'inline-block';
+                            icon.style.visibility = 'visible';
+                            icon.style.opacity = '0.8';
+                        }
+                        if (textFallback) textFallback.style.display = 'none';
+                        console.log(`  Botón ${index + 1} (${field}): Icono Material Symbols presente, Opacidad: ${icon ? window.getComputedStyle(icon).opacity : 'N/A'}`);
+                    }
+                });
+            }, 500);
+        });
+    </script>
 </body>
 
 </html>

@@ -22,6 +22,16 @@ class DataAdapter {
     // ========== Métodos para Obligaciones ==========
 
     async getObligaciones(filters = {}) {
+        // En producción, usar localStorage como fallback si la API falla
+        if (!ENV.USE_LOCAL_STORAGE) {
+            try {
+                return await this.storage.getObligaciones(filters);
+            } catch (error) {
+                console.warn('API de obligaciones no disponible, usando localStorage:', error);
+                const localStorageManager = new LocalStorageManager();
+                return localStorageManager.getObligaciones(filters);
+            }
+        }
         return this.storage.getObligaciones(filters);
     }
 
@@ -30,10 +40,44 @@ class DataAdapter {
     }
 
     async saveObligacion(obligacion) {
+        // En producción, usar localStorage como fallback si la API falla
+        if (!ENV.USE_LOCAL_STORAGE) {
+            try {
+                return await this.storage.saveObligacion(obligacion);
+            } catch (error) {
+                console.warn('API de obligaciones no disponible, usando localStorage:', error);
+                const localStorageManager = new LocalStorageManager();
+                return localStorageManager.saveObligacion(obligacion);
+            }
+        }
         return this.storage.saveObligacion(obligacion);
     }
 
     async saveAllObligaciones(obligaciones) {
+        // En producción, usar localStorage como fallback si la API falla
+        if (!ENV.USE_LOCAL_STORAGE) {
+            try {
+                if (this.storage.saveAllObligaciones) {
+                    return await this.storage.saveAllObligaciones(obligaciones);
+                } else {
+                    // Si no tiene saveAllObligaciones, guardar una por una
+                    let saved = 0;
+                    for (const obligacion of obligaciones) {
+                        try {
+                            await this.storage.saveObligacion(obligacion);
+                            saved++;
+                        } catch (error) {
+                            console.error(`Error al guardar obligación ${obligacion.id}:`, error);
+                        }
+                    }
+                    return saved;
+                }
+            } catch (error) {
+                console.warn('API de obligaciones no disponible, usando localStorage:', error);
+                const localStorageManager = new LocalStorageManager();
+                return localStorageManager.saveAllObligaciones(obligaciones);
+            }
+        }
         if (this.storage.saveAllObligaciones) {
             return this.storage.saveAllObligaciones(obligaciones);
         }
@@ -160,20 +204,60 @@ class DataAdapter {
     // ========== Métodos para Auditoría ==========
 
     async getAuditoria(filters = {}) {
+        // En producción, usar localStorage como fallback si la API falla
+        if (!ENV.USE_LOCAL_STORAGE) {
+            try {
+                return await this.storage.getAuditoria(filters);
+            } catch (error) {
+                console.warn('API de auditoría no disponible, usando localStorage:', error);
+                const localStorageManager = new LocalStorageManager();
+                return localStorageManager.getAuditoria(filters);
+            }
+        }
         return this.storage.getAuditoria(filters);
     }
 
     async saveAuditoria(evento) {
+        // En producción, usar localStorage como fallback si la API falla
+        if (!ENV.USE_LOCAL_STORAGE) {
+            try {
+                return await this.storage.saveAuditoria(evento);
+            } catch (error) {
+                console.warn('API de auditoría no disponible, usando localStorage:', error);
+                const localStorageManager = new LocalStorageManager();
+                return localStorageManager.saveAuditoria(evento);
+            }
+        }
         return this.storage.saveAuditoria(evento);
     }
 
     // ========== Métodos para Configuración ==========
 
     async getConfiguracion() {
+        // En producción, usar localStorage como fallback si la API falla
+        if (!ENV.USE_LOCAL_STORAGE) {
+            try {
+                return await this.storage.getConfiguracion();
+            } catch (error) {
+                console.warn('API de configuración no disponible, usando localStorage:', error);
+                const localStorageManager = new LocalStorageManager();
+                return localStorageManager.getConfiguracion();
+            }
+        }
         return this.storage.getConfiguracion();
     }
 
     async saveConfiguracion(config) {
+        // En producción, usar localStorage como fallback si la API falla
+        if (!ENV.USE_LOCAL_STORAGE) {
+            try {
+                return await this.storage.saveConfiguracion(config);
+            } catch (error) {
+                console.warn('API de configuración no disponible, usando localStorage:', error);
+                const localStorageManager = new LocalStorageManager();
+                return localStorageManager.saveConfiguracion(config);
+            }
+        }
         return this.storage.saveConfiguracion(config);
     }
 

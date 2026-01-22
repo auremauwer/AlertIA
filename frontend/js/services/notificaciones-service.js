@@ -8,6 +8,78 @@ class NotificacionesService {
     }
 
     /**
+     * Enviar correo por AWS SES (producción)
+     * @param {string} to - Destinatario
+     * @param {string} subject - Asunto
+     * @param {string} body - Cuerpo del correo
+     * @param {Array} cc - Lista de CC (opcional)
+     * @param {string} from - Email remitente (opcional)
+     * @param {string} fromName - Nombre del remitente (opcional)
+     * @returns {Promise<object>} Resultado del envío
+     */
+    async enviarPorSES(to, subject, body, cc = [], from = null, fromName = null) {
+        try {
+            // Obtener configuración
+            const config = await this.dataAdapter.getConfiguracion();
+            
+            const payload = {
+                to: Array.isArray(to) ? to : [to],
+                subject: subject,
+                body: body,
+                cc: cc && cc.length > 0 ? (Array.isArray(cc) ? cc : [cc]) : [],
+                from: from || config.remitente || 'auremauwer@gmail.com',
+                fromName: fromName || config.nombre_remitente || 'AlertIA'
+            };
+            
+            console.log('[Notificaciones] Enviando correo por SES:', payload);
+            
+            // Llamar a la API
+            const response = await fetch(`${ENV.API_BASE_URL}/email/send`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: response.statusText }));
+                throw new Error(error.message || error.error || 'Error al enviar correo');
+            }
+            
+            const result = await response.json();
+            console.log('[Notificaciones] Correo enviado exitosamente por SES:', result);
+            return result;
+            
+        } catch (error) {
+            console.error('[Notificaciones] Error al enviar correo por SES:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Enviar correo (detecta automáticamente si usar Outlook o SES)
+     * @param {string} to - Destinatario
+     * @param {string} subject - Asunto
+     * @param {string} body - Cuerpo del correo
+     * @param {Array} cc - Lista de CC (opcional)
+     * @param {string} from - Email remitente (opcional)
+     * @param {string} fromName - Nombre del remitente (opcional)
+     * @returns {Promise<boolean|object>} Resultado del envío
+     */
+    async enviarCorreo(to, subject, body, cc = [], from = null, fromName = null) {
+        if (ENV.USE_LOCAL_STORAGE) {
+            // Modo local: usar Outlook
+            console.log('[Notificaciones] Modo local: usando Outlook');
+            return this.enviarPorOutlook(to, subject, body, cc);
+        } else {
+            // Modo producción: usar SES
+            console.log('[Notificaciones] Modo producción: usando SES');
+            return await this.enviarPorSES(to, subject, body, cc, from, fromName);
+        }
+    }
+
+    /**
      * Enviar correo por Outlook usando mailto:
      * @param {string} to - Destinatario
      * @param {string} subject - Asunto
@@ -88,10 +160,19 @@ class NotificacionesService {
                 resolve(false);
             });
 
-            btnEnviar.addEventListener('click', () => {
+            btnEnviar.addEventListener('click', async () => {
                 limpiar();
-                this.enviarPorOutlook(to, subject, body, cc);
-                resolve(true);
+                try {
+                    await this.enviarCorreo(to, subject, body, cc);
+                    if (!ENV.USE_LOCAL_STORAGE) {
+                        Utils.showNotification('Correo enviado exitosamente', 'success');
+                    }
+                    resolve(true);
+                } catch (error) {
+                    console.error('Error al enviar correo:', error);
+                    Utils.showNotification('Error al enviar correo: ' + error.message, 'error');
+                    resolve(false);
+                }
             });
 
             btnEditar.addEventListener('click', () => {
@@ -132,18 +213,17 @@ class NotificacionesService {
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Para:</label>
                             <input type="text" id="edit-to" value="${to}" 
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" 
-                                readonly>
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
                         </div>
                         
                         <!-- CC -->
-                        ${cc && cc.length > 0 ? `
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">CC:</label>
-                            <input type="text" id="edit-cc" value="${cc.join('; ')}" 
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                            <input type="text" id="edit-cc" value="${cc && cc.length > 0 ? cc.join('; ') : ''}" 
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                placeholder="correo1@dominio.com; correo2@dominio.com">
+                            <p class="text-xs text-gray-500 mt-1">Separe múltiples correos electrónicos por punto y coma (;)</p>
                         </div>
-                        ` : ''}
                         
                         <!-- Asunto -->
                         <div>
@@ -194,11 +274,13 @@ class NotificacionesService {
                 document.body.removeChild(editModal);
             };
 
-            const enviar = () => {
+            const enviar = async () => {
                 const nuevoTo = inputTo.value.trim();
                 const nuevoSubject = inputSubject.value.trim();
                 const nuevoBody = textareaBody.value.trim();
-                const nuevoCC = inputCC ? inputCC.value.split(';').map(e => e.trim()).filter(e => e) : cc;
+                const nuevoCC = inputCC && inputCC.value.trim() 
+                    ? inputCC.value.split(';').map(e => e.trim()).filter(e => e) 
+                    : [];
 
                 if (!nuevoTo || !nuevoSubject || !nuevoBody) {
                     Utils.showNotification('Por favor complete todos los campos requeridos', 'warning');
@@ -206,8 +288,17 @@ class NotificacionesService {
                 }
 
                 limpiar();
-                this.enviarPorOutlook(nuevoTo, nuevoSubject, nuevoBody, nuevoCC);
-                resolve(true);
+                try {
+                    await this.enviarCorreo(nuevoTo, nuevoSubject, nuevoBody, nuevoCC);
+                    if (!ENV.USE_LOCAL_STORAGE) {
+                        Utils.showNotification('Correo enviado exitosamente', 'success');
+                    }
+                    resolve(true);
+                } catch (error) {
+                    console.error('Error al enviar correo:', error);
+                    Utils.showNotification('Error al enviar correo: ' + error.message, 'error');
+                    resolve(false);
+                }
             };
 
             btnCerrar.addEventListener('click', () => {
@@ -632,6 +723,57 @@ AlertIA`;
         } catch (error) {
             console.error('[Notificaciones] Error al enviar recordatorio:', error);
             // No lanzar error para no interrumpir el flujo
+        }
+    }
+
+    /**
+     * Enviar recordatorio simple al área responsable
+     * @param {string} obligacionId - ID de la obligación
+     * @returns {Promise<void>}
+     */
+    async enviarRecordatorioSimple(obligacionId) {
+        try {
+            // Obtener información de la obligación
+            const obligacion = await this.dataAdapter.getObligacion(obligacionId);
+            if (!obligacion) {
+                throw new Error(`Obligación ${obligacionId} no encontrada`);
+            }
+
+            // Obtener área responsable
+            const area = obligacion.area_responsable || obligacion.area || 'Área no especificada';
+            
+            // Obtener email del área (formato genérico)
+            // NOTA: En modo sandbox de SES, solo se pueden enviar correos a emails verificados
+            // Para producción, verificar el email del área o salir del sandbox mode
+            let emailArea = `${area.toLowerCase().replace(/\s+/g, '.')}@alertia.com`;
+            
+            // En modo producción con SES, si estamos en sandbox, usar email verificado como destinatario
+            if (!ENV.USE_LOCAL_STORAGE) {
+                // En sandbox de SES, usar el email verificado como destinatario para pruebas
+                // TODO: En producción, verificar el email del área o solicitar salir del sandbox
+                emailArea = 'auremauwer@gmail.com'; // Email verificado en SES
+                console.log(`[Notificaciones] Modo sandbox SES: usando email verificado como destinatario`);
+            }
+
+            // Construir email simple
+            const subject = `[AlertIA] Recordatorio - ${obligacionId}`;
+            const body = 'Tienes una obligación pendiente';
+
+            // Enviar correo (usará SES en producción, Outlook en local)
+            await this.enviarCorreo(
+                emailArea,
+                subject,
+                body,
+                [],
+                null,
+                'AlertIA'
+            );
+
+            console.log(`[Notificaciones] Recordatorio simple enviado a ${emailArea} para obligación ${obligacionId}`);
+            
+        } catch (error) {
+            console.error('[Notificaciones] Error al enviar recordatorio simple:', error);
+            throw error;
         }
     }
 }

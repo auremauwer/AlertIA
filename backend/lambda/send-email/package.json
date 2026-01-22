@@ -1,0 +1,20 @@
+{
+  "name": "alertia-send-email",
+  "version": "1.0.0",
+  "description": "Lambda function para enviar correos con Amazon SES",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "ses",
+    "email"
+  ],
+  "author": "AlertIA",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1400.0"
+  }
+}

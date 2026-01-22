@@ -4,6 +4,7 @@
  */
 class GestionEvidenciaController {
     constructor() {
+        this.dataAdapter = null;
         this.obligacionesService = null;
         this.archivosService = null;
         this.fileStorageService = null;
@@ -21,8 +22,11 @@ class GestionEvidenciaController {
             return;
         }
 
+        // Guardar referencia al dataAdapter
+        this.dataAdapter = window.dataAdapter;
+
         // Inicializar servicios
-        this.obligacionesService = new ObligacionesService(window.dataAdapter);
+        this.obligacionesService = new ObligacionesService(this.dataAdapter);
         
         // Inicializar FileStorageService si está disponible
         if (window.FileStorageService) {
@@ -35,7 +39,7 @@ class GestionEvidenciaController {
         }
 
         // Inicializar ArchivosService
-        this.archivosService = new ArchivosService(window.dataAdapter, this.fileStorageService);
+        this.archivosService = new ArchivosService(this.dataAdapter, this.fileStorageService);
 
         this.setupEventListeners();
         await this.loadObligaciones();
@@ -61,6 +65,24 @@ class GestionEvidenciaController {
         const btnConsultar = document.getElementById('btn-consultar-folio');
         if (btnConsultar) {
             btnConsultar.addEventListener('click', () => this.consultarFolio());
+        }
+
+        // Campo de búsqueda de folio
+        const buscarFolio = document.getElementById('buscar-folio');
+        if (buscarFolio) {
+            // Buscar al presionar Enter
+            buscarFolio.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.buscarFolioPorId();
+                }
+            });
+            // Buscar al perder el foco (opcional, se puede quitar si no se desea)
+            buscarFolio.addEventListener('blur', () => {
+                if (buscarFolio.value.trim()) {
+                    this.buscarFolioPorId();
+                }
+            });
         }
 
         // Botón cargar archivo
@@ -129,7 +151,13 @@ class GestionEvidenciaController {
      */
     async loadObligaciones() {
         try {
-            this.obligaciones = await this.obligacionesService.getAll();
+            const todasObligaciones = await this.obligacionesService.getAll();
+            
+            // Filtrar solo obligaciones con estatus=Recordatorio (cualquier subestatus)
+            this.obligaciones = todasObligaciones.filter(obl => {
+                const estatus = String(obl.estatus || '').trim();
+                return estatus.toLowerCase() === 'recordatorio';
+            });
             
             const selectFolio = document.getElementById('folio');
             if (!selectFolio) return;
@@ -139,7 +167,7 @@ class GestionEvidenciaController {
                 selectFolio.removeChild(selectFolio.lastChild);
             }
 
-            // Agregar obligaciones al selector
+            // Agregar obligaciones filtradas al selector
             this.obligaciones.forEach(obl => {
                 const option = document.createElement('option');
                 option.value = obl.id;
@@ -156,19 +184,32 @@ class GestionEvidenciaController {
     /**
      * Manejar cambio de folio
      */
-    onFolioChange() {
+    async onFolioChange() {
         const selectFolio = document.getElementById('folio');
         if (!selectFolio) return;
 
         const obligacionId = selectFolio.value;
         if (obligacionId) {
             this.obligacionSeleccionada = this.obligaciones.find(obl => obl.id === obligacionId);
+            // Cargar archivos automáticamente cuando se selecciona un folio
+            await this.cargarArchivos(obligacionId);
         } else {
             this.obligacionSeleccionada = null;
+            // Limpiar tabla de archivos si no hay folio seleccionado
+            const tbody = document.getElementById('tabla-archivos');
+            const contador = document.getElementById('contador-archivos');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">
+                            Seleccione un folio para ver los archivos cargados
+                        </td>
+                    </tr>
+                `;
+            }
+            if (contador) contador.textContent = '0 Archivos';
+            this.archivos = [];
         }
-        
-        // Mostrar estatus y subestatus
-        this.mostrarEstatusSubestatus();
         
         // Actualizar estado de los botones
         this.actualizarEstadoBotonAceptar();
@@ -195,11 +236,20 @@ class GestionEvidenciaController {
             return;
         }
 
-        // Cargar archivos de la obligación
-        await this.cargarArchivos(obligacionId);
-        
-        // Mostrar estatus y subestatus
-        this.mostrarEstatusSubestatus();
+        // Cargar archivos de la obligación (asegurar que se carguen y muestren)
+        try {
+            await this.cargarArchivos(obligacionId);
+            
+            // Mostrar notificación si hay archivos cargados
+            if (this.archivos.length > 0) {
+                Utils.showNotification(`${this.archivos.length} archivo(s) encontrado(s) para este folio`, 'success');
+            } else {
+                Utils.showNotification('No hay archivos cargados para este folio', 'info');
+            }
+        } catch (error) {
+            console.error('Error al cargar archivos:', error);
+            Utils.showNotification('Error al cargar archivos', 'error');
+        }
         
         // Actualizar estado de los botones
         this.actualizarEstadoBotonAceptar();
@@ -209,102 +259,76 @@ class GestionEvidenciaController {
     }
 
     /**
-     * Mostrar estatus y subestatus del folio seleccionado
+     * Buscar folio por ID (sin restricciones de estatus)
      */
-    mostrarEstatusSubestatus() {
-        const contenedor = document.getElementById('info-estatus-subestatus');
-        const estatusDisplay = document.getElementById('estatus-display');
-        const subestatusDisplay = document.getElementById('subestatus-display');
+    async buscarFolioPorId() {
+        const buscarFolio = document.getElementById('buscar-folio');
+        if (!buscarFolio) return;
 
-        if (!contenedor || !estatusDisplay || !subestatusDisplay) return;
-
-        if (!this.obligacionSeleccionada) {
-            contenedor.classList.add('hidden');
+        const folioBuscado = buscarFolio.value.trim();
+        if (!folioBuscado) {
+            Utils.showNotification('Por favor ingrese un ID de folio', 'warning');
             return;
         }
 
-        // Obtener estatus y subestatus
-        const estatus = this.obligacionSeleccionada.estatus || 'No definido';
-        const subestatus = this.obligacionSeleccionada.sub_estatus || 'No definido';
+        try {
+            // Obtener todas las obligaciones sin filtro de estatus
+            const todasObligaciones = await this.obligacionesService.getAll();
+            
+            // Buscar por ID o ID oficial (case-insensitive)
+            const obligacionEncontrada = todasObligaciones.find(obl => {
+                const id = String(obl.id || '').trim();
+                const idOficial = String(obl.id_oficial || '').trim();
+                const busqueda = folioBuscado.toLowerCase();
+                return id.toLowerCase() === busqueda || 
+                       idOficial.toLowerCase() === busqueda ||
+                       id.toLowerCase().includes(busqueda) ||
+                       idOficial.toLowerCase().includes(busqueda);
+            });
 
-        // Obtener clases CSS según estatus
-        const estatusClass = this.getEstatusClass(estatus);
-        const subestatusClass = this.getSubEstatusClass(subestatus);
+            if (!obligacionEncontrada) {
+                Utils.showNotification(`No se encontró ningún folio con ID "${folioBuscado}"`, 'warning');
+                return;
+            }
 
-        // Obtener etiquetas legibles
-        const estatusLabel = this.getEstatusLabel(estatus);
-        const subestatusLabel = subestatus;
+            // Establecer como obligación seleccionada
+            this.obligacionSeleccionada = obligacionEncontrada;
 
-        // Actualizar HTML
-        estatusDisplay.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide status-pill ${estatusClass}`;
-        estatusDisplay.textContent = estatusLabel;
+            // Actualizar el selector de folio si la obligación está en la lista filtrada
+            const selectFolio = document.getElementById('folio');
+            if (selectFolio) {
+                const optionEncontrada = Array.from(selectFolio.options).find(opt => opt.value === obligacionEncontrada.id);
+                if (optionEncontrada) {
+                    selectFolio.value = obligacionEncontrada.id;
+                } else {
+                    // Si no está en la lista, agregarla temporalmente
+                    const option = document.createElement('option');
+                    option.value = obligacionEncontrada.id;
+                    const nombre = obligacionEncontrada.descripcion || obligacionEncontrada.nombre || 'Sin descripción';
+                    option.textContent = `${obligacionEncontrada.id_oficial || obligacionEncontrada.id} - ${nombre}`;
+                    selectFolio.appendChild(option);
+                    selectFolio.value = obligacionEncontrada.id;
+                }
+            }
 
-        subestatusDisplay.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide status-pill ${subestatusClass}`;
-        subestatusDisplay.textContent = subestatusLabel;
+            // Cargar archivos de la obligación encontrada
+            await this.cargarArchivos(obligacionEncontrada.id);
+            
+            // Mostrar notificación
+            if (this.archivos.length > 0) {
+                Utils.showNotification(`Folio encontrado: ${obligacionEncontrada.id_oficial || obligacionEncontrada.id}. ${this.archivos.length} archivo(s) encontrado(s)`, 'success');
+            } else {
+                Utils.showNotification(`Folio encontrado: ${obligacionEncontrada.id_oficial || obligacionEncontrada.id}. No hay archivos cargados`, 'info');
+            }
 
-        // Mostrar contenedor
-        contenedor.classList.remove('hidden');
-    }
-
-    /**
-     * Obtener etiqueta legible para estatus
-     */
-    getEstatusLabel(estatus) {
-        const labels = {
-            'pendiente': 'Pendiente',
-            'recordatorio': 'Recordatorio',
-            'ventana': 'En ventana',
-            'pausada': 'Pausada',
-            'atendida': 'Atendida',
-            'solicitud': 'Solicitud',
-            'cerrado': 'Cerrado',
-            'apagado': 'Apagado'
-        };
-        return labels[estatus?.toLowerCase()] || estatus || 'No definido';
-    }
-
-    /**
-     * Obtener clase CSS para estatus
-     */
-    getEstatusClass(estatus) {
-        const estatusLower = String(estatus || '').toLowerCase();
-        const classes = {
-            'pendiente': 'status-pendiente',
-            'recordatorio': 'status-recordatorio',
-            'ventana': 'status-ventana',
-            'pausada': 'status-pausada',
-            'atendida': 'status-atendida',
-            'solicitud': 'status-solicitud',
-            'cerrado': 'status-cerrado',
-            'apagado': 'status-apagado'
-        };
-        return classes[estatusLower] || 'status-pendiente';
-    }
-
-    /**
-     * Obtener clase CSS para subestatus
-     */
-    getSubEstatusClass(subEstatus) {
-        if (!subEstatus) return 'status-pendiente';
-        
-        const subEstatusLower = String(subEstatus).toLowerCase();
-        
-        if (subEstatusLower.includes('pendiente')) {
-            return 'status-pendiente';
-        } else if (subEstatusLower.includes('sin respuesta') || subEstatusLower.includes('vencida')) {
-            return 'status-ventana';
-        } else if (subEstatusLower.includes('atendida') || subEstatusLower.includes('completada')) {
-            return 'status-atendida';
-        } else if (subEstatusLower.includes('pausada') || subEstatusLower.includes('pausado')) {
-            return 'status-pausada';
-        } else if (subEstatusLower.includes('recordatorio')) {
-            return 'status-recordatorio';
-        } else if (subEstatusLower.includes('solicitud')) {
-            return 'status-solicitud';
-        } else if (subEstatusLower.includes('cerrado') || subEstatusLower.includes('cerrada')) {
-            return 'status-cerrado';
-        } else {
-            return 'status-pendiente';
+            // Actualizar estado de los botones
+            this.actualizarEstadoBotonAceptar();
+            this.actualizarEstadoBotonRechazar();
+            this.actualizarEstadoBotonEnviar();
+            this.actualizarEstadoBotonCargar();
+        } catch (error) {
+            console.error('Error al buscar folio:', error);
+            Utils.showNotification('Error al buscar folio', 'error');
         }
     }
 
@@ -315,9 +339,69 @@ class GestionEvidenciaController {
         try {
             this.archivos = await this.archivosService.obtenerArchivos(obligacionId);
             this.renderArchivos();
+            
+            // Actualizar estado de los botones después de cargar archivos
+            this.actualizarEstadoBotonAceptar();
+            this.actualizarEstadoBotonRechazar();
         } catch (error) {
             console.error('Error al cargar archivos:', error);
             Utils.showNotification('Error al cargar archivos', 'error');
+        }
+    }
+
+    /**
+     * Actualizar estatus y subestatus cuando hay archivos cargados
+     */
+    async actualizarEstatusConArchivos() {
+        if (!this.obligacionSeleccionada || !this.archivos || this.archivos.length === 0) {
+            return;
+        }
+
+        try {
+            // Obtener obligación actualizada
+            const obligacion = await this.dataAdapter.getObligacion(this.obligacionSeleccionada.id);
+            if (!obligacion) {
+                return;
+            }
+
+            // Solo cambiar si no está ya en el estado correcto
+            const estatusActual = String(obligacion.estatus || '').trim();
+            const subestatusActual = String(obligacion.sub_estatus || '').trim();
+
+            if (estatusActual.toLowerCase() !== 'recordatorio' || 
+                subestatusActual.toLowerCase() !== 'pendiente (cn)') {
+                
+                obligacion.estatus = 'Recordatorio';
+                obligacion.sub_estatus = 'Pendiente (cn)';
+                obligacion.updated_at = new Date().toISOString();
+
+                // Guardar obligación actualizada
+                await this.dataAdapter.saveObligacion(obligacion);
+
+                // Actualizar obligación seleccionada en memoria
+                this.obligacionSeleccionada.estatus = 'Recordatorio';
+                this.obligacionSeleccionada.sub_estatus = 'Pendiente (cn)';
+
+                // Registrar en bitácora
+                if (window.BitacoraService) {
+                    const bitacoraService = new BitacoraService(this.dataAdapter);
+                    const user = await this.dataAdapter.getCurrentUser();
+                    await bitacoraService.registrarEvento(
+                        obligacion.id,
+                        'cambio_estatus',
+                        'Estatus actualizado por carga de archivos',
+                        `Estatus cambiado a "Recordatorio" y subestatus a "Pendiente (cn)" automáticamente al cargar ${this.archivos.length} archivo(s)`,
+                        { estatus: estatusActual, sub_estatus: subestatusActual },
+                        { estatus: 'Recordatorio', sub_estatus: 'Pendiente (cn)' },
+                        null
+                    );
+                }
+
+                // Los estatus y subestatus ya no se muestran en la UI según requerimientos anteriores
+            }
+        } catch (error) {
+            console.error('Error al actualizar estatus:', error);
+            // No mostrar error al usuario, solo loguear
         }
     }
 
@@ -439,6 +523,30 @@ class GestionEvidenciaController {
             `;
         }
         
+        if (archivo.estado === 'aprobado') {
+            return `
+                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 cursor-default" 
+                     title="Aprobado">
+                    <span class="material-symbols-outlined text-lg">check</span>
+                </div>
+            `;
+        }
+        
+        // Para archivos rechazados, mostrar tache en gris y botón de eliminar
+        if (archivo.estado === 'rechazado') {
+            return `
+                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 cursor-default" 
+                     title="Rechazado">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </div>
+                <button class="btn-eliminar w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors border border-red-100" 
+                        data-archivo-id="${archivo.id}" title="Eliminar">
+                    <span class="material-symbols-outlined text-lg">delete</span>
+                </button>
+            `;
+        }
+        
+        // Para otros estados, mostrar botón de ver
         return `
             <button class="btn-ver w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition-colors" 
                     data-archivo-id="${archivo.id}" title="Ver">
@@ -467,11 +575,22 @@ class GestionEvidenciaController {
             });
         });
 
-        // Botones ver
+        // Botones ver (solo para archivos rechazados, no para aprobados)
         document.querySelectorAll('.btn-ver').forEach(btn => {
+            // Solo agregar listener si el botón no está deshabilitado
+            if (!btn.disabled) {
+                btn.addEventListener('click', (e) => {
+                    const archivoId = e.currentTarget.dataset.archivoId;
+                    this.verArchivo(archivoId);
+                });
+            }
+        });
+
+        // Botones eliminar
+        document.querySelectorAll('.btn-eliminar').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const archivoId = e.currentTarget.dataset.archivoId;
-                this.verArchivo(archivoId);
+                this.eliminarArchivo(archivoId);
             });
         });
     }
@@ -546,8 +665,15 @@ class GestionEvidenciaController {
         // Recargar archivos después de subir
         await this.cargarArchivos(this.obligacionSeleccionada.id);
         
-        // Actualizar estado del botón enviar evidencia
+        // Si hay al menos un archivo, cambiar estatus y subestatus automáticamente
+        if (this.archivos.length > 0) {
+            await this.actualizarEstatusConArchivos();
+        }
+        
+        // Actualizar estado de los botones
         this.actualizarEstadoBotonEnviar();
+        this.actualizarEstadoBotonAceptar();
+        this.actualizarEstadoBotonRechazar();
     }
 
     /**
@@ -643,9 +769,17 @@ class GestionEvidenciaController {
             throw new Error('Archivo no encontrado');
         }
 
+        // Capturar estado anterior antes de cambiarlo
+        const estadoAnterior = archivo.estado || 'pendiente_revision';
+
         archivo.estado = nuevoEstado;
         archivo.fecha_revision = new Date().toISOString();
-        const user = await window.dataAdapter.getCurrentUser();
+        
+        if (!this.dataAdapter) {
+            throw new Error('dataAdapter no está inicializado');
+        }
+        
+        const user = await this.dataAdapter.getCurrentUser();
         archivo.usuario_reviso = user.nombre || 'Usuario';
 
         obligacion.updated_at = new Date().toISOString();
@@ -659,7 +793,7 @@ class GestionEvidenciaController {
                 nuevoEstado === 'aprobado' ? 'archivo_aprobado' : 'archivo_rechazado',
                 nuevoEstado === 'aprobado' ? 'Archivo aprobado' : 'Archivo rechazado',
                 `Archivo "${archivo.nombre}" ${nuevoEstado === 'aprobado' ? 'aprobado' : 'rechazado'} por ${user.nombre || 'Usuario'}`,
-                { estado: archivo.estado },
+                { estado: estadoAnterior },
                 { estado: nuevoEstado },
                 null
             );
@@ -675,6 +809,31 @@ class GestionEvidenciaController {
         } catch (error) {
             console.error('Error al ver archivo:', error);
             Utils.showNotification('Error al descargar archivo', 'error');
+        }
+    }
+
+    /**
+     * Eliminar archivo
+     */
+    async eliminarArchivo(archivoId) {
+        if (!this.obligacionSeleccionada) return;
+
+        const archivo = this.archivos.find(a => a.id === archivoId);
+        if (!archivo) {
+            Utils.showNotification('Archivo no encontrado', 'error');
+            return;
+        }
+
+        const confirmar = await Utils.confirm(`¿Está seguro de eliminar el archivo "${archivo.nombre}"? Esta acción no se puede deshacer.`);
+        if (!confirmar) return;
+
+        try {
+            await this.archivosService.eliminarArchivo(this.obligacionSeleccionada.id, archivoId);
+            Utils.showNotification('Archivo eliminado correctamente', 'success');
+            await this.cargarArchivos(this.obligacionSeleccionada.id);
+        } catch (error) {
+            console.error('Error al eliminar archivo:', error);
+            Utils.showNotification('Error al eliminar archivo', 'error');
         }
     }
 
@@ -776,9 +935,6 @@ class GestionEvidenciaController {
             this.actualizarEstadoBotonAceptar();
             this.actualizarEstadoBotonRechazar();
             this.actualizarEstadoBotonCargar();
-            
-            // Actualizar visualización de estatus y subestatus
-            this.mostrarEstatusSubestatus();
         } catch (error) {
             console.error('Error al enviar evidencia:', error);
             Utils.showNotification('Error al enviar evidencia', 'error');
@@ -786,18 +942,18 @@ class GestionEvidenciaController {
     }
 
     /**
-     * Actualizar estado del botón "Aceptar Evidencia" según estatus y subestatus
+     * Actualizar estado del botón "Aceptar Evidencia" según archivos cargados
      */
     actualizarEstadoBotonAceptar() {
         const btnAceptar = document.getElementById('btn-aceptar-evidencia');
         if (!btnAceptar) return;
 
-        // Verificar si la obligación cumple las condiciones
-        const puedeAceptar = this.obligacionSeleccionada && 
-                            this.obligacionSeleccionada.estatus === 'Recordatorio' && 
-                            this.obligacionSeleccionada.sub_estatus === 'Pendiente (cn)';
+        // Verificar si hay al menos un archivo cargado
+        const tieneArchivos = this.obligacionSeleccionada && 
+                             this.archivos && 
+                             this.archivos.length > 0;
 
-        if (puedeAceptar) {
+        if (tieneArchivos) {
             btnAceptar.disabled = false;
             btnAceptar.classList.remove('opacity-50', 'cursor-not-allowed');
             btnAceptar.classList.add('cursor-pointer');
@@ -891,9 +1047,6 @@ class GestionEvidenciaController {
             await this.cargarArchivos(this.obligacionSeleccionada.id);
             this.actualizarEstadoBotonAceptar();
             this.actualizarEstadoBotonRechazar();
-            
-            // Actualizar visualización de estatus y subestatus
-            this.mostrarEstatusSubestatus();
         } catch (error) {
             console.error('Error al aprobar evidencias:', error);
             Utils.showNotification('Error al aprobar evidencias', 'error');
@@ -901,18 +1054,18 @@ class GestionEvidenciaController {
     }
 
     /**
-     * Actualizar estado del botón "Rechazar Evidencia" según estatus y subestatus
+     * Actualizar estado del botón "Rechazar Evidencia" según archivos cargados
      */
     actualizarEstadoBotonRechazar() {
         const btnRechazar = document.getElementById('btn-rechazar-evidencia');
         if (!btnRechazar) return;
 
-        // Verificar si la obligación cumple las condiciones
-        const puedeRechazar = this.obligacionSeleccionada && 
-                             this.obligacionSeleccionada.estatus === 'Recordatorio' && 
-                             this.obligacionSeleccionada.sub_estatus === 'Pendiente (cn)';
+        // Verificar si hay al menos un archivo cargado
+        const tieneArchivos = this.obligacionSeleccionada && 
+                             this.archivos && 
+                             this.archivos.length > 0;
 
-        if (puedeRechazar) {
+        if (tieneArchivos) {
             btnRechazar.disabled = false;
             btnRechazar.classList.remove('opacity-50', 'cursor-not-allowed');
             btnRechazar.classList.add('cursor-pointer');
@@ -1006,9 +1159,6 @@ class GestionEvidenciaController {
             await this.cargarArchivos(this.obligacionSeleccionada.id);
             this.actualizarEstadoBotonRechazar();
             this.actualizarEstadoBotonCargar();
-            
-            // Actualizar visualización de estatus y subestatus
-            this.mostrarEstatusSubestatus();
         } catch (error) {
             console.error('Error al rechazar evidencias:', error);
             Utils.showNotification('Error al rechazar evidencias', 'error');

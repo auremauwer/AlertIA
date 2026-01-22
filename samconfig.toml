@@ -1,0 +1,23 @@
+# Configuración para AWS SAM CLI
+# Este archivo se crea automáticamente cuando ejecutas 'sam deploy --guided'
+# Pero lo creamos aquí para que tengas una referencia
+
+version = 0.1
+
+[default]
+[default.global.parameters]
+stack_name = "alertia-stack"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+region = "us-east-1"
+parameter_overrides = [
+    "FromEmail=noreply@alertia.com",
+    "FromName=AlertIA"
+]

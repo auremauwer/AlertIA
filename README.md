@@ -1,4 +1,4 @@
-# AlertIA - Sistema de Alertamiento Normativo
+# AlertIA - Sistema de Alertamiento Normativo v3.0.7
 
 Sistema de gestión y alertamiento de obligaciones normativas con arquitectura híbrida (LocalStorage local / AWS en producción).
 
@@ -20,7 +20,7 @@ Sistema de gestión y alertamiento de obligaciones normativas con arquitectura h
    - Dashboard: http://localhost:8000/frontend/Dashboard.html
    - Obligaciones: http://localhost:8000/frontend/Obligaciones.html
    - Envío de correos: http://localhost:8000/frontend/Correos.html
-   - Historial: http://localhost:8000/frontend/Historial.html
+   - Escritos: http://localhost:8000/frontend/Escritos.html
    - Auditoría: http://localhost:8000/frontend/Auditoria.html
    - Configuración: http://localhost:8000/frontend/Configuración.html
 
@@ -63,6 +63,7 @@ AlertIA/
 - **Frontend:** S3 + CloudFront
 - **Backend:** API Gateway + Lambda + DynamoDB
 - **Email:** Amazon SES
+- **Envío Automático:** EventBridge + Lambda programada (ejecuta diariamente)
 
 ## 🔧 Configuración
 
@@ -77,6 +78,7 @@ La aplicación detecta automáticamente el entorno:
 - ✅ Gestión de obligaciones (ver, pausar, reanudar, marcar atendida)
 - ✅ Cálculo manual de alertas
 - ✅ Envío manual de correos (flujo de 4 pasos)
+- ✅ Envío automático programado de correos (EventBridge + Lambda)
 - ✅ Historial de envíos
 - ✅ Auditoría de eventos
 - ✅ Configuración del sistema

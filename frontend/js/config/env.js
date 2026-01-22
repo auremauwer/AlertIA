@@ -18,7 +18,9 @@ const ENV = {
             return 'http://localhost:3000/api';
         }
         // En producción, usar el dominio de la API
-        return 'https://api.alertia.example.com';
+        // Esta URL se actualizará automáticamente durante el despliegue
+        // Si necesitas cambiarla manualmente, reemplaza YOUR_API_ID con el ID real
+        return 'https://sdgpz3mrrg.execute-api.us-east-1.amazonaws.com/Prod';
     })(),
     
     // Usar LocalStorage solo en local
@@ -27,7 +29,7 @@ const ENV = {
                        window.location.hostname === '',
     
     // Versión de la aplicación
-    VERSION: '1.0.0',
+    VERSION: '3.0.7',
     
     // Debug mode
     DEBUG: window.location.hostname === 'localhost' || 

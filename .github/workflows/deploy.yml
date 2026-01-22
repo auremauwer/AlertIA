@@ -1,0 +1,162 @@
+name: Deploy AlertIA to AWS
+
+# Este workflow se ejecuta cuando:
+# - Haces push a la rama main
+# - O lo ejecutas manualmente desde GitHub Actions
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Variables de entorno para todo el workflow
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '18.x'
+  PYTHON_VERSION: '3.9'
+
+jobs:
+  # ============================================
+  # JOB 1: Desplegar Backend (Lambda + API Gateway + DynamoDB)
+  # ============================================
+  deploy-backend:
+    name: 🚀 Deploy Backend (Lambda + API Gateway)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: 📦 Install AWS SAM CLI
+        run: |
+          pip install aws-sam-cli
+          sam --version
+      
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 🔨 Build SAM application
+        run: |
+          echo "🔨 Construyendo aplicación SAM..."
+          sam build
+          echo "✅ Build completado"
+      
+      - name: 🚀 Deploy SAM application
+        run: |
+          echo "🚀 Desplegando aplicación a AWS..."
+          sam deploy \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --stack-name alertia-stack \
+            --capabilities CAPABILITY_IAM \
+            --region ${{ env.AWS_REGION }} \
+            --parameter-overrides FromEmail=${{ secrets.SES_FROM_EMAIL }} FromName=${{ secrets.SES_FROM_NAME || 'AlertIA' }}
+          echo "✅ Despliegue completado"
+      
+      - name: 📋 Get API Gateway URL
+        id: get-api-url
+        run: |
+          echo "📋 Obteniendo URL de API Gateway..."
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name alertia-stack \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiGatewayApi`].OutputValue' \
+            --output text)
+          
+          if [ -z "$API_URL" ]; then
+            echo "⚠️ No se pudo obtener la URL de la API"
+            exit 1
+          fi
+          
+          echo "API_URL=$API_URL" >> $GITHUB_ENV
+          echo "✅ URL de API: $API_URL"
+          echo "::notice title=API URL::La URL de la API es: $API_URL"
+  
+  # ============================================
+  # JOB 2: Desplegar Frontend (S3)
+  # ============================================
+  deploy-frontend:
+    name: 🎨 Deploy Frontend (S3)
+    runs-on: ubuntu-latest
+    needs: deploy-backend  # Espera a que el backend se despliegue primero
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 📋 Get API Gateway URL
+        id: get-api-url
+        run: |
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name alertia-stack \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiGatewayApi`].OutputValue' \
+            --output text)
+          echo "API_URL=$API_URL" >> $GITHUB_ENV
+          echo "API URL: $API_URL"
+      
+      - name: 🔧 Update API URL in env.js
+        run: |
+          echo "🔧 Actualizando URL de API en env.js..."
+          if [ -f "frontend/js/config/env.js" ]; then
+            # Reemplazar la URL placeholder con la URL real
+            sed -i "s|https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/Prod|${{ env.API_URL }}|g" frontend/js/config/env.js
+            sed -i "s|https://api.alertia.example.com|${{ env.API_URL }}|g" frontend/js/config/env.js
+            echo "✅ URL de API actualizada en env.js"
+          else
+            echo "⚠️ No se encontró frontend/js/config/env.js"
+          fi
+      
+      - name: 📦 Deploy to S3
+        run: |
+          echo "📦 Subiendo frontend a S3..."
+          aws s3 sync frontend/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
+            --delete \
+            --exclude "*.git*" \
+            --exclude "*.md" \
+            --exclude ".DS_Store" \
+            --exclude "*.log"
+          echo "✅ Frontend desplegado a S3"
+      
+      - name: 🔄 Invalidate CloudFront cache (if configured)
+        if: ${{ secrets.CLOUDFRONT_DIST_ID != '' }}
+        run: |
+          echo "🔄 Invalidando caché de CloudFront..."
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} \
+            --paths "/*"
+          echo "✅ Caché invalidado"
+      
+      - name: ✅ Deployment Summary
+        run: |
+          echo "## 🎉 Despliegue Completado" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Backend" >> $GITHUB_STEP_SUMMARY
+          echo "- API URL: ${{ env.API_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Stack: alertia-stack" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Frontend" >> $GITHUB_STEP_SUMMARY
+          echo "- S3 Bucket: ${{ secrets.S3_BUCKET_NAME }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ secrets.CLOUDFRONT_DIST_ID }}" != "" ]; then
+            echo "- CloudFront: ${{ secrets.CLOUDFRONT_DIST_ID }}" >> $GITHUB_STEP_SUMMARY
+          fi

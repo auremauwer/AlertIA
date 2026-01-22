@@ -19,8 +19,25 @@ class IndexController {
             return;
         }
 
+        // Esperar a que dataAdapter esté disponible
         if (!window.dataAdapter) {
             console.error('IndexController: dataAdapter no está disponible');
+            return;
+        }
+
+        // Esperar a que los servicios estén disponibles
+        if (typeof ExcelService === 'undefined') {
+            console.error('IndexController: ExcelService no está disponible');
+            return;
+        }
+
+        if (typeof ObligacionesService === 'undefined') {
+            console.error('IndexController: ObligacionesService no está disponible');
+            return;
+        }
+
+        if (typeof AuditoriaService === 'undefined') {
+            console.error('IndexController: AuditoriaService no está disponible');
             return;
         }
 
@@ -670,6 +687,9 @@ function initializeIndexController() {
     console.log('[DEBUG] initializeIndexController called', {
         XLSX: typeof XLSX !== 'undefined',
         dataAdapter: !!window.dataAdapter,
+        ExcelService: typeof ExcelService !== 'undefined',
+        ObligacionesService: typeof ObligacionesService !== 'undefined',
+        AuditoriaService: typeof AuditoriaService !== 'undefined',
         alreadyInitialized: !!window.indexController,
         documentReadyState: document.readyState
     });
@@ -682,6 +702,24 @@ function initializeIndexController() {
 
     if (!window.dataAdapter) {
         console.warn('[DEBUG] IndexController: Esperando dataAdapter...');
+        setTimeout(initializeIndexController, 100);
+        return;
+    }
+
+    if (typeof ExcelService === 'undefined') {
+        console.warn('[DEBUG] IndexController: Esperando ExcelService...');
+        setTimeout(initializeIndexController, 100);
+        return;
+    }
+
+    if (typeof ObligacionesService === 'undefined') {
+        console.warn('[DEBUG] IndexController: Esperando ObligacionesService...');
+        setTimeout(initializeIndexController, 100);
+        return;
+    }
+
+    if (typeof AuditoriaService === 'undefined') {
+        console.warn('[DEBUG] IndexController: Esperando AuditoriaService...');
         setTimeout(initializeIndexController, 100);
         return;
     }

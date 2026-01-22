@@ -19,14 +19,24 @@ class ObligacionesController {
         this.itemsPerPage = 10;
         this.ultimaFechaVerificada = null; // Para detectar cambio de día
         this.intervalVerificacionDia = null; // Referencia al intervalo
+        this.sortConfig = {
+            field: null,
+            direction: null // 'asc' o 'desc'
+        };
     }
 
     /**
      * Inicializar controlador
      */
     async init() {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'obligaciones-controller.js:31',message:'ObligacionesController.init called',data:{dataAdapterExists:!!window.dataAdapter},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
         if (!window.dataAdapter) {
             console.error('dataAdapter no está disponible');
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'obligaciones-controller.js:33',message:'init aborted - no dataAdapter',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+            // #endregion
             return;
         }
 
@@ -53,11 +63,250 @@ class ObligacionesController {
         }
 
         this.setupEventListeners();
+        // #region agent log
+        const sortButtonsAfterSetup = document.querySelectorAll('.sort-btn');
+        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'obligaciones-controller.js:59',message:'After setupEventListeners - checking sort buttons',data:{sortButtonsCount:sortButtonsAfterSetup.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         await this.loadObligaciones();
         await this.loadFilters();
         
         // Inicializar detección de cambio de día
         this.inicializarDeteccionCambioDia();
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/334755c9-e669-4015-ace9-566328740005',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'obligaciones-controller.js:64',message:'init completed',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+    }
+
+    /**
+     * Configurar listeners de ordenamiento
+     */
+    setupSortListeners() {
+        // #region agent log
+        console.log('[DEBUG] setupSortListeners called');
+        // #endregion
+        // Esperar un poco para asegurar que el DOM esté listo
+        setTimeout(() => {
+            const sortButtons = document.querySelectorAll('.sort-btn');
+            // #region agent log
+            console.log('[DEBUG] sortButtons found:', sortButtons.length, 'buttons');
+            // #endregion
+            console.log('🔍 Botones de ordenamiento encontrados:', sortButtons.length);
+            
+            sortButtons.forEach((btn, index) => {
+                // #region agent log
+                const btnStyles = window.getComputedStyle(btn);
+                const icon = btn.querySelector('.sort-icon');
+                const iconStyles = icon ? window.getComputedStyle(icon) : null;
+                console.log(`[DEBUG] Button ${index} (${btn.dataset.sort}):`, {
+                    display: btnStyles.display,
+                    visibility: btnStyles.visibility,
+                    opacity: btnStyles.opacity,
+                    width: btnStyles.width,
+                    height: btnStyles.height,
+                    iconExists: icon !== null,
+                    iconDisplay: iconStyles?.display,
+                    iconOpacity: iconStyles?.opacity,
+                    iconFontSize: iconStyles?.fontSize,
+                    iconFontFamily: iconStyles?.fontFamily
+                });
+                // #endregion
+                // Remover listener anterior si existe
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const field = newBtn.dataset.sort;
+                    const sortType = newBtn.dataset.sortType || 'string';
+                    
+                    console.log('🖱️ Click en botón de ordenamiento:', field, sortType);
+                    
+                    // Determinar nueva dirección
+                    let newDirection;
+                    if (this.sortConfig.field === field) {
+                        // Si ya está ordenando por este campo, alternar dirección
+                        if (this.sortConfig.direction === 'asc') {
+                            newDirection = 'desc';
+                        } else if (this.sortConfig.direction === 'desc') {
+                            newDirection = null; // Quitar ordenamiento
+                        } else {
+                            newDirection = 'asc';
+                        }
+                    } else {
+                        // Nuevo campo, empezar con ascendente
+                        newDirection = 'asc';
+                    }
+                    
+                    // Actualizar estado
+                    this.sortConfig.field = newDirection ? field : null;
+                    this.sortConfig.direction = newDirection;
+                    
+                    console.log('📊 Nuevo ordenamiento:', this.sortConfig);
+                    
+                    // Actualizar UI
+                    this.updateSortButtons();
+                    
+                    // Recargar obligaciones con nuevo ordenamiento
+                    this.loadObligaciones();
+                });
+            });
+        }, 100);
+    }
+
+    /**
+     * Actualizar estado visual de los botones de ordenamiento
+     */
+    updateSortButtons() {
+        const buttons = document.querySelectorAll('.sort-btn');
+        // #region agent log
+        console.log('[DEBUG] updateSortButtons called:', {
+            buttonsFound: buttons.length,
+            currentSortField: this.sortConfig.field,
+            currentSortDirection: this.sortConfig.direction
+        });
+        // #endregion
+        buttons.forEach(btn => {
+            const field = btn.dataset.sort;
+            const icon = btn.querySelector('.sort-icon');
+            const btnStyles = window.getComputedStyle(btn);
+            const iconStyles = icon ? window.getComputedStyle(icon) : null;
+            
+            // #region agent log
+            console.log(`[DEBUG] updateSortButtons - Button ${field}:`, {
+                btnDisplay: btnStyles.display,
+                btnVisibility: btnStyles.visibility,
+                btnOpacity: btnStyles.opacity,
+                iconExists: icon !== null,
+                iconDisplay: iconStyles?.display,
+                iconOpacity: iconStyles?.opacity,
+                iconFontFamily: iconStyles?.fontFamily
+            });
+            // #endregion
+            
+            // Remover todas las clases de estado
+            btn.classList.remove('active', 'asc', 'desc');
+            
+            // Si este es el campo activo, aplicar estado
+            if (this.sortConfig.field === field && this.sortConfig.direction) {
+                btn.classList.add('active', this.sortConfig.direction);
+                if (icon) {
+                    icon.style.opacity = '1';
+                }
+            } else {
+                // Restaurar opacidad por defecto (0.3 según CSS)
+                if (icon) {
+                    icon.style.opacity = '';
+                }
+            }
+        });
+    }
+
+    /**
+     * Ordenar obligaciones
+     */
+    sortObligaciones(obligaciones, field, direction) {
+        const sorted = [...obligaciones];
+        const sortType = document.querySelector(`[data-sort="${field}"]`)?.dataset.sortType || 'string';
+        
+        sorted.sort((a, b) => {
+            let valueA = this.getSortValue(a, field);
+            let valueB = this.getSortValue(b, field);
+            
+            // Manejar valores nulos/undefined
+            if (valueA === null || valueA === undefined) valueA = '';
+            if (valueB === null || valueB === undefined) valueB = '';
+            
+            let comparison = 0;
+            
+            if (sortType === 'number') {
+                const numA = typeof valueA === 'number' ? valueA : parseFloat(valueA) || 0;
+                const numB = typeof valueB === 'number' ? valueB : parseFloat(valueB) || 0;
+                comparison = numA - numB;
+            } else if (sortType === 'date') {
+                const dateA = this.parseDateForSort(valueA);
+                const dateB = this.parseDateForSort(valueB);
+                if (dateA && dateB) {
+                    comparison = dateA.getTime() - dateB.getTime();
+                } else if (dateA) {
+                    comparison = 1;
+                } else if (dateB) {
+                    comparison = -1;
+                } else {
+                    comparison = String(valueA).localeCompare(String(valueB));
+                }
+            } else {
+                // String comparison
+                comparison = String(valueA).localeCompare(String(valueB), 'es', { 
+                    numeric: true, 
+                    sensitivity: 'base' 
+                });
+            }
+            
+            return direction === 'asc' ? comparison : -comparison;
+        });
+        
+        return sorted;
+    }
+
+    /**
+     * Obtener valor para ordenamiento
+     */
+    getSortValue(obligacion, field) {
+        switch (field) {
+            case 'id':
+                return obligacion.id_oficial || obligacion.id || '';
+            case 'regulador':
+                return obligacion.regulador || '';
+            case 'area':
+                return obligacion.area || '';
+            case 'fecha_limite':
+                return obligacion.fecha_limite || obligacion.fecha_limite_original || null;
+            case 'dias_restantes':
+                return obligacion.dias_restantes !== null && obligacion.dias_restantes !== undefined 
+                    ? obligacion.dias_restantes 
+                    : null;
+            case 'estatus':
+                return obligacion.estatus || '';
+            case 'sub_estatus':
+                return obligacion.sub_estatus || '';
+            default:
+                return '';
+        }
+    }
+
+    /**
+     * Parsear fecha para ordenamiento
+     */
+    parseDateForSort(value) {
+        if (!value) return null;
+        
+        // Si ya es Date
+        if (value instanceof Date && !isNaN(value.getTime())) {
+            return value;
+        }
+        
+        // Si es string YYYY-MM-DD
+        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return new Date(value + 'T00:00:00Z');
+        }
+        
+        // Si es string DD/MM/YYYY
+        if (typeof value === 'string' && value.includes('/')) {
+            const parts = value.split('/');
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const year = parseInt(parts[2], 10);
+                if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                    return new Date(Date.UTC(year, month, day));
+                }
+            }
+        }
+        
+        // Intentar parsear como fecha genérica
+        const date = new Date(value);
+        return isNaN(date.getTime()) ? null : date;
     }
 
     /**
@@ -151,6 +400,9 @@ class ObligacionesController {
 
         // Botones de acción
         this.attachActionListeners();
+
+        // Botones de ordenamiento
+        this.setupSortListeners();
     }
 
     /**
@@ -167,7 +419,13 @@ class ObligacionesController {
      */
     async loadObligaciones() {
         try {
-            const obligaciones = await this.obligacionesService.filter(this.currentFilters);
+            let obligaciones = await this.obligacionesService.filter(this.currentFilters);
+            
+            // Aplicar ordenamiento si está configurado
+            if (this.sortConfig.field && this.sortConfig.direction) {
+                obligaciones = this.sortObligaciones(obligaciones, this.sortConfig.field, this.sortConfig.direction);
+            }
+            
             this.renderObligaciones(obligaciones);
             this.updatePagination(obligaciones.length);
         } catch (error) {
@@ -180,6 +438,14 @@ class ObligacionesController {
      * Renderizar obligaciones en tabla
      */
     renderObligaciones(obligaciones) {
+        // #region agent log
+        const theadBefore = document.querySelector('table thead');
+        const sortButtonsBefore = document.querySelectorAll('.sort-btn');
+        console.log('[DEBUG] renderObligaciones entry:', {
+            theadExists: theadBefore !== null,
+            sortButtonsCount: sortButtonsBefore.length
+        });
+        // #endregion
         const tbody = document.querySelector('table tbody');
         if (!tbody) return;
 
@@ -246,6 +512,18 @@ class ObligacionesController {
 
         // Re-attach event listeners
         this.attachActionListeners();
+        
+        // #region agent log
+        const theadAfter = document.querySelector('table thead');
+        const sortButtonsAfter = document.querySelectorAll('.sort-btn');
+        console.log('[DEBUG] renderObligaciones exit:', {
+            theadExists: theadAfter !== null,
+            sortButtonsCount: sortButtonsAfter.length
+        });
+        // #endregion
+        
+        // Actualizar estado visual de ordenamiento
+        this.updateSortButtons();
     }
 
     /**

@@ -6,7 +6,7 @@
     'use strict';
 
     // Versión de la aplicación para verificación
-    window.APP_VERSION = '3.0.5';
+    window.APP_VERSION = '3.0.7';
     console.log(`%c AlertIA v${window.APP_VERSION} Iniciando... `, 'background: #ec0000; color: white; font-weight: bold; padding: 4px; border-radius: 2px;');
 
     // Orden de carga de scripts
@@ -36,6 +36,7 @@
         'js/services/recordatorios-service.js',
         'js/services/auth-service.js',
         'js/services/calendario-service.js',
+        'js/services/envio-automatico-service.js',
 
         // Plantillas
         'js/email-template.js'
@@ -336,6 +337,28 @@
         }
     }
 
+    /**
+     * Iniciar servicio de envío automático
+     */
+    async function iniciarEnvioAutomatico() {
+        try {
+            if (!window.EnvioAutomaticoService || !window.dataAdapter) {
+                console.warn('[Envío Automático] Servicios no disponibles');
+                return;
+            }
+
+            const envioAutomaticoService = new EnvioAutomaticoService(window.dataAdapter);
+            await envioAutomaticoService.iniciar();
+            
+            // Guardar referencia global para poder detenerlo si es necesario
+            window.envioAutomaticoService = envioAutomaticoService;
+            
+            console.log('✅ Servicio de envío automático iniciado');
+        } catch (error) {
+            console.error('Error al iniciar servicio de envío automático:', error);
+        }
+    }
+
     function onReady() {
         // Verificar que dataAdapter esté disponible
         if (window.dataAdapter) {
@@ -360,6 +383,11 @@
             setTimeout(() => {
                 sincronizarBitacoras();
             }, 2000);
+
+            // Iniciar servicio de envío automático
+            setTimeout(() => {
+                iniciarEnvioAutomatico();
+            }, 3000);
         } else {
             console.warn('⚠️ dataAdapter no está disponible');
         }

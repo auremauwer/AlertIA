@@ -13,6 +13,7 @@ class DashboardController {
         this.currentFilteredData = []; // Guardar datos filtrados actuales
         this.ultimaFechaVerificada = null; // Para detectar cambio de día
         this.intervalVerificacionDia = null; // Referencia al intervalo
+        this.correosChart = null; // Referencia al gráfico de Chart.js
     }
 
     /**
@@ -27,6 +28,8 @@ class DashboardController {
 
         this.obligacionesService = new ObligacionesService(window.dataAdapter);
         this.configService = new ConfigService(window.dataAdapter);
+        this.enviosService = new EnviosService(window.dataAdapter);
+        this.alertasService = new AlertasService(window.dataAdapter);
         this.allObligaciones = []; // Store all data
 
         // Cargar configuración para obtener total_filas_excel
@@ -40,6 +43,7 @@ class DashboardController {
         await this.loadDashboard();
         this.setupFilters();
         this.setupSalirButton();
+        this.setupChart();
 
         // Configurar descarga después de que todo esté cargado
         if (document.readyState === 'complete') {
@@ -347,6 +351,7 @@ class DashboardController {
 
         this.currentFilteredData = filtered; // Guardar datos filtrados
         this.calculateKPIs(filtered);
+        this.updateChart(); // Actualizar gráfica cuando cambien los filtros
     }
 
     /**
@@ -825,6 +830,201 @@ class DashboardController {
         window.addEventListener('beforeunload', () => {
             if (this.intervalVerificacionDia) {
                 clearInterval(this.intervalVerificacionDia);
+            }
+        });
+    }
+
+    /**
+     * Configurar gráfica de correos enviados
+     */
+    setupChart() {
+        const chartPeriod = document.getElementById('chart-period');
+        if (chartPeriod) {
+            chartPeriod.addEventListener('change', () => {
+                this.updateChart();
+            });
+        }
+        this.updateChart();
+    }
+
+    /**
+     * Actualizar gráfica de correos enviados según filtros
+     */
+    async updateChart() {
+        try {
+            // Obtener todos los envíos
+            const allEnvios = await this.enviosService.getAll();
+            
+            // Si no hay envíos, mostrar gráfica vacía
+            if (!allEnvios || allEnvios.length === 0) {
+                const period = document.getElementById('chart-period')?.value || 'day';
+                this.renderChart({ labels: [], data: [] }, period);
+                return;
+            }
+            
+            // Verificar si hay filtros activos
+            const filterArea = document.getElementById('filter-area')?.value || '';
+            const filterEstatus = document.getElementById('filter-estatus')?.value || '';
+            const filterSubEstatus = document.getElementById('filter-sub-estatus')?.value || '';
+            const filterId = document.getElementById('filter-id')?.value?.trim() || '';
+            
+            const hasFilters = filterArea || filterEstatus || filterSubEstatus || filterId;
+            
+            let filteredEnvios = allEnvios;
+            
+            // Si hay filtros activos, filtrar envíos según las obligaciones filtradas
+            if (hasFilters && this.currentFilteredData && this.currentFilteredData.length > 0) {
+                // Obtener todas las alertas para relacionar con obligaciones
+                const allAlertas = await window.dataAdapter.getAlertas();
+                
+                // Obtener IDs de obligaciones filtradas
+                const filteredObligacionIds = new Set(
+                    this.currentFilteredData.map(obl => obl.id || obl.id_oficial).filter(id => id)
+                );
+                
+                // Filtrar alertas que pertenecen a las obligaciones filtradas
+                const filteredAlertas = allAlertas.filter(alerta => {
+                    const obligacionId = alerta.obligacion_id || alerta.obligacion?.id;
+                    return obligacionId && filteredObligacionIds.has(obligacionId);
+                });
+                
+                const filteredAlertaIds = new Set(filteredAlertas.map(a => a.id));
+                
+                // Filtrar envíos que contienen alertas relacionadas con las obligaciones filtradas
+                filteredEnvios = allEnvios.filter(envio => {
+                    if (!envio.alertas || !Array.isArray(envio.alertas)) {
+                        return false;
+                    }
+                    // Verificar si alguna alerta del envío está en las alertas filtradas
+                    return envio.alertas.some(alertaId => filteredAlertaIds.has(alertaId));
+                });
+            }
+            
+            // Obtener período seleccionado
+            const period = document.getElementById('chart-period')?.value || 'day';
+            
+            // Agrupar envíos por período
+            const grouped = this.groupEnviosByPeriod(filteredEnvios, period);
+            
+            // Crear o actualizar gráfica
+            this.renderChart(grouped, period);
+            
+        } catch (error) {
+            console.error('Error al actualizar gráfica de correos:', error);
+            // Si hay error, mostrar gráfica vacía
+            const period = document.getElementById('chart-period')?.value || 'day';
+            this.renderChart({ labels: [], data: [] }, period);
+        }
+    }
+
+    /**
+     * Agrupar envíos por período (día o mes)
+     */
+    groupEnviosByPeriod(envios, period) {
+        const grouped = {};
+        
+        envios.forEach(envio => {
+            const fecha = new Date(envio.fecha);
+            let key;
+            
+            if (period === 'month') {
+                // Agrupar por mes (YYYY-MM)
+                key = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+            } else {
+                // Agrupar por día (YYYY-MM-DD)
+                key = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+            }
+            
+            if (!grouped[key]) {
+                grouped[key] = 0;
+            }
+            
+            grouped[key] += (envio.correos_enviados || 0);
+        });
+        
+        // Ordenar por fecha
+        const sortedKeys = Object.keys(grouped).sort();
+        
+        // Formatear etiquetas
+        const labels = sortedKeys.map(key => {
+            if (period === 'month') {
+                const [year, month] = key.split('-');
+                const date = new Date(year, parseInt(month) - 1, 1);
+                return date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+            } else {
+                const [year, month, day] = key.split('-');
+                const date = new Date(year, parseInt(month) - 1, parseInt(day));
+                return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+            }
+        });
+        
+        const data = sortedKeys.map(key => grouped[key]);
+        
+        return { labels, data };
+    }
+
+    /**
+     * Renderizar gráfica con Chart.js
+     */
+    renderChart(chartData, period) {
+        const canvas = document.getElementById('correos-chart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Destruir gráfica anterior si existe
+        if (this.correosChart) {
+            this.correosChart.destroy();
+        }
+        
+        // Crear nueva gráfica
+        this.correosChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels || [],
+                datasets: [{
+                    label: 'Correos Enviados',
+                    data: chartData.data || [],
+                    backgroundColor: 'rgba(236, 0, 0, 0.7)',
+                    borderColor: 'rgba(236, 0, 0, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y} correo${context.parsed.y !== 1 ? 's' : ''} enviado${context.parsed.y !== 1 ? 's' : ''}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        },
+                        title: {
+                            display: true,
+                            text: 'Cantidad de Correos'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: period === 'month' ? 'Mes' : 'Día'
+                        }
+                    }
+                }
             }
         });
     }
